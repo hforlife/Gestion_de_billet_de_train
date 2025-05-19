@@ -6,7 +6,7 @@ enum statusVoyage: string
 {
     //
     case Programmé = 'programmé';
-    case En_cours = 'en_cours';
-    case Termoiné = 'terminé';
+    case EnCours = 'en_cours';
+    case Terminé = 'terminé';
     case Annulé = 'annulé';
 }

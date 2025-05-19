@@ -1,10 +1,9 @@
 import './bootstrap';
+// import 'assets/js/bootstrap.bundle.min.js'
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import { InertiaProgress } from '@inertiajs/progress'
-import { ZiggyVue } from 'ziggy-js';
-import Toast from 'vue-toastification'
-import 'vue-toastification/dist/index.css'
+import { ZiggyVue } from 'ziggy-js'
 import VueSweetalert2 from 'vue-sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
 
@@ -19,7 +18,6 @@ createInertiaApp({
   setup({ el, App, props, plugin }) {
     createApp({ render: () => h(App, props) })
       .use(plugin)
-      .use(Toast)
       .use(VueSweetalert2)
       .use(ZiggyVue)
       .mount(el);

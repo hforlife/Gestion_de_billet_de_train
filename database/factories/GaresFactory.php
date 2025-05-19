@@ -20,7 +20,7 @@ class GaresFactory extends Factory
         return [
             //
             'nom' => fake()->name(),
-        'localisation' => Str::random(10),
+            'localisation' => Str::random(10),
         ];
     }
 }

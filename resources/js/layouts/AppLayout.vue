@@ -1,190 +1,232 @@
 <script setup>
-import {Link} from '@inertiajs/vue3';
-import { router } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { Link } from "@inertiajs/vue3"
+import { computed, onMounted, ref } from "vue"
+import { usePage } from "@inertiajs/vue3"
 
-const page = usePage();
-const user = computed(() => page.props.auth.user);
+const page = usePage()
+const user = computed(() => page.props.auth.user)
+const sidebarActive = ref(false)
+const userDropdownOpen = ref(false)
 
+// Gestion du toggle sidebar
+const toggleSidebar = () => {
+  sidebarActive.value = !sidebarActive.value
+}
+
+// Gestion du dropdown utilisateur
+const toggleUserDropdown = () => {
+  userDropdownOpen.value = !userDropdownOpen.value
+}
+
+// Fermer les dropdowns quand on clique ailleurs
+const closeAllDropdowns = () => {
+  userDropdownOpen.value = false
+}
+
+onMounted(() => {
+  // Ajoute un écouteur pour fermer les dropdowns au clic externe
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.user-dropdown')) {
+      userDropdownOpen.value = false
+    }
+  })
+
+  // Active l'élément de menu correspondant à l'URL
+  const currentPath = window.location.pathname.split('/').pop()
+  document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+    const href = link.getAttribute('href') || ''
+    if (href.includes(currentPath)) {
+      link.classList.add('active')
+      link.closest('.nav-item')?.classList.add('active')
+    }
+  })
+})
 </script>
+
 <template>
-    <div class="container-scroller">
-        <!-- partial:partials/_navbar.html -->
-        <nav
-            class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex flex-row"
+  <div class="container-scroller" @click="closeAllDropdowns">
+    <!-- Navbar -->
+    <nav class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+      <div class="text-center navbar-brand-wrapper d-flex align-items-top justify-content-center">
+        <Link class="navbar-brand brand-logo" :href="route('dashboard')">
+          <img src="/resources/js/assets/images/icon_white.png" alt="logo" />
+        </Link>
+        <Link class="navbar-brand brand-logo-mini" :href="route('dashboard')">
+          <img src="/resources/js/assets/images/icon.png" alt="logo" style="width: 50px; height: 50px;" class="rounded-circle" />
+        </Link>
+      </div>
+
+      <div class="navbar-menu-wrapper d-flex align-items-center">
+        <ul class="navbar-nav ml-auto">
+          <!-- Dropdown Utilisateur -->
+          <li class="nav-item dropdown d-none d-xl-inline-block user-dropdown" @click.stop>
+            <a class="nav-link dropdown-toggle" id="UserDropdown" href="#" @click="toggleUserDropdown">
+              <img class="img-xs rounded-circle" src="/resources/js/assets/images/icon.png" alt="Profile image">
+            </a>
+            <div class="dropdown-menu dropdown-menu-right navbar-dropdown" :class="{ show: userDropdownOpen }" aria-labelledby="UserDropdown">
+              <div class="dropdown-header text-center">
+                <img class="img-md rounded-circle" src="/resources/js/assets/images/icon.png" alt="Profile image">
+                <p class="mb-1 mt-3 font-weight-semibold">{{ user.name }}</p>
+                <p class="font-weight-light text-muted mb-0">{{ user.email }}</p>
+              </div>
+              <Link class="dropdown-item" :href="route('user.profile')">
+                <i class="dropdown-item-icon ti-dashboard"></i> Mon Profil
+              </Link>
+              <Link as="button" method="post" :href="route('logout')" class="dropdown-item">
+                <i class="dropdown-item-icon ti-power-off"></i> Déconnexion
+              </Link>
+            </div>
+          </li>
+        </ul>
+
+        <button
+          class="navbar-toggler navbar-toggler-right d-lg-none align-self-center"
+          type="button"
+          @click="toggleSidebar"
         >
-            <div
-                class="text-center navbar-brand-wrapper d-flex align-items-top justify-content-center"
-            >
-                <a class="navbar-brand brand-logo" href="/dashboard">
-                    <img
-                        src="/resources/js/assets/images/icon_white.png"
-                        alt="logo"
-                    />
-                </a>
-                <a class="navbar-brand brand-logo-mini" href="/dashboard">
-                    <img
-                        src="/resources/js/assets/images/icon.png"
-                        alt="logo"
-                    />
-                </a>
+          <span class="mdi mdi-menu"></span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="container-fluid page-body-wrapper">
+      <nav class="sidebar sidebar-offcanvas" :class="{ active: sidebarActive }" id="sidebar">
+        <ul class="nav">
+          <li class="nav-item nav-profile">
+            <a href="#" class="nav-link">
+              <div class="profile-image">
+                <img class="img-xs rounded-circle" src="/resources/js/assets/images/icon.png" alt="profile image">
+                <div class="dot-indicator bg-success"></div>
+              </div>
+              <div class="text-wrapper">
+                <p class="profile-name">{{ user.name }}</p>
+                <p class="designation">{{ user.roles?.join(', ') || 'Utilisateur' }}</p>
+              </div>
+            </a>
+          </li>
+
+          <li class="nav-item nav-category">Menu Principal</li>
+
+          <li class="nav-item">
+            <Link class="nav-link" :href="route('dashboard')" :class="{ active: $page.url === '/dashboard' }">
+              <i class="menu-icon typcn typcn-document-text"></i>
+              <span class="menu-title">Tableau de Bord</span>
+            </Link>
+          </li>
+
+          <li class="nav-item">
+            <Link class="nav-link" :href="route('vente.index')" :class="{ active: $page.url.startsWith('/vente') }">
+              <i class="menu-icon typcn typcn-document-text"></i>
+              <span class="menu-title">Gestion des Ventes</span>
+            </Link>
+          </li>
+
+          <li class="nav-item">
+            <Link class="nav-link" :href="route('gare.index')" :class="{ active: $page.url.startsWith('/gare') }">
+              <i class="menu-icon typcn typcn-user-outline"></i>
+              <span class="menu-title">Gestion des Gares</span>
+            </Link>
+          </li>
+
+          <li class="nav-item">
+            <Link class="nav-link" :href="route('bagage.index')" :class="{ active: $page.url.startsWith('/bagage') }">
+              <i class="menu-icon typcn typcn-th-large-outline"></i>
+              <span class="menu-title">Gestion des Colis</span>
+            </Link>
+          </li>
+
+          <li class="nav-item">
+            <Link class="nav-link" :href="route('voyage.index')" :class="{ active: $page.url.startsWith('/voyage') }">
+              <i class="menu-icon typcn typcn-bell"></i>
+              <span class="menu-title">Gestion des Voyages</span>
+            </Link>
+          </li>
+
+          <li class="nav-item">
+            <Link class="nav-link" :href="route('train.index')" :class="{ active: $page.url.startsWith('/train') }">
+              <i class="menu-icon typcn typcn-bell"></i>
+              <span class="menu-title">Gestion des Trains</span>
+            </Link>
+          </li>
+
+          <li class="nav-item">
+            <Link class="nav-link"  :class="{ active: $page.url.startsWith('/user') }" :href="route('user.index')">
+              <i class="menu-icon typcn typcn-user-outline"></i>
+              <span class="menu-title">Gestion des Utilisateurs</span>
+            </Link>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Contenu principal -->
+      <div class="main-panel">
+        <div class="content-wrapper">
+            <div v-if="$page.props.flash.message" class="alert">
+        {{ $page.props.flash.message }}
             </div>
-            <div class="navbar-menu-wrapper d-flex align-items-center">
-                <form class="ml-auto search-form d-none d-md-block" action="#">
-                    <div class="form-group">
-                        <input
-                            type="search"
-                            class="form-control"
-                            placeholder="Chercher Ici..."
-                        />
-                    </div>
-                </form>
-                <button
-                    class="navbar-toggler navbar-toggler-right d-lg-none align-self-center"
-                    type="button"
-                    data-toggle="offcanvas"
-                >
-                    <span class="mdi mdi-menu"></span>
-                </button>
-                <Link
-                    as="button"
-                    method="post"
-                    :href="route('logout')"
-                    class="btn btn-primary toolbar-item"
-                    >Se Deconnecter</Link
-                >
-            </div>
-        </nav>
-        <!-- partial:partials/_sidebar.html -->
-        <div class="container-fluid page-body-wrapper">
-            <nav class="sidebar sidebar-offcanvas" id="sidebar">
-                <ul class="nav">
-                    <li class="nav-item nav-profile">
-                        <a href="#" class="nav-link">
-                            <div class="profile-image">
-                                <img
-                                    class="img-xs rounded-circle"
-                                    src="/resources/js/assets/images/faces/face8.jpg"
-                                    alt="profile image"
-                                />
-                                <div class="dot-indicator bg-success"></div>
-                            </div>
-                            <!-- Utilisateur Connecté -->
-                            <div class="text-wrapper">
-                                <p class="profile-name">Username</p>
-                                <p class="designation">Role: Admin</p>
-                            </div>
-                        </a>
-                    </li>
-                    <!-- Menu -->
-                    <li class="nav-item nav-category">Menu Principal</li>
-                    <!-- Tableau de Bord/Dashboard -->
-                    <li class="nav-item">
-                        <Link class="nav-link" :href="route('dashboard')">
-                            <i class="menu-icon typcn typcn-document-text"></i>
-                            <span class="menu-title">Tableau de Bord</span>
-                        </Link>
-                    </li>
-                    <!-- Gestion des Ventes -->
-                    <li class="nav-item">
-                        <Link class="nav-link" :href="route('vente.index')">
-                            <i class="menu-icon typcn typcn-document-text"></i>
-                            <span class="menu-title">Gestion des Ventes</span>
-                        </Link>
-                    </li>
-                    <!-- Gestion des Gares -->
-                    <li class="nav-item">
-                        <Link class="nav-link" :href="route('gare.index')">
-                            <i class="menu-icon typcn typcn-user-outline"></i>
-                            <span class="menu-title">Gestion des Gares</span>
-                        </Link>
-                    </li>
-                    <!-- Gestion des Bagages -->
-                    <li class="nav-item">
-                        <Link class="nav-link" :href="route('bagage.index')">
-                            <i class="menu-icon typcn typcn-th-large-outline"></i>
-                            <span class="menu-title">Gestion des Bagages</span>
-                        </Link>
-                    </li>
-                    <!-- Gestion des Voyages -->
-                    <li class="nav-item">
-                        <Link class="nav-link" :href="route('voyage.index')">
-                            <i class="menu-icon typcn typcn-bell"></i>
-                            <span class="menu-title">Gestion des Voyages</span>
-                        </Link>
-                    </li>
-                    <!-- Gestion des Trains -->
-                    <li class="nav-item">
-                        <Link class="nav-link" :href="route('train.index')">
-                            <i class="menu-icon typcn typcn-bell"></i>
-                            <span class="menu-title">Gestion des Trains</span>
-                        </Link>
-                    </li>
-                    <!-- Gestion des Employées -->
-                    <li class="nav-item">
-                        <Link class="nav-link" :href="route('employee.index')">
-                            <i class="menu-icon typcn typcn-user-outline"></i>
-                            <span class="menu-title">Gestion du Personnel</span>
-                        </Link>
-                    </li>
-                    <!-- Gestion des Sections -->
-                    <li class="nav-item">
-                        <Link class="nav-link" :href="route('section.index')">
-                            <i class="menu-icon typcn typcn-user-outline"></i>
-                            <span class="menu-title">Gestion des Sections</span>
-                        </Link>
-                    </li>
-                    <!-- Rapports -->
-                    <!-- <li class="nav-item">
-                        <a class="nav-link" :href="route('rapport.index')">
-                            <i class="menu-icon typcn typcn-user-outline"></i>
-                            <span class="menu-title">Rapports</span>
-                        </a>
-                    </li> -->
-                    <!-- Activités -->
-                    <!-- <li class="nav-item">
-                        <a class="nav-link" :href="route('activity.index')">
-                            <i class="menu-icon typcn typcn-user-outline"></i>
-                            <span class="menu-title">Supervision des Activités</span>
-                        </a>
-                    </li> -->
-                    <!-- Gestion des transactions -->
-                    <!-- <li class="nav-item">
-                        <a class="nav-link" :href="route('pay.index')">
-                            <i class="menu-icon typcn typcn-shopping-bag"></i>
-                            <span class="menu-title">Gestion des Transactions</span>
-                        </a>
-                    </li> -->
-                </ul>
-            </nav>
-            <!-- Content -->
-                <div class="main-panel">
-                    <div class="content-wrapper">
-                        <slot />
-                    </div>
-                    <!-- content-wrapper ends -->
-                    <footer class="footer">
-                        <div class="container-fluid clearfix">
-                            <span
-                                class="text-muted d-block text-center text-sm-left d-sm-inline-block"
-                                >Copyright © Doucsoft 2025</span
-                            >
-                            <span
-                                class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center"
-                            >
-                                Site
-                                <a href="#" target="_blank"
-                                    >Doucsoft Technologies</a
-                                >
-                                par doucsoft.com</span
-                            >
-                        </div>
-                    </footer>
-                    <!-- partial -->
-                </div>
-            <!-- End Content -->
-            <!-- partial:partials/_footer.html -->
+          <slot />
         </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+          <div class="container-fluid clearfix">
+            <span class="text-muted d-block text-center text-sm-left d-sm-inline-block">
+              Copyright © Doucsoft {{ new Date().getFullYear() }}
+            </span>
+            <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">
+              Site <a href="#" target="_blank">Doucsoft Technologies</a> par doucsoft.com
+            </span>
+          </div>
+        </footer>
+      </div>
     </div>
+  </div>
 </template>
+
+<style scoped>
+/* Style pour les dropdowns */
+.user-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  z-index: 1000;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+/* Animation pour la sidebar */
+.sidebar-offcanvas {
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar-offcanvas.active {
+  transform: translateX(0);
+}
+
+/* Style pour les liens actifs */
+.nav-link.active {
+  background-color: rgba(75, 73, 172, 0.1);
+  border-left: 3px solid var(--primary);
+}
+
+/* Style pour les alertes */
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.alert-success {
+  color: #3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+</style>

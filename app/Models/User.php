@@ -46,4 +46,25 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function scopeFilter($query, array $filters)
+{
+    $query->when($filters['search'] ?? null, function ($query, $search) {
+        $query->where('name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
+    });
+}
+    public function scopeRole($query, $role)
+{
+    return $query->whereHas('roles', function ($q) use ($role) {
+        $q->where('name', $role);
+    });
+}
+
+    public function scopeNotRole($query, $role)
+{
+    return $query->whereDoesntHave('roles', function ($q) use ($role) {
+        $q->where('name', $role);
+    });
+}
 }

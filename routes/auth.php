@@ -3,14 +3,14 @@
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
-    Route::get('login', [AuthController::class, 'create'])
-        ->name('login');
 
-    Route::post('login', [AuthController::class, 'store']);
-});
+Route::get('login', [AuthController::class, 'create'])
+    ->name('login')
+    ->middleware('guest');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('logout', [AuthController::class, 'destroy'])
-        ->name('logout');
-});
+Route::post('login', [AuthController::class, 'store'])
+    ->name('login.store')
+    ->middleware('guest');
+
+Route::post('logout', [AuthController::class, 'destroy'])
+    ->name('logout');

@@ -25,7 +25,7 @@ class VoyageFactory extends Factory
         'gare_arrivee' => Gares::all()->random()->nom,
         'date_depart' => fake()->dateTime(),
         'date_arrivee' => fake()->dateTime(),
-        'status' => fake()->randomElement,
+        'status' => fake()->randomElement(['prévu', 'en cours', 'terminé', 'annulé']),
         ];
     }
 }

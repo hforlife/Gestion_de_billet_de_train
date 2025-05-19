@@ -1,7 +1,6 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3";
-import InputError from "@/components/InputError.vue";
-import { LoaderCircle } from "lucide-vue-next";
+import Swal from "sweetalert2";
 
 const form = useForm({
     email: "",
@@ -10,8 +9,14 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post("login", {
-        onFinish: () => form.reset("password"),
+    form.post("/login", {
+        onSuccess: () => {
+            Swal.fire("Succès", "Bienvenue sur le Tableau de bord.", "success");
+        },
+        onError: () => {
+            Swal.fire("Erreur", "Merci de vérifier les champs du formulaire.", "error");
+        },
+        onFinish: () =>  form.reset("password"),
     });
 };
 </script>
@@ -19,18 +24,14 @@ const submit = () => {
 <template>
     <div class="container-scroller">
         <div class="container-fluid page-body-wrapper full-page-wrapper">
-            <div
-                class="content-wrapper d-flex align-items-center auth auth-bg-1 theme-one"
-            >
+            <div class="content-wrapper d-flex align-items-center auth auth-bg-1 theme-one">
                 <div class="row w-100">
                     <div class="col-lg-4 mx-auto">
+                        <div class="p-2 flex">
+                            <img  src="/resources/js/assets/images/icon_white.png" class="justify-center" alt="logo" width="400" />
+                        </div>
+                        <br>
                         <div class="auto-form-wrapper">
-                            <div
-                                v-if="form.hasErrors"
-                                class="alert alert-danger"
-                            >
-                                {{ form.errors.email }}
-                            </div>
                             <form @submit.prevent="submit">
                                 <div class="form-group">
                                     <label class="label">Email</label>
@@ -39,6 +40,8 @@ const submit = () => {
                                             id="email"
                                             v-model="form.email"
                                             type="email"
+                                            name="email"
+                                            :message='form.errors.email'
                                             required
                                             autofocus
                                             autocomplete="email"
@@ -53,7 +56,7 @@ const submit = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <InputError :message="form.errors.email" />
+                                    <span v-if="form.errors.email" class="text-red-500">{{ form.errors.email }}</span>
                                 </div>
 
                                 <div class="form-group">
@@ -63,6 +66,8 @@ const submit = () => {
                                             id="password"
                                             v-model="form.password"
                                             type="password"
+                                            name="password"
+                                            :message='form.errors.password'
                                             required
                                             autocomplete="current-password"
                                             placeholder="Password"
@@ -76,9 +81,7 @@ const submit = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <InputError
-                                        :message="form.errors.password"
-                                    />
+                                    <span v-if="form.errors.password" class="text-red-500">{{ form.errors.password }}</span>
                                 </div>
 
                                 <div
@@ -120,12 +123,6 @@ const submit = () => {
                                 </div>
                             </form>
                         </div>
-
-                        <ul class="auth-footer">
-                            <li><a href="/dashboard">Conditions</a></li>
-                            <li><a href="#">Aide</a></li>
-                            <li><a href="#">Termes & Politique</a></li>
-                        </ul>
 
                         <p class="footer-text text-center">
                             © 2024 DoucsoftTechnologies. Tous droits réservés.

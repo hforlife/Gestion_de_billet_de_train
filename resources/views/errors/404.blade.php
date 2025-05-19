@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr-FR">
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -42,7 +42,6 @@
               <div class="row mt-5">
                 <div class="col-12 mt-xl-2">
                   <p class="text-white font-weight-medium text-center">Copyright &copy; 2020 All rights reserved.</p>
-                  <p class="footer-text text-center"><a href="https://www.bootstrapdash.com/bootstrap-admin-template/" target="_blank"> Free Bootstrap template </a> from BootstrapDash templates</p>
                 </div>
               </div>
             </div>
