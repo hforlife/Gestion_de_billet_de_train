@@ -132,13 +132,32 @@ const submit = () => {
                                 </select>
                                 <div v-if="errors.statut" class="text-danger">{{ errors.statut }}</div>
                             </div>
-                            <button type="submit" class="btn btn-primary mr-2">
-                                Modifier
-                            </button>
-
-                            <button class="btn btn-light" type="reset">
-                                Annuler
-                            </button>
+                            <div class="d-flex justify-content-end mt-4">
+                                <button
+                                    type="reset"
+                                    class="btn btn-light mr-2"
+                                    @click="form.reset()"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary"
+                                    :disabled="form.processing"
+                                >
+                                    <span
+                                        v-if="form.processing"
+                                        class="spinner-border spinner-border-sm"
+                                        role="status"
+                                        aria-hidden="true"
+                                    ></span>
+                                    {{
+                                        form.processing
+                                            ? "En cours..."
+                                            : "Valider"
+                                    }}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>

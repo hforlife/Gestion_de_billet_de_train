@@ -28,7 +28,9 @@ const submit = () => {
                 <div class="row w-100">
                     <div class="col-lg-4 mx-auto">
                         <div class="p-2 flex">
-                            <img  src="/resources/js/assets/images/icon_white.png" class="justify-center" alt="logo" width="400" />
+                            <center>
+                                <img  src="/resources/js/assets/images/icon_white.png" class="justify-center" alt="logo" width="400" />
+                            </center>
                         </div>
                         <br>
                         <div class="auto-form-wrapper">
@@ -124,7 +126,7 @@ const submit = () => {
                             </form>
                         </div>
 
-                        <p class="footer-text text-center">
+                        <p class="footer-text text-center mt-2">
                             © 2024 DoucsoftTechnologies. Tous droits réservés.
                         </p>
                     </div>

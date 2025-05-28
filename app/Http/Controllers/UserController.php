@@ -70,18 +70,18 @@ class UserController extends Controller
                 'email' => $user->email,
                 'role' => $user->getRoleNames()->first(), // ✅ un seul rôle pour le champ select
             ],
-            'allRoles' => Role::pluck('name', 'id'), // Si besoin d’ID + nom, sinon .toArray() simple
+            'roles' => Role::all()->pluck('name')->toArray(), // Si besoin d’ID + nom, sinon .toArray() simple
         ]);
     }
 
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'name' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
-            'roles' => ['required', 'array'],
-            'roles.*' => ['exists:roles,name'],
+           'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['string', 'exists:roles,name'],
         ]);
 
         $user->update([

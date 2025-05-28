@@ -43,6 +43,10 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'message' => fn () => $request->session()->get('message')
             ],
+            'pwa' => [
+            'enabled' => true,
+            'version' => config('app.version')
+        ]
         ]);
     }
 

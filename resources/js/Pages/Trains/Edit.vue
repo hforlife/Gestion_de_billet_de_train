@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 
 const props = defineProps({
     trains: Object,
+    errors: Object,
 });
 
 // Initialisation du formulaire
@@ -15,18 +16,26 @@ const form = useForm({
     etat: props.trains?.etat || '',
 });
 
-const { errors } = form;
-
 // Fonction d'envoi du formulaire
 const submit = () => {
   form.put(route('train.update', props.trains.id), {
     onSuccess: () => {
-      Swal.fire(
-        'Success',
-        'Information du train modifiée avec succès !',
-        'success'
-      );
-    }
+            Swal.fire({
+                title: "Succès",
+                text: "Information du train modifié(e) avec succès.",
+                icon: "success",
+                confirmButtonText: "OK",
+            });
+            form.reset();
+        },
+        onError: (errors) => {
+            Swal.fire({
+                title: "Erreur",
+                text: "Veuillez corriger les erreurs dans le formulaire.",
+                icon: "error",
+                confirmButtonText: "OK",
+            });
+        },
   });
 };
 </script>
@@ -59,9 +68,16 @@ const submit = () => {
                                     type="text"
                                     class="form-control"
                                     v-model="form.numero"
+                                     :class="{ 'is-invalid': form.errors.numero }"
                                     placeholder="Entrer Nom"
                                     required
                                 />
+                                <div
+                                    v-if="form.errors.numero"
+                                    class="invalid-feedback"
+                                >
+                                    {{ form.errors.numero }}
+                                </div>
                             </div>
                             <!-- Capacité -->
                             <div class="form-group">
@@ -70,9 +86,16 @@ const submit = () => {
                                     type="number"
                                     class="form-control"
                                     v-model="form.capacite"
+                                     :class="{ 'is-invalid': form.errors.capacite }"
                                     placeholder="Entrer Capacité"
                                     required
                                 />
+                                <div
+                                    v-if="form.errors.capacite"
+                                    class="invalid-feedback"
+                                >
+                                    {{ form.errors.capacite }}
+                                </div>
                             </div>
                             <!-- Etat -->
                             <div class="form-group">
@@ -82,6 +105,7 @@ const submit = () => {
                                 <select
                                     class="form-control"
                                     v-model="form.etat"
+                                     :class="{ 'is-invalid': form.errors.etat }"
                                 >
                                     <option value="" disabled>
                                         -- Choisissez un etat --
@@ -91,13 +115,39 @@ const submit = () => {
                                         Maintenance
                                     </option>
                                 </select>
+                                <div
+                                    v-if="form.errors.etat"
+                                    class="invalid-feedback"
+                                >
+                                    {{ form.errors.etat }}
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-primary">
-                                Valider
-                            </button>
-                            <button type="reset" class="btn btn-light ml-2">
-                                Annuler
-                            </button>
+                            <div class="d-flex justify-content-end mt-4">
+                                <button
+                                    type="reset"
+                                    class="btn btn-light mr-2"
+                                    @click="form.reset()"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary"
+                                    :disabled="form.processing"
+                                >
+                                    <span
+                                        v-if="form.processing"
+                                        class="spinner-border spinner-border-sm"
+                                        role="status"
+                                        aria-hidden="true"
+                                    ></span>
+                                    {{
+                                        form.processing
+                                            ? "En cours..."
+                                            : "Valider"
+                                    }}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>

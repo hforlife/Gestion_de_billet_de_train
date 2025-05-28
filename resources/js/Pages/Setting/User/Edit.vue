@@ -1,24 +1,29 @@
 <script setup>
 import AppLayout from "@/layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
+import { defineProps } from "vue";
 import Swal from "sweetalert2";
 
 const props = defineProps({
-    name: Object,
-    email: Object,
-    password: Object,
-    password_confirmation: Object,
+    users: Object,
     errors: Object,
     roles: Array, // Changé de Object à Array pour plus de clarté
 });
 
+const form = useForm({
+    name: props.users?.name || '',
+    email: props.users?.email || '',
+    password: props?.password || '',
+    password_confirmation: props?.password || '',
+    roles: props.users?.roles || '', // Changé à string pour single select
+});
 
 const submit = () => {
-    form.post(route("user.store"), {
+    form.put(route("user.update", props.users.id), {
         onSuccess: () => {
             Swal.fire({
                 title: "Succès",
-                text: "Utilisateur ajouté avec succès.",
+                text: "Utilisateur modifié(e) avec succès.",
                 icon: "success",
                 confirmButtonText: "OK",
             });
@@ -169,7 +174,7 @@ const submit = () => {
                             <div class="d-flex justify-content-end mt-4">
                                 <button
                                     type="reset"
-                                    class="btn btn-light me-2"
+                                    class="btn btn-light mr-2"
                                     @click="form.reset()"
                                 >
                                     Annuler

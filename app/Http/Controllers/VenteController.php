@@ -14,37 +14,34 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class VenteController extends Controller
 {
     //
-    public function index(Request $request)
-    {
-        $search = $request->input('search');
-        $voyageId = $request->input('voyage_id');
+public function index(Request $request)
+{
+    $search = trim($request->input('search'));
+    $voyageId = $request->input('voyage_id');
 
-        $voyages = Voyages::all();
+    $voyages = Voyages::where('statut', ['programmé', 'en_cours'])->get(); // Utilise le bon modèle
 
-        $ventes = Ventes::with(['voyage', 'train'])
-            ->when(
-                $search,
-                fn($query) =>
-                $query->where('client_nom', 'like', "%{$search}%")
-            )
-            ->when(
-                $voyageId,
-                fn($query) =>
-                $query->where('voyage_id', $voyageId)
-            )
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->withQueryString(); // garde les filtres et recherche dans l'URL
+    $ventes = Ventes::with(['voyage', 'train'])
+        ->when($search, function ($query, $search) {
+            $query->where('client_nom', 'like', "%{$search}%");
+        })
+        ->when($voyageId, function ($query, $voyageId) {
+            $query->where('voyage_id', $voyageId);
+        })
+        ->latest() // équivalent à orderBy('created_at', 'desc')
+        ->paginate(10)
+        ->withQueryString(); // conserve les paramètres dans l'URL
 
-        return Inertia::render('Ventes/Index', [
-            'ventes' => $ventes,
-            'voyages' => $voyages,
-            'filters' => [
-                'search' => $search,
-                'voyage_id' => $voyageId,
-            ],
-        ]);
-    }
+    return Inertia::render('Ventes/Index', [
+        'ventes' => $ventes,
+        'voyages' => $voyages,
+        'filters' => [
+            'search' => $search,
+            'voyage_id' => $voyageId,
+        ],
+    ]);
+}
+
     public function create()
     {
         $voyage = Voyages::all();
@@ -80,16 +77,17 @@ class VenteController extends Controller
         return Redirect::route('vente.index')->with('success', 'Billet vendu avec succès !');
     }
 
-    public function show($id)
+   public function show($id)
     {
         $items = Ventes::with(['voyage', 'train'])->findOrFail($id);
-        return Inertia::render('Ventes/Index', props: [
-            'ventes' => $items
+        return Inertia::render('Ventes/Show', props: [
+            'vente' => $items,
         ]);
     }
 
     // Afficher le formulaire d'édition
-    public function edit($id){
+    public function edit($id)
+    {
         $items = Ventes::findOrFail($id);
         $voyage = Voyages::all();
         $train = Trains::all();
@@ -114,7 +112,7 @@ class VenteController extends Controller
         ]);
 
         // Modification de la vente
-         $vente->update([
+        $vente->update([
             'client_nom' => $validated['client_nom'],
             'voyage_id' => $validated['voyage_id'],
             'train_id' => $validated['train_id'],

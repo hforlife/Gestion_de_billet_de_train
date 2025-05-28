@@ -133,14 +133,14 @@ const deleteUsers = (id) => {
                                         <td>{{ user.roles }}</td>
                                         <td>
                                             <button
-                                                @click="editUsers(users.id)"
+                                                @click="editUsers(user.id)"
                                                 class="btn btn-warning toolbar-item m-2"
                                             >
-                                            
+
                                                 <Pencil size="16" />
                                             </button>
                                             <button
-                                                @click="deleteUsers(users.id)"
+                                                @click="deleteUsers(user.id)"
                                                 class="btn btn-danger toolbar-item"
                                             >
                                                 <Trash size="16" />

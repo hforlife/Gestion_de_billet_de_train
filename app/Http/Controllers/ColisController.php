@@ -71,7 +71,7 @@ class ColisController extends Controller
             'tarif' => ['required', 'numeric'],
             'statut' => ['required'],
         ]);
-        
+
         $item = Colis::findOrFail($id);
         $item->user1 = $request->input('user1');
         $item->user2 = $request->input('user2');
@@ -79,7 +79,7 @@ class ColisController extends Controller
         $item->tarif = $request->input('tarif');
         $item->statut = $request->input('statut');
         $item->update();
-        
+
         // dd($request);
 
         return redirect()->route('bagage.index')->with('success', 'Ajout effectué avec succès');

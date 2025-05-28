@@ -2,57 +2,65 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, reactive, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
-import { Pencil, Trash, Eye } from "lucide-vue-next";
+import { Pencil, Trash, Eye, Plus } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
     ventes: Object,
-    voyages: Object,
+    voyages: Array,
     filters: Object,
     flash: Object,
 });
 
-// 🔍 Filtres réactifs
 const filters = reactive({
-    search: props.filters.search || "",
+    search: props.filters?.search || "",
+    voyage_id: props.filters?.voyage_id || "",
 });
 
-// 🔍 Watch pour mise à jour auto lors de la recherche
-watch(
-    () => filters.search,
-    (newValue) => {
-        router.get(
-            route("gare.index"),
-            { search: newValue },
-            {
-                preserveState: true,
-                replace: true,
-            }
-        );
-    }
-);
-// Affichage du message flash
-if (props.flash && props.flash.success) {
-    Swal.fire("Succès", props.flash.success, "success");
-}
-// Fonction pour rediriger vers la page d’édition avec l'ID
-const editVente = (id) => {
-    router.visit(route("vente.edit", id));
+const getResults = () => {
+    router.get(route("vente.index"), filters, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
 };
-// suppression
+
+watch(filters, () => getResults(), { deep: true });
+
+if (props.flash?.success) {
+    Swal.fire({
+        title: "Succès",
+        text: props.flash.success,
+        icon: "success",
+        timer: 3000,
+    });
+}
+
+const showVente = (id) => {
+    router.visit(route("vente.show", id));
+};
+
 const deleteVente = (id) => {
     Swal.fire({
-        title: "Êtes-vous sûr ?",
+        title: "Confirmer la suppression",
         text: "Cette action est irréversible !",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Oui, supprimer !",
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Supprimer",
         cancelButtonText: "Annuler",
     }).then((result) => {
         if (result.isConfirmed) {
-            router.delete(route("vente.destroy", id));
+            router.delete(route("vente.destroy", id), {
+                onSuccess: () => {
+                    Swal.fire(
+                        "Supprimé !",
+                        "La vente a été supprimée.",
+                        "success"
+                    );
+                },
+            });
         }
     });
 };
@@ -60,77 +68,93 @@ const deleteVente = (id) => {
 
 <template>
     <AppLayout>
+        <!-- 🧭 Titre -->
         <div class="row page-title-header">
             <div class="col-12">
                 <div class="page-header">
                     <h4 class="page-title">Gestion des Ventes</h4>
+                    <div
+                        class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
+                    >
+                        <ul class="quick-links">
+                            <li><a href="#">Dashboard</a></li>
+                            <li><a href="#">Ventes</a></li>
+                        </ul>
+                        <ul class="quick-links ml-auto">
+                            <li><a href="#">Settings</a></li>
+                            <li><a href="#">Analytics</a></li>
+                            <li><a href="#">Watchlist</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="input-group filter mb-3">
-            <select
-                v-model="filters.voyage_id"
-                @change="getResults"
-                class="btn btn-outline-secondary dropdown-toggle"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-            >
-                <option value="">Tous les voyages</option>
-                <option
-                    v-for="voyage in voyages"
-                    :key="voyage.id"
-                    :value="voyage.id"
-                >
-                    {{ voyage.name }}
-                </option>
-            </select>
-            <input
-                type="text"
-                v-model="filters.search"
-                @input="getResults"
-                placeholder="Rechercher par nom..."
-                class="form-control"
-            />
+        <!-- 🔍 Barre de recherche & Filtre -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <select v-model="filters.voyage_id" class="form-control">
+                        <option value="">Tous les voyages</option>
+                        <option
+                            v-for="voyage in voyages"
+                            :key="voyage.id"
+                            :value="voyage.id"
+                        >
+                            {{ voyage.name }} ({{ voyage.date_depart }})
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        v-model="filters.search"
+                        placeholder="Rechercher par client..."
+                        class="form-control"
+                    />
+                    <button
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        @click="getResults"
+                    >
+                        <i class="mdi mdi-magnify"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
+        <!-- 📋 Tableau des Ventes -->
         <div class="row">
-            <!-- table 3 -->
-            <div class="col-lg-12 grid-margin stretch-card">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <!-- Titre -->
-                        <div class="d-flex justify-content-between">
-                            <h4 class="card-title mb-0">
-                                Listes des ventes effectuées
-                            </h4>
-                        </div>
-
-                        <!-- Boutton -->
-                        <div class="pt-4 pb-4">
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-4"
+                        >
+                            <h4 class="card-title mb-0">Liste des ventes</h4>
                             <Link
-                                type="button"
                                 :href="route('vente.create')"
-                                class="btn btn-primary toolbar-item"
+                                class="btn btn-primary btn-icon-text"
                             >
-                                Nouvelle Vente</Link
-                            >
+                                <Plus size="16" class="me-1" />
+                                Nouvelle Vente
+                            </Link>
                         </div>
 
-                        <!-- Formulaire -->
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
+                            <table class="table table-hover">
+                                <thead class="table-light">
                                     <tr>
                                         <th>#</th>
                                         <th>Client</th>
                                         <th>Voyage</th>
                                         <th>Train</th>
-                                        <th>Prix (FCFA)</th>
+                                        <th class="text-end">Prix</th>
                                         <th>Bagage</th>
-                                        <th>Poids</th>
-                                        <th>Actions</th>
+                                        <th class="text-end">Poids</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -138,144 +162,131 @@ const deleteVente = (id) => {
                                         v-for="(vente, index) in ventes.data"
                                         :key="vente.id"
                                     >
-                                        <td>{{ index + 1 }}</td>
-                                        <td>{{ vente.client_nom }}</td>
+                                        <td>{{ ventes.from + index }}</td>
+                                        <td>{{ vente.client_nom || "---" }}</td>
                                         <td>
-                                            {{
-                                                vente.voyage
-                                                    ? vente.voyage.name
-                                                    : "---"
-                                            }}
+                                            <span v-if="vente.voyage">
+                                                {{ vente.voyage.name }}
+                                                <small
+                                                    class="text-muted d-block"
+                                                    >{{
+                                                        vente.voyage.date_depart
+                                                    }}</small
+                                                >
+                                            </span>
+                                            <span v-else>---</span>
                                         </td>
                                         <td>
-                                            {{
-                                                vente.train
-                                                    ? vente.train.numero
-                                                    : "---"
-                                            }}
+                                            {{ vente.train?.numero || "---" }}
                                         </td>
-                                        <td>
+                                        <td class="text-end">
                                             {{
                                                 vente.prix
-                                                    ? vente.voyage.prix
+                                                    ? `${vente.prix.toLocaleString()} FCFA`
                                                     : "---"
                                             }}
                                         </td>
                                         <td>
-                                            {{ vente.bagage ? "Oui" : "Non" }}
+                                            <span
+                                                :class="{
+                                                    'badge bg-success':
+                                                        vente.bagage,
+                                                    'badge bg-secondary':
+                                                        !vente.bagage,
+                                                }"
+                                            >
+                                                {{
+                                                    vente.bagage ? "Oui" : "Non"
+                                                }}
+                                            </span>
                                         </td>
-                                        <td>
-                                            {{ vente.poids_bagage || "0" }} Kg
+                                        <td class="text-end">
+                                            {{
+                                                vente.poids_bagage
+                                                    ? `${vente.poids_bagage} kg`
+                                                    : "---"
+                                            }}
                                         </td>
-                                        <td>
-                                            <Link
-                                                :href="
-                                                    route(
-                                                        'vente.edit',
-                                                        vente.id
-                                                    )
-                                                "
-                                                class="btn btn-warning btn-sm m-1"
-                                            >
-                                                <Pencil size="16" />
-                                            </Link>
-                                            <button
-                                                @click="deleteVente(vente.id)"
-                                                class="btn btn-danger btn-sm"
-                                            >
-                                                <Trash size="16" />
-                                            </button>
-                                            <!-- Modal -->
-                                            <!-- button -->
-                                            <button
-                                                type="button"
-                                                class="btn btn-primary btn-sm m-1"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#exampleModal"
-                                                :data-bs-whatever="vente.id"
-                                            >
-                                                <Eye size="16" />
-                                            </button>
-                                            <!-- content -->
-                                            <div
-                                                class="modal fade"
-                                                id="exampleModal"
-                                                tabindex="-1"
-                                                aria-labelledby="exampleModalLabel"
-                                                aria-hidden="true"
-                                            >
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div
-                                                            class="modal-header"
-                                                        >
-                                                            <h5
-                                                                class="modal-title"
-                                                                id="exampleModalLabel"
-                                                            >
-                                                                Modal title
-                                                            </h5>
-                                                            <button
-                                                                type="button"
-                                                                class="btn-close"
-                                                                data-bs-dismiss="modal"
-                                                                aria-label="Close"
-                                                            ></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            ...
-                                                        </div>
-                                                        <div
-                                                            class="modal-footer"
-                                                        >
-                                                            <button
-                                                                type="button"
-                                                                class="btn btn-secondary"
-                                                                data-bs-dismiss="modal"
-                                                            >
-                                                                Fermer
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                class="btn btn-primary"
-                                                            >
-                                                                Modifier
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <button
+                                                    @click="showVente(vente.id)"
+                                                    class="btn btn-info btn-sm mx-1"
+                                                    title="Voir détails"
+                                                >
+                                                    <Eye size="16" />
+                                                </button>
+                                                <Link
+                                                    :href="
+                                                        route(
+                                                            'vente.edit',
+                                                            vente.id
+                                                        )
+                                                    "
+                                                    class="btn btn-warning btn-sm mx-1"
+                                                    title="Modifier"
+                                                >
+                                                    <Pencil size="16" />
+                                                </Link>
+                                                <button
+                                                    @click="
+                                                        deleteVente(vente.id)
+                                                    "
+                                                    class="btn btn-danger btn-sm mx-1"
+                                                    title="Supprimer"
+                                                >
+                                                    <Trash size="16" />
+                                                </button>
                                             </div>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="ventes.data.length === 0">
+                                        <td
+                                            colspan="8"
+                                            class="text-center py-4 text-muted"
+                                        >
+                                            Aucune vente trouvée
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        <div class="pagination mt-4">
-                            <nav>
-                                <ul class="pagination">
-                                    <li
-                                        v-for="link in ventes.links"
-                                        :key="link.label"
-                                        :class="{
-                                            'page-item active': link.active,
-                                            'page-item': !link.active,
-                                        }"
-                                    >
-                                        <Link
-                                            v-if="link.url"
-                                            :href="link.url"
-                                            class="page-link"
-                                            v-html="link.label"
-                                        />
-                                        <span
-                                            v-else
-                                            class="page-link"
-                                            v-html="link.label"
-                                        ></span>
-                                    </li>
-                                </ul>
-                            </nav>
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <p class="text-muted">
+                                    Affichage de {{ ventes.from }} à
+                                    {{ ventes.to }} sur
+                                    {{ ventes.total }} ventes
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <nav class="float-end">
+                                    <ul class="pagination">
+                                        <li
+                                            v-for="link in ventes.links"
+                                            :key="link.label"
+                                            class="page-item"
+                                            :class="{
+                                                active: link.active,
+                                                disabled: !link.url,
+                                            }"
+                                        >
+                                            <Link
+                                                v-if="link.url"
+                                                :href="link.url"
+                                                class="page-link"
+                                                v-html="link.label"
+                                            />
+                                            <span
+                                                v-else
+                                                class="page-link"
+                                                v-html="link.label"
+                                            ></span>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -283,3 +294,17 @@ const deleteVente = (id) => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.table-hover tbody tr:hover {
+    background-color: rgba(75, 73, 172, 0.05);
+}
+.badge {
+    padding: 5px 10px;
+    border-radius: 50px;
+    font-weight: 500;
+}
+.btn-group {
+    white-space: nowrap;
+}
+</style>

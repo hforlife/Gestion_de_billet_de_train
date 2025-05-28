@@ -2,7 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, reactive, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
-import { Trash, Pencil } from "lucide-vue-next";
+import { Plus, Pencil, Trash, Eye, Search, Download } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
@@ -73,28 +73,53 @@ const deleteTrain = (id) => {
             <div class="col-12">
                 <div class="page-header">
                     <h4 class="page-title">Gestion des Trains</h4>
+                    <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
+                    <ul class="quick-links">
+                      <li><a href="#">Dashboard</a></li>
+                      <li><a href="#">Trains </a></li> 
+                    </ul>
+                    <ul class="quick-links ml-auto">
+                      <li><a href="#">Settings</a></li>
+                      <li><a href="#">Analytics</a></li>
+                      <li><a href="#">Watchlist</a></li>
+                    </ul>
+                  </div>
                 </div>
             </div>
         </div>
 
         <!-- 🔍 Barre de recherche -->
-        <div class="input-group filter mb-3">
-            <input
-                type="text"
-                v-model="filters.search"
-                placeholder="Rechercher par numero de train..."
-                class="form-control"
-            />
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        v-model="filters.search"
+                        placeholder="Rechercher par client..."
+                        class="form-control"
+                    >
+                    <button class="btn btn-outline-secondary" type="button" @click="getResults">
+                        <i class="mdi mdi-magnify"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- 📋 Tableau des Trains -->
-        <div class="row">
-            <div class="col-lg-12 grid-margin stretch-card">
+         <div class="row">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <!-- Titre -->
-                        <div class="d-flex justify-content-between">
-                            <h4 class="card-title mb-0">Listes des Trains</h4>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="card-title mb-0">Liste des Trains</h4>
+                            <!-- ➕ Bouton de création -->
+                            <Link
+                                :href="route('train.create')"
+                                class="btn btn-primary btn-icon-text"
+                            >
+                                <Plus size="16" class="me-1" />
+                                Nouveaux Train
+                            </Link>
                         </div>
 
                         <!-- Message flash -->
@@ -105,25 +130,15 @@ const deleteTrain = (id) => {
                             {{ props.flash.success }}
                         </div>
 
-                        <!-- ➕ Bouton de création -->
-                        <div class="pt-4 pb-4">
-                            <Link
-                                type="button"
-                                :href="route('train.create')"
-                                class="btn btn-primary toolbar-item"
-                                >Nouveau Train</Link
-                            >
-                        </div>
-
                         <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
+                            <table class="table table-hover">
+                                <thead class="table-light">
                                     <tr>
                                         <th>#</th>
                                         <th>Numéro du Train</th>
                                         <th>Capacité(Personnes)</th>
                                         <th>Etat</th>
-                                        <th>Action</th>
+                                        <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -150,38 +165,55 @@ const deleteTrain = (id) => {
                                             </button>
                                         </td>
                                     </tr>
+                                    <tr v-if="trains.data.length === 0">
+                                        <td
+                                            colspan="8"
+                                            class="text-center py-4 text-muted"
+                                        >
+                                            Aucune vente trouvée
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
 
                         <!-- 📄 Pagination -->
-                        <nav class="mt-4">
-                            <ul class="pagination">
-                                <li
-                                    v-for="link in trains.links"
-                                    :key="link.label"
-                                    :class="[
-                                        'page-item',
-                                        {
-                                            active: link.active,
-                                            disabled: !link.url,
-                                        },
-                                    ]"
-                                >
-                                    <Link
-                                        v-if="link.url"
-                                        class="page-link"
-                                        :href="link.url"
-                                        v-html="link.label"
-                                    />
-                                    <span
-                                        v-else
-                                        class="page-link"
-                                        v-html="link.label"
-                                    ></span>
-                                </li>
-                            </ul>
-                        </nav>
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <p class="text-muted">
+                                    Affichage de {{ trains.from }} à
+                                    {{ trains.to }} sur
+                                    {{ trains.total }} ventes
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <nav class="float-end">
+                                    <ul class="pagination">
+                                        <li
+                                            v-for="link in trains.links"
+                                            :key="link.label"
+                                            class="page-item"
+                                            :class="{
+                                                active: link.active,
+                                                disabled: !link.url,
+                                            }"
+                                        >
+                                            <Link
+                                                v-if="link.url"
+                                                :href="link.url"
+                                                class="page-link"
+                                                v-html="link.label"
+                                            />
+                                            <span
+                                                v-else
+                                                class="page-link"
+                                                v-html="link.label"
+                                            ></span>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
