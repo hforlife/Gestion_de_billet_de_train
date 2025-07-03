@@ -2,26 +2,27 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, reactive, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
-import { Plus, Pencil, Trash, Eye, Search, Download } from "lucide-vue-next";
+import { Pencil, Trash, Plus } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
+// Props envoyées depuis le contrôleur
 const props = defineProps({
-    trains: Array,
+    categories: Object, // objet paginé
     filters: Object,
     flash: Object,
 });
 
-// 🔍 Filtres réactifs
+// Filtres réactifs
 const filters = reactive({
     search: props.filters.search || "",
 });
 
-// 🔍 Watch pour mise à jour auto lors de la recherche
+// Mise à jour automatique des résultats au changement du champ recherche
 watch(
     () => filters.search,
     (newValue) => {
         router.get(
-            route("train.index"),
+            route("categories-colis.index"),
             { search: newValue },
             {
                 preserveState: true,
@@ -31,16 +32,18 @@ watch(
     }
 );
 
-if (props.flash && props.flash.success) {
+// Message de succès
+if (props.flash?.success) {
     Swal.fire("Succès", props.flash.success, "success");
 }
 
-// Fonction pour rediriger vers la page d’édition avec l'ID
-const editTrain = (id) => {
-    router.visit(route("train.edit", id));
+// Redirection vers la page d’édition
+const editCategorie = (id) => {
+    router.visit(route("categories-colis.edit", id));
 };
 
-const deleteTrain = (id) => {
+// Suppression avec confirmation
+const deleteCategorie = (id) => {
     Swal.fire({
         title: "Êtes-vous sûr ?",
         text: "Cette action est irréversible !",
@@ -52,11 +55,11 @@ const deleteTrain = (id) => {
         cancelButtonText: "Annuler",
     }).then((result) => {
         if (result.isConfirmed) {
-            router.delete(route("train.destroy", id), {
+            router.delete(route("categories-colis.destroy", id), {
                 onSuccess: () => {
                     Swal.fire(
                         "Supprimé !",
-                        "Le Train a été supprimée avec succès.",
+                        "La catégorie de colis a été supprimée avec succès.",
                         "success"
                     );
                 },
@@ -68,93 +71,81 @@ const deleteTrain = (id) => {
 
 <template>
     <AppLayout>
-        <!-- 🧭 Titre -->
+        <!-- Titre de la page -->
         <div class="row page-title-header">
             <div class="col-12">
                 <div class="page-header">
-                    <h4 class="page-title">Gestion des Trains</h4>
+                    <h4 class="page-title">Catégories de Colis</h4>
                     <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
-                    <ul class="quick-links ml-auto">
-                     <li><a href="#">Tableau de bord</a></li>
-                      <li><a href="#">Trains </a></li>
-                    </ul>
-                  </div>
+                        <ul class="quick-links ml-auto">
+                            <li><a href="#">Tableau de bord</a></li>
+                            <li><a href="#">Catégories</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 🔍 Barre de recherche -->
+        <!-- Barre de recherche -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <div class="input-group">
                     <input
                         type="text"
                         v-model="filters.search"
-                        placeholder="Rechercher par client..."
+                        placeholder="Rechercher par nom de catégorie..."
                         class="form-control"
-                    >
-                    <button class="btn btn-outline-secondary" type="button" @click="getResults">
-                        <i class="mdi mdi-magnify"></i>
-                    </button>
+                    />
                 </div>
             </div>
         </div>
 
-        <!-- 📋 Tableau des Trains -->
-         <div class="row">
+        <!-- Tableau des catégories -->
+        <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
+                        <!-- En-tête -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 class="card-title mb-0">Liste des Trains</h4>
-                            <!-- ➕ Bouton de création -->
+                            <h4 class="card-title mb-0">Liste des Catégories</h4>
                             <Link
-                                :href="route('train.create')"
+                                :href="route('categories-colis.create')"
                                 class="btn btn-primary btn-icon-text"
                             >
                                 <Plus size="16" class="me-1" />
-                                Nouveaux Train
+                                Nouvelle Catégorie
                             </Link>
                         </div>
 
-                        <!-- Message flash -->
-                        <div
-                            v-if="props.flash.success"
-                            class="alert alert-success"
-                        >
-                            {{ props.flash.success }}
-                        </div>
-
+                        <!-- Tableau -->
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
                                         <th>#</th>
-                                        <th>Numéro du Train</th>
-                                        <th>Capacité(Personnes)</th>
-                                        <th>Etat</th>
-                                        <th class="text-center">Action</th>
+                                        <th>Nom</th>
+                                        <th>Description</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr
-                                        v-for="(train, index) in trains.data"
-                                        :key="train.id"
+                                        v-for="(categorie, index) in categories.data"
+                                        :key="categorie.id"
                                     >
-                                        <td class="py-1">{{ index + 1 }}</td>
-                                        <td>{{ train.numero }}</td>
-                                        <td>{{ train.capacite }}</td>
-                                        <td>{{ train.etat }}</td>
-                                        <td>
-                                            <div class="btn-group" role="group">
+                                        <td>{{ index + 1 }}</td>
+                                        <td>{{ categorie.nom }}</td>
+                                        <td>{{ categorie.description }}</td>
+                                        <td class="text-center">
+                                            <div class="btn-group">
                                                 <button
-                                                    @click="editTrain(train.id)"
+                                                    @click="editCategorie(categorie.id)"
                                                     class="btn btn-warning btn-sm"
                                                 >
                                                     <Pencil size="16" />
                                                 </button>
                                                 <button
-                                                    @click="deleteTrain(train.id)"
+                                                    @click="deleteCategorie(categorie.id)"
                                                     class="btn btn-danger btn-sm"
                                                 >
                                                     <Trash size="16" />
@@ -162,39 +153,32 @@ const deleteTrain = (id) => {
                                             </div>
                                         </td>
                                     </tr>
-
-                                    <tr v-if="trains.data.length === 0">
-                                        <td
-                                            colspan="8"
-                                            class="text-center py-4 text-muted"
-                                        >
-                                            Aucune vente trouvée
+                                    <tr v-if="categories.data.length === 0">
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            Aucune catégorie trouvée
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        <!-- 📄 Pagination -->
+                        <!-- Pagination -->
                         <div class="row mt-4">
                             <div class="col-md-6">
                                 <p class="text-muted">
-                                    Affichage de {{ trains.from }} à
-                                    {{ trains.to }} sur
-                                    {{ trains.total }} ventes
+                                    Affichage de {{ categories.from }} à
+                                    {{ categories.to }} sur
+                                    {{ categories.total }} catégories
                                 </p>
                             </div>
                             <div class="col-md-6">
                                 <nav class="float-end">
                                     <ul class="pagination">
                                         <li
-                                            v-for="link in trains.links"
+                                            v-for="link in categories.links"
                                             :key="link.label"
                                             class="page-item"
-                                            :class="{
-                                                active: link.active,
-                                                disabled: !link.url,
-                                            }"
+                                            :class="{ active: link.active, disabled: !link.url }"
                                         >
                                             <Link
                                                 v-if="link.url"
@@ -212,10 +196,10 @@ const deleteTrain = (id) => {
                                 </nav>
                             </div>
                         </div>
+                        <!-- Fin pagination -->
                     </div>
                 </div>
             </div>
-            <!-- Fin Tableau -->
         </div>
     </AppLayout>
 </template>

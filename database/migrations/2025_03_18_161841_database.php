@@ -5,8 +5,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up() {
-            Schema::create('gares', function (Blueprint $table) {
+    public function up()
+    {
+        Schema::create('gares', function (Blueprint $table) {
             $table->id();
             $table->string('nom');
             $table->string('adresse');
@@ -33,7 +34,7 @@ return new class extends Migration {
             $table->enum('statut', ['programmé', 'en_cours', 'terminé', 'annulé']);
             $table->timestamps();
         });
-        
+
         Schema::create('ventes', function (Blueprint $table) {
             $table->id();
             $table->string('client_nom')->nullable();
@@ -48,19 +49,28 @@ return new class extends Migration {
 
         Schema::create('bagages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('vente_id')->constrained()->onDelete('cascade');
+            $table->foreignId('vente_id')->constrained('ventes')->onDelete('cascade');
             $table->decimal('poids', 8, 2);
             $table->decimal('tarif', 10, 2);
             $table->string('description')->nullable();
             $table->timestamps();
         });
-        
+
+        Schema::create('categorie_colis', function (Blueprint $table) {
+            $table->id();
+            $table->string('nom')->unique();
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('colis', function (Blueprint $table) {
             $table->id();
             $table->string('user1');
             $table->string('user2');
             $table->decimal('poids', 8, 2);
             $table->decimal('tarif', 10, 2);
+            $table->foreignId('categorie_coli_id')->constrained('categorie_colis')->onDelete('cascade');
+            $table->string('description')->nullable();
             $table->enum('statut', ['enregistré', 'perdu', 'livré']);
             $table->timestamps();
         });
@@ -72,9 +82,21 @@ return new class extends Migration {
             $table->dateTime('date');
             $table->timestamps();
         });
+
+        Schema::create('parametres', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('categorie_id')->constrained('categorie_colis')->onDelete('cascade');
+            $table->decimal('poids_min');
+            $table->decimal('poids_max');
+            $table->decimal('prix_par_kg');
+            $table->timestamps();
+        });
+
+
     }
 
-    public function down() {
+    public function down()
+    {
         Schema::dropIfExists('rapports');
         Schema::dropIfExists('bagages');
         Schema::dropIfExists('colis');

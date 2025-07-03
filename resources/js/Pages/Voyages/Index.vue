@@ -128,7 +128,7 @@ const deleteVoyage = (id) => {
                                 Nouveaux Voyages
                             </Link>
                         </div>
-                        
+
                         <!-- Formulaire -->
                          <div class="table-responsive">
                             <table class="table table-hover">
@@ -163,20 +163,23 @@ const deleteVoyage = (id) => {
                                         <td>{{ voyage.prix }}</td>
                                         <td>{{ voyage.statut }}</td>
                                         <td>
-                                            <button
-                                                @click="editVoyage(voyage.id)"
-                                                class="btn btn-warning toolbar-item m-2"
-                                            >
-                                                <Pencil size="16" />
-                                            </button>
-                                            <button
-                                                @click="deleteVoyage(voyage.id)"
-                                                class="btn btn-danger toolbar-item"
-                                            >
-                                                <Trash size="16" />
-                                            </button>
+                                            <div class="btn-group">
+                                                <button
+                                                    @click="editVoyage(voyage.id)"
+                                                    class="btn btn-warning btn-sm"
+                                                >
+                                                    <Pencil size="16" />
+                                                </button>
+                                                <button
+                                                    @click="deleteVoyage(voyage.id)"
+                                                    class="btn btn-danger btn-sm"
+                                                >
+                                                    <Trash size="16" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
+
                                      <tr v-if="voyages.data.length === 0">
                                         <td
                                             colspan="8"

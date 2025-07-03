@@ -76,14 +76,9 @@ const deleteVente = (id) => {
                     <div
                         class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
                     >
-                        <ul class="quick-links">
-                            <li><a href="#">Dashboard</a></li>
-                            <li><a href="#">Ventes</a></li>
-                        </ul>
                         <ul class="quick-links ml-auto">
-                            <li><a href="#">Settings</a></li>
-                            <li><a href="#">Analytics</a></li>
-                            <li><a href="#">Watchlist</a></li>
+                            <li><a href="#">Tableau de bord</a></li>
+                            <li><a href="#">Ventes</a></li>
                         </ul>
                     </div>
                 </div>
@@ -211,7 +206,7 @@ const deleteVente = (id) => {
                                             <div class="btn-group" role="group">
                                                 <button
                                                     @click="showVente(vente.id)"
-                                                    class="btn btn-info btn-sm mx-1"
+                                                    class="btn btn-info btn-sm"
                                                     title="Voir détails"
                                                 >
                                                     <Eye size="16" />
@@ -223,7 +218,7 @@ const deleteVente = (id) => {
                                                             vente.id
                                                         )
                                                     "
-                                                    class="btn btn-warning btn-sm mx-1"
+                                                    class="btn btn-warning btn-sm"
                                                     title="Modifier"
                                                 >
                                                     <Pencil size="16" />
@@ -232,7 +227,7 @@ const deleteVente = (id) => {
                                                     @click="
                                                         deleteVente(vente.id)
                                                     "
-                                                    class="btn btn-danger btn-sm mx-1"
+                                                    class="btn btn-danger btn-sm"
                                                     title="Supprimer"
                                                 >
                                                     <Trash size="16" />
@@ -252,6 +247,7 @@ const deleteVente = (id) => {
                             </table>
                         </div>
 
+                        <!-- Pagination -->
                         <div class="row mt-4">
                             <div class="col-md-6">
                                 <p class="text-muted">

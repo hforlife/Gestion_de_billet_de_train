@@ -56,7 +56,7 @@ const submit = () => {
                             <option value="" disabled>-- Sélectionner un train --</option>
                             <option v-for="train in props.trains" :key="train.id" :value="train.id">{{ train.numero }}</option>
                         </select>
-                        <span v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</span>
+                        <span v-if="form.errors.train_id" class="text-red-500">{{ form.errors.train_id }}</span>
                     </div>
                     
 
@@ -67,7 +67,7 @@ const submit = () => {
                             <option value="" disabled>-- Sélectionner une gare de depart --</option>
                             <option v-for="gare in props.gares" :key="gare.id" :value="gare.id">{{ gare.nom }}</option>
                         </select>
-                        <span v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</span>
+                        <span v-if="form.errors.gare_depart_id" class="text-red-500">{{ form.errors.gare_depart_id }}</span>
                     </div>
 
                     <!-- Gare d'arrivée -->
@@ -77,28 +77,28 @@ const submit = () => {
                             <option value="" disabled>-- Sélectionner une gare d'arrivée --</option>
                             <option v-for="gare in props.gares" :key="gare.id" :value="gare.id">{{ gare.nom }}</option>
                         </select>
-                        <span v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</span>
+                        <span v-if="form.errors.gare_arrivee_id" class="text-red-500">{{ form.errors.gare_arrivee_id }}</span>
                     </div>
 
                     <!-- Date de départ -->
                     <div class="form-group">
                         <label>Date de  départ</label>
                         <input type="datetime-local" v-model="form.date_depart" class="form-control" required>
-                        <span v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</span>
+                        <span v-if="form.errors.date_depart" class="text-red-500">{{ form.errors.date_depart }}</span>
                     </div>
 
                     <!-- Date d'arrivée -->
                     <div class="form-group">
                         <label>Date d'arrivée</label>
                         <input type="datetime-local" v-model="form.date_arrivee" class="form-control" required>
-                        <span v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</span>
+                        <span v-if="form.errors.date_arrivee" class="text-red-500">{{ form.errors.date_arrivee }}</span>
                     </div>
 
                     <!-- Prix du voyage -->
                     <div class="form-group">
                         <label>Prix du voyage(FCFA)</label>
                         <input type="number" v-model="form.prix" class="form-control" placeholder="00.000" required>
-                        <span v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</span>
+                        <span v-if="form.errors.prix" class="text-red-500">{{ form.errors.prix }}</span>
                     </div>
 
                     <!-- statut -->
@@ -111,7 +111,7 @@ const submit = () => {
                             <option value="terminé">Terminé</option>
                             <option value="annulé">Annulé</option>
                         </select>
-                        <span v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</span>
+                        <span v-if="form.errors.statut" class="text-red-500">{{ form.errors.statut }}</span>
                     </div>
 
                     <!-- Boutons -->

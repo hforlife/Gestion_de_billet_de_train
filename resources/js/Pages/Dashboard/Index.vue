@@ -90,11 +90,18 @@ onMounted(() => {
 
 <template>
     <AppLayout>
-        <!-- Titre -->
+        <!-- 🧭 Titre -->
         <div class="row page-title-header">
             <div class="col-12">
                 <div class="page-header">
                     <h4 class="page-title">Tableau de bord</h4>
+                    <div
+                        class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
+                    >
+                        <ul class="quick-links ml-auto">
+                           <li><a href="#">Tableau de bord</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -119,7 +126,7 @@ onMounted(() => {
                                         </p>
                                     </div>
                                     <div class="wrapper my-auto ml-auto ml-lg-4">
-                                        <Bus size="70" color="#2196f3"/>
+                                        <Bus size="50" color="#2196f3"/>
                                     </div>
                                 </div>
                             </div>

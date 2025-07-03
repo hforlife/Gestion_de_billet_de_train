@@ -1,36 +1,62 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
-import { defineProps } from "vue";
+import { ref, computed, watch } from "vue";
 import Swal from "sweetalert2";
+import { defineProps } from "vue";
 
+// Props
+const props = defineProps({
+    categories: Array,
+    tarifs: Array, // les paramètres de tarif
+});
 
-// Initialisation du formulaire
+// Formulaire
 const form = useForm({
     user1: "",
     user2: "",
+    categorie_id: "",
     poids: "",
     tarif: "",
     statut: "",
 });
 
-defineProps({
-    errors: Object,
-});
+// Calcul automatique du tarif
+watch(() => form.poids, calculateTarif);
+watch(() => form.categorie_id, calculateTarif);
+
+
+
+function calculateTarif() {
+    const poids = parseFloat(form.poids);
+    const cat = props.categories.find(c => c.id === form.categorie_id);
+    if (!poids || poids <= 0 || !cat) {
+        form.tarif = '';
+        return;
+    }
+
+    const tarifRange = cat.tarifs.find(t => poids >= t.poids_min && poids <= t.poids_max);
+    if (tarifRange) {
+        form.tarif = poids * tarifRange.prix_par_kg;
+    } else {
+        form.tarif = '';
+    }
+}
+
 
 // Soumission
 const submit = () => {
     form.post(route("bagage.store"), {
         preserveScroll: true,
         onSuccess: () => {
-            Swal.fire("Succès", "Colis ajouté avec succès.", "success");
+            Swal.fire("Succès", "Colis enregistré avec succès.", "success");
+            form.reset();
         },
         onError: () => {
             Swal.fire("Erreur", "Merci de vérifier le formulaire.", "error");
         },
     });
 };
-
 </script>
 
 <template>
@@ -84,6 +110,32 @@ const submit = () => {
                                 ></div>
                             </div>
 
+                            <!-- Catégorie de colis -->
+                            <div class="form-group">
+                                <label for="categorie">Catégorie</label>
+                                <select
+                                    v-model="form.categorie_id"
+                                    class="form-control"
+                                >
+                                    <option value="" disabled>
+                                        -- Sélectionner une catégorie --
+                                    </option>
+                                    <option
+                                        v-for="cat in categories"
+                                        :key="cat.id"
+                                        :value="cat.id"
+                                    >
+                                        {{ cat.nom }}
+                                    </option>
+                                </select>
+                                <div
+                                    v-if="form.errors.categorie_id"
+                                    class="text-danger"
+                                >
+                                    {{ form.errors.categorie_id }}
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label for="poids">Poids du colis (Kg)</label>
                                 <input
@@ -101,21 +153,21 @@ const submit = () => {
                             </div>
 
                             <div class="form-group">
-                                <label for="tarif"
-                                    >Prix d'expédition (FCFA)</label
-                                >
+                                <label for="tarif">Tarif (FCFA)</label>
                                 <input
                                     type="number"
                                     id="tarif"
                                     class="form-control"
                                     v-model="form.tarif"
-                                    placeholder="Entrer Prix"
+                                    placeholder="Calcul automatique"
+                                    disabled
                                 />
                                 <div
                                     v-if="form.errors.tarif"
-                                    v-text="form.errors.tarif"
                                     class="text-danger"
-                                ></div>
+                                >
+                                    {{ form.errors.tarif }}
+                                </div>
                             </div>
 
                             <div class="form-group">

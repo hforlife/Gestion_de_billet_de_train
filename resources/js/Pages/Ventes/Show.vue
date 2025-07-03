@@ -3,7 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { router } from '@inertiajs/vue3';
 import { Link } from "@inertiajs/vue3";
 import { defineProps, computed } from "vue";
-import { Pencil, Trash, Eye } from "lucide-vue-next";
+import { Pencil, Trash, File } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
@@ -11,6 +11,10 @@ const props = defineProps({
         required: true
     }
 });
+
+const generateVente = (id) => {
+    window.open(route('vente.generate', id), '_blank');
+}
 
 const form = computed(() => ({
     client_nom: props.vente.client_nom || 'Non spécifié',
@@ -158,10 +162,12 @@ const confirmDelete = () => {
                     </div>
                 </div>
                 <!-- Boutton Modifier/Supprimer -->
-                <Link :href="route('vente.edit', vente.id )" class="btn btn-warning btn-sm m-1">
-                <Pencil size="16" />
-                </Link>
-                <button type="button" class="btn btn-danger" @click="confirmDelete"> <Trash size="16" /></button>
+                <div class="btn-group" role="group">
+                <Link :href="route('vente.edit', vente.id )" class="btn btn-warning btn-sm "><Pencil size="16" /></Link>
+                <button type="button" class="btn btn-danger btn-sm" @click="confirmDelete"> <Trash size="16" /></button>
+                <button @click="generateVente(vente.id)" title="Génerer billet" class="btn btn-success btn-sm" target="_blank"> <File size="16" /></button>
+                 </div>
+
             </div>
         </div>
     </AppLayout>

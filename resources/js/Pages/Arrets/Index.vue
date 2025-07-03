@@ -2,13 +2,13 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, reactive, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
-import { Plus, Pencil, Trash, Eye, Search, Download } from "lucide-vue-next";
+import { Pencil, Trash, Eye, Plus } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
-    trains: Array,
+    arrets: Object, // ✅ c’est un objet paginé, pas Array !
     filters: Object,
-    flash: Object,
+    flash: Object, // ✅ pour les messages flash
 });
 
 // 🔍 Filtres réactifs
@@ -21,7 +21,7 @@ watch(
     () => filters.search,
     (newValue) => {
         router.get(
-            route("train.index"),
+            route("arret.index"),
             { search: newValue },
             {
                 preserveState: true,
@@ -30,17 +30,17 @@ watch(
         );
     }
 );
-
+// Affichage du message flash
 if (props.flash && props.flash.success) {
     Swal.fire("Succès", props.flash.success, "success");
 }
-
 // Fonction pour rediriger vers la page d’édition avec l'ID
-const editTrain = (id) => {
-    router.visit(route("train.edit", id));
+const editArret = (id) => {
+    router.visit(route("arret.edit", id));
 };
 
-const deleteTrain = (id) => {
+// 🗑️ Suppression avec confirmation
+const deleteArret = (id) => {
     Swal.fire({
         title: "Êtes-vous sûr ?",
         text: "Cette action est irréversible !",
@@ -52,11 +52,11 @@ const deleteTrain = (id) => {
         cancelButtonText: "Annuler",
     }).then((result) => {
         if (result.isConfirmed) {
-            router.delete(route("train.destroy", id), {
+            router.delete(route("arret.destroy", id), {
                 onSuccess: () => {
                     Swal.fire(
                         "Supprimé !",
-                        "Le Train a été supprimée avec succès.",
+                        "L'arret a été supprimé avec succès.",
                         "success"
                     );
                 },
@@ -72,13 +72,15 @@ const deleteTrain = (id) => {
         <div class="row page-title-header">
             <div class="col-12">
                 <div class="page-header">
-                    <h4 class="page-title">Gestion des Trains</h4>
-                    <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
-                    <ul class="quick-links ml-auto">
-                     <li><a href="#">Tableau de bord</a></li>
-                      <li><a href="#">Trains </a></li>
-                    </ul>
-                  </div>
+                    <h4 class="page-title">Gestion des Arrets</h4>
+                    <div
+                        class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
+                    >
+                        <ul class="quick-links ml-auto">
+                            <li><a href="#">Tableau de bord</a></li>
+                            <li><a href="#">Arrets</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -90,30 +92,37 @@ const deleteTrain = (id) => {
                     <input
                         type="text"
                         v-model="filters.search"
-                        placeholder="Rechercher par client..."
+                        placeholder="Rechercher par nom expediteur ou destinataire..."
                         class="form-control"
+                    />
+                    <button
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        @click="getResults"
                     >
-                    <button class="btn btn-outline-secondary" type="button" @click="getResults">
                         <i class="mdi mdi-magnify"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 📋 Tableau des Trains -->
-         <div class="row">
+        <!-- 📋 Tableau des bagages -->
+        <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 class="card-title mb-0">Liste des Trains</h4>
-                            <!-- ➕ Bouton de création -->
+                        <!-- Titre -->
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-4"
+                        >
+                            <h4 class="card-title mb-0">Liste des Arrets</h4>
+                            <!-- ➕ Bouton création -->
                             <Link
-                                :href="route('train.create')"
+                                :href="route('arret.create')"
                                 class="btn btn-primary btn-icon-text"
                             >
                                 <Plus size="16" class="me-1" />
-                                Nouveaux Train
+                                Nouvel Arret
                             </Link>
                         </div>
 
@@ -125,36 +134,46 @@ const deleteTrain = (id) => {
                             {{ props.flash.success }}
                         </div>
 
+                        <!-- Formulaire -->
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
                                         <th>#</th>
-                                        <th>Numéro du Train</th>
-                                        <th>Capacité(Personnes)</th>
-                                        <th>Etat</th>
-                                        <th class="text-center">Action</th>
+                                        <th>Voyage</th>
+                                        <th>Gare</th>
+                                        <th>Heure de D'arrivée</th>
+                                        <th>Heure de Depart</th>
+                                        <th>Ordre</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr
-                                        v-for="(train, index) in trains.data"
-                                        :key="train.id"
+                                        v-for="(arret, index) in arrets.data"
+                                        :key="arret.id"
                                     >
                                         <td class="py-1">{{ index + 1 }}</td>
-                                        <td>{{ train.numero }}</td>
-                                        <td>{{ train.capacite }}</td>
-                                        <td>{{ train.etat }}</td>
+                                        <td>{{ arret.voyage.name }}</td>
+                                        <td>{{ arret.gare.nom }}</td>
+                                        <td>{{ arret.heure_arrivee }}</td>
+                                        <td>{{ arret.heure_depart }}</td>
+                                        <td>{{ arret.ordre }}</td>
+                                        <td>{{ arret.statut }}</td>
                                         <td>
-                                            <div class="btn-group" role="group">
+                                            <div class="btn-group">
                                                 <button
-                                                    @click="editTrain(train.id)"
+                                                    @click="
+                                                        editArret(arret.id)
+                                                    "
                                                     class="btn btn-warning btn-sm"
                                                 >
                                                     <Pencil size="16" />
                                                 </button>
                                                 <button
-                                                    @click="deleteTrain(train.id)"
+                                                    @click="
+                                                        deleteArret(arret.id)
+                                                    "
                                                     class="btn btn-danger btn-sm"
                                                 >
                                                     <Trash size="16" />
@@ -162,13 +181,12 @@ const deleteTrain = (id) => {
                                             </div>
                                         </td>
                                     </tr>
-
-                                    <tr v-if="trains.data.length === 0">
+                                    <tr v-if="arrets.data.length === 0">
                                         <td
                                             colspan="8"
                                             class="text-center py-4 text-muted"
                                         >
-                                            Aucune vente trouvée
+                                            Aucun arrets trouvé
                                         </td>
                                     </tr>
                                 </tbody>
@@ -179,16 +197,16 @@ const deleteTrain = (id) => {
                         <div class="row mt-4">
                             <div class="col-md-6">
                                 <p class="text-muted">
-                                    Affichage de {{ trains.from }} à
-                                    {{ trains.to }} sur
-                                    {{ trains.total }} ventes
+                                    Affichage de {{ arrets.from }} à
+                                    {{ arrets.to }} sur
+                                    {{ arrets.total }} arrets
                                 </p>
                             </div>
                             <div class="col-md-6">
                                 <nav class="float-end">
                                     <ul class="pagination">
                                         <li
-                                            v-for="link in trains.links"
+                                            v-for="link in arrets.links"
                                             :key="link.label"
                                             class="page-item"
                                             :class="{
@@ -212,10 +230,10 @@ const deleteTrain = (id) => {
                                 </nav>
                             </div>
                         </div>
+                        <!-- End Pagination -->
                     </div>
                 </div>
             </div>
-            <!-- Fin Tableau -->
         </div>
     </AppLayout>
 </template>

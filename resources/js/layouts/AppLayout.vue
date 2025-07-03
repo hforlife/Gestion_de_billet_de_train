@@ -2,6 +2,7 @@
 import { Link } from "@inertiajs/vue3";
 import { computed, onMounted, ref } from "vue";
 import { usePage } from "@inertiajs/vue3";
+import { Plus } from "lucide-vue-next";
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -99,6 +100,13 @@ onMounted(() => {
             </div>
 
             <div class="navbar-menu-wrapper d-flex align-items-center">
+                <Link
+                    :href="route('vente.create')"
+                    class="btn btn-primary btn-icon-text"
+                >
+                    Effectuer une Vente
+                    <!-- <Plus size="16" class="me-1" /> -->
+                </Link>
                 <ul class="navbar-nav ml-auto">
                     <!-- Dropdown Utilisateur -->
                     <li
@@ -125,12 +133,12 @@ onMounted(() => {
                             <div class="dropdown-header text-center">
                                 <center>
                                     <img
-                                    class="img-md rounded-circle"
-                                    src="/resources/js/assets/images/icon.png"
-                                    alt="Profile image"
+                                        class="img-md rounded-circle"
+                                        src="/resources/js/assets/images/icon.png"
+                                        alt="Profile image"
                                     />
                                 </center>
-                                
+
                                 <p class="mb-1 mt-3 font-weight-semibold">
                                     {{ user.name }}
                                 </p>
@@ -146,7 +154,7 @@ onMounted(() => {
                                 Mon Profil
                             </Link>
                             <Link
-                            as="button"
+                                as="button"
                                 method="post"
                                 :href="route('logout')"
                                 class="dropdown-item"
@@ -157,9 +165,9 @@ onMounted(() => {
                         </div>
                     </li>
                 </ul>
-                
+
                 <button
-                class="navbar-toggler navbar-toggler-right d-lg-none align-self-center"
+                    class="navbar-toggler navbar-toggler-right d-lg-none align-self-center"
                     type="button"
                     @click="toggleSidebar"
                 >
@@ -199,6 +207,7 @@ onMounted(() => {
 
                     <li class="nav-item nav-category">Menu Principal</li>
 
+                    <!-- Dashboard -->
                     <li class="nav-item">
                         <Link
                             class="nav-link"
@@ -210,6 +219,7 @@ onMounted(() => {
                         </Link>
                     </li>
 
+                    <!-- Ventes -->
                     <li class="nav-item">
                         <Link
                             class="nav-link"
@@ -223,21 +233,105 @@ onMounted(() => {
                         </Link>
                     </li>
 
+                    <!-- Gares/Arrets/Trains -->
                     <li class="nav-item">
-                        <Link
+                        <a
                             class="nav-link"
-                            :href="route('gare.index')"
-                            :class="{
-                                active: $page.url.startsWith('/gare'),
-                            }"
+                            data-toggle="collapse"
+                            href="#ui-basic"
+                            aria-expanded="false"
+                            aria-controls="ui-basic"
                         >
-                            <i class="menu-icon typcn typcn-user-outline"></i>
+                            <i class="menu-icon typcn typcn-coffee"></i>
                             <span class="menu-title">Gestion des Gares</span>
-                        </Link>
+                            <i class="menu-arrow"></i>
+                        </a>
+                        <div class="collapse" id="ui-basic">
+                            <ul class="nav flex-column sub-menu">
+                                <!-- Gares -->
+                                <li class="nav-item">
+                                    <!-- <a class="nav-link" href="pages/ui-features/buttons.html">Gares</a> -->
+                                    <Link
+                                        class="nav-link"
+                                        :href="route('gare.index')"
+                                        :class="{
+                                            active: $page.url.startsWith(
+                                                '/gare'
+                                            ),
+                                        }"
+                                    >
+                                        <i
+                                            class="menu-icon typcn typcn-user-outline"
+                                        ></i>
+                                        <span class="menu-title">Gares</span>
+                                    </Link>
+                                </li>
+
+                                <!-- Arrets -->
+                                <li class="nav-item">
+                                    <!-- <a class="nav-link" href="pages/ui-features/dropdowns.html">Arrets</a> -->
+                                    <Link
+                                        class="nav-link"
+                                        :href="route('arret.index')"
+                                        :class="{
+                                            active: $page.url.startsWith(
+                                                '/arret'
+                                            ),
+                                        }"
+                                    >
+                                        <i
+                                            class="menu-icon typcn typcn-user-outline"
+                                        ></i>
+                                        <span class="menu-title">Arrets</span>
+                                    </Link>
+                                </li>
+
+                                <!-- Trains -->
+                                <li class="nav-item">
+                                    <!-- <a class="nav-link" href="pages/ui-features/typography.html">Trains</a> -->
+                                    <Link
+                                        class="nav-link"
+                                        :href="route('train.index')"
+                                        :class="{
+                                            active: $page.url.startsWith(
+                                                '/train'
+                                            ),
+                                        }"
+                                    >
+                                        <i
+                                            class="menu-icon typcn typcn-bell"
+                                        ></i>
+                                        <span class="menu-title">Trains</span>
+                                    </Link>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
 
                     <li class="nav-item">
-                        <Link
+              <a class="nav-link" data-toggle="collapse" href="#ui-classic" aria-expanded="false" aria-controls="ui-classic">
+                <i class="menu-icon typcn typcn-coffee"></i>
+                <span class="menu-title">Gestion des Colis</span>
+                <i class="menu-arrow"></i>
+              </a>
+              <div class="collapse" id="ui-classic">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item">
+                   <Link
+                            class="nav-link"
+                            :href="route('categories-colis.index')"
+                            :class="{
+                                active: $page.url.startsWith('/categories-colis'),
+                            }"
+                        >
+                            <i
+                                class="menu-icon typcn typcn-th-large-outline"
+                            ></i>
+                            <span class="menu-title">Catégories de Colis</span>
+                        </Link>
+                  </li>
+                  <li class="nav-item">
+                    <Link
                             class="nav-link"
                             :href="route('bagage.index')"
                             :class="{
@@ -247,10 +341,14 @@ onMounted(() => {
                             <i
                                 class="menu-icon typcn typcn-th-large-outline"
                             ></i>
-                            <span class="menu-title">Gestion des Colis</span>
+                            <span class="menu-title">Colis</span>
                         </Link>
-                    </li>
+                  </li>
+                </ul>
+              </div>
+            </li>
 
+                    <!-- Voyages -->
                     <li class="nav-item">
                         <Link
                             class="nav-link"
@@ -264,19 +362,7 @@ onMounted(() => {
                         </Link>
                     </li>
 
-                    <li class="nav-item">
-                        <Link
-                            class="nav-link"
-                            :href="route('train.index')"
-                            :class="{
-                                active: $page.url.startsWith('/train'),
-                            }"
-                        >
-                            <i class="menu-icon typcn typcn-bell"></i>
-                            <span class="menu-title">Gestion des Trains</span>
-                        </Link>
-                    </li>
-
+                    <!-- Utilisateurs -->
                     <li class="nav-item">
                         <Link
                             class="nav-link"
@@ -288,6 +374,22 @@ onMounted(() => {
                             <i class="menu-icon typcn typcn-user-outline"></i>
                             <span class="menu-title"
                                 >Gestion des Utilisateurs</span
+                            >
+                        </Link>
+                    </li>
+
+                    <!-- Parametre -->
+                    <li class="nav-item">
+                        <Link
+                            class="nav-link"
+                            :class="{
+                                active: $page.url.startsWith('/setting'),
+                            }"
+                            :href="route('setting.index')"
+                        >
+                            <i class="menu-icon typcn typcn-user-outline"></i>
+                            <span class="menu-title"
+                                >Parametre</span
                             >
                         </Link>
                     </li>

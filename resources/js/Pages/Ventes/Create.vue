@@ -21,6 +21,7 @@ const form = useForm({
 const updatePrix = () => {
   const voyage = props.voyages.find(v => v.id === form.voyage_id);
   form.prix = voyage ? voyage.prix : '';
+  form.train_id = voyage ? voyage.train_id : '';
 };
 
 
@@ -34,6 +35,14 @@ const submit = () => {
                 timer: 2000
             });
         },
+        onError: (errors) => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'Nombre de place maximal atteint.',
+                showConfirmButton: true
+            });
+        }
     });
 };
 </script>
@@ -69,7 +78,7 @@ const submit = () => {
                     <!-- Train -->
                     <div class="form-group">
                         <label>Train</label>
-                        <select v-model="form.train_id" class="form-control">
+                        <select v-model="form.train_id" readonly class="form-control">
                             <option value="" disabled>-- Sélectionner un train --</option>
                             <option v-for="train in props.trains" :key="train.id" :value="train.id">{{ train.numero }}</option>
                         </select>

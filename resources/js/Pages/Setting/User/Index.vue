@@ -2,7 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, reactive, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
-import { Trash, Pencil } from "lucide-vue-next";
+import { Pencil, Trash, Eye, Plus } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
@@ -73,47 +73,61 @@ const deleteUsers = (id) => {
             <div class="col-12">
                 <div class="page-header">
                     <h4 class="page-title">Gestion des Utilisateurs</h4>
+                    <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
+                        <ul class="quick-links ml-auto">
+                           <li><a href="#">Tableau de bord</a></li>
+                            <li><a href="#">Utilisateurs</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- 🔍 Barre de recherche -->
-        <div class="input-group filter mb-3">
-            <input
-                type="text"
-                v-model="filters.search"
-                placeholder="Rechercher par nom..."
-                class="form-control"
-            />
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        v-model="filters.search"
+                        placeholder="Rechercher par nom..."
+                        class="form-control"
+                    />
+                    <button
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        @click="getResults"
+                    >
+                        <i class="mdi mdi-magnify"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- 📋 Tableau des bagages -->
-        <div class="row">
-            <div class="col-lg-12 grid-margin stretch-card">
+         <div class="row">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-body">
                         <!-- Titre -->
-                        <div class="d-flex justify-content-between">
-                            <h4 class="card-title mb-0">
-                                Liste des Utilisateurs
-                            </h4>
-                        </div>
-
-                        <!-- ➕ Bouton création -->
-                        <div class="pt-4 pb-4">
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-4"
+                        >
+                            <h4 class="card-title mb-0">Liste des Utilisateur</h4>
+                            <!-- ➕ Bouton création -->
                             <Link
-                                type="button"
                                 :href="route('user.create')"
-                                class="btn btn-primary toolbar-item mt-3"
+                                class="btn btn-primary btn-icon-text"
                             >
-                                Nouvel Utilisateur
+                                <Plus size="16" class="me-1" />
+                                Nouvelle Vente
                             </Link>
                         </div>
 
                         <!-- Formulaire -->
                         <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
+                            <table class="table table-hover">
+                                <thead class="table-light">
                                     <tr>
                                         <th>#</th>
                                         <th>Nom</th>
@@ -145,6 +159,14 @@ const deleteUsers = (id) => {
                                             >
                                                 <Trash size="16" />
                                             </button>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="users.data.length === 0">
+                                        <td
+                                            colspan="8"
+                                            class="text-center py-4 text-muted"
+                                        >
+                                            Aucun utilisteur trouvée
                                         </td>
                                     </tr>
                                 </tbody>

@@ -1,85 +1,82 @@
 <script setup>
-import AppLayout from "@/layouts/AppLayout.vue";
-import { ref } from "vue";
+import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 // Initialisation du formulaire
 const form = useForm({
     nom: "",
-    adresse: "",
+    description: "",
 });
 
-const { errors } = form;
-
-// Fonction d'envoi du formulaire
+// Soumission
 const submit = () => {
-    form.post(route("gare.store"), {
+    form.post(route("categories-colis.store"), {
+        preserveScroll: true,
         onSuccess: () => {
-            Swal.fire("Succès", "Gare ajoutée avec succès.", "success");
+            Swal.fire("Succès", "Catégorie ajoutée avec succès.", "success");
+            form.reset();
         },
         onError: () => {
-            Swal.fire(
-                "Erreur",
-                "Merci de vérifier les champs du formulaire.",
-                "error"
-            );
+            Swal.fire("Erreur", "Merci de vérifier le formulaire.", "error");
         },
     });
 };
 </script>
+
 <template>
     <AppLayout>
-        <!-- Page Title Header Starts-->
+        <!-- Titre -->
         <div class="row page-title-header">
             <div class="col-12">
                 <div class="page-header">
-                    <h4 class="page-title">Nouvelle Gare</h4>
+                    <h4 class="page-title">Ajouter une Catégorie de Colis</h4>
                 </div>
             </div>
         </div>
-        <!-- Page Title Header Ends-->
-        <div></div>
-        <!-- Fromulaire -->
+        <!-- Fin Titre -->
+
+        <!-- Formulaire -->
         <div class="row flex-grow">
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title">Formulaire Gare</h4>
-                        <!-- <p class="card-description"> Basic form layout </p> -->
+                        <h4 class="card-title">Formulaire</h4>
                         <form class="forms-sample" @submit.prevent="submit">
+                            <!-- Nom -->
                             <div class="form-group">
-                                <label for="nom">Nom de la gare</label>
+                                <label for="nom">Nom de la catégorie</label>
                                 <input
                                     type="text"
-                                    class="form-control"
                                     id="nom"
-                                    v-model="form.nom"
-                                    placeholder="Entrer Nom..."
-                                />
-                                <span
-                                    v-if="form.errors.nom"
-                                    class="text-red-500"
-                                    >{{ form.errors.nom }}</span
-                                >
-                            </div>
-
-                            <div class="form-group">
-                                <label for="adresse">Adresse de la gare</label>
-                                <input
-                                    type="text"
                                     class="form-control"
-                                    id="adresse"
-                                    v-model="form.adresse"
-                                    placeholder="Entrer Adresse..."
+                                    v-model="form.nom"
+                                    placeholder="Ex: Petit colis, Volumineux..."
                                 />
-                                <span
-                                    v-if="form.errors.adresse"
-                                    class="text-red-500"
-                                    >{{ form.errors.adresse }}</span
-                                >
+                                <div
+                                    v-if="form.errors.nom"
+                                    class="text-danger"
+                                    v-text="form.errors.nom"
+                                />
                             </div>
 
+                            <!-- Description -->
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea
+                                    id="description"
+                                    class="form-control"
+                                    v-model="form.description"
+                                    placeholder="Description facultative"
+                                ></textarea>
+                                <div
+                                    v-if="form.errors.description"
+                                    class="text-danger"
+                                    v-text="form.errors.description"
+                                />
+                            </div>
+
+                            <!-- Boutons -->
                             <div class="d-flex justify-content-end mt-4">
                                 <button
                                     type="reset"
@@ -99,11 +96,7 @@ const submit = () => {
                                         role="status"
                                         aria-hidden="true"
                                     ></span>
-                                    {{
-                                        form.processing
-                                            ? "En cours..."
-                                            : "Valider"
-                                    }}
+                                    {{ form.processing ? "En cours..." : "Valider" }}
                                 </button>
                             </div>
                         </form>
@@ -111,6 +104,5 @@ const submit = () => {
                 </div>
             </div>
         </div>
-        <!-- Fin Formulaire -->
     </AppLayout>
 </template>

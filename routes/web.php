@@ -2,13 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
+    ArretController,
+    BilletController,
     ColisController,
     DashboardController,
     GareController,
     TrainController,
     VenteController,
     VoyageController,
-    UserController
+    UserController,
+    CategorieColisController,
+    ParametreController
 };
 
 Route::get('/', function () {
@@ -25,7 +29,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Routes pour caissiers, chefs et admin
 Route::middleware(['auth', 'role:admin|chef|caissier'])->group(function () {
-    Route::prefix('vente')->group(function () {
+    Route::prefix('/vente')->group(function () {
         Route::get('/', [VenteController::class, 'index'])->name('vente.index');
         Route::get('/create', [VenteController::class, 'create'])->name('vente.create');
         Route::post('/store', [VenteController::class, 'store'])->name('vente.store');
@@ -33,22 +37,25 @@ Route::middleware(['auth', 'role:admin|chef|caissier'])->group(function () {
         Route::get('/{id}/edit', [VenteController::class, 'edit'])->name('vente.edit');
         Route::put('/{vente}', [VenteController::class, 'update'])->name('vente.update');
         Route::delete('/{id}', [VenteController::class, 'destroy'])->name('vente.destroy');
-        Route::get('/{id}/billet', [VenteController::class, 'generateBillet'])->name('vente.billet');
     });
 
-    Route::resource('bagage', ColisController::class)->except(['show']);
+    Route::get('/billet/{id}', [BilletController::class, 'generateBillet'])->name('vente.generate');
+    Route::resource('/bagage', ColisController::class)->except(['show']);
 });
 
 // Routes pour chefs et admin seulement
 Route::middleware(['auth', 'role:admin|chef'])->group(function () {
-    Route::resource('train', TrainController::class)->except(['show']);
-    Route::resource('gare', GareController::class)->except(['show']);
-    Route::resource('voyage', VoyageController::class)->except(['show']);
+    Route::resource('/train', TrainController::class)->except(['show']);
+    Route::resource('/gare', GareController::class)->except(['show']);
+    Route::resource('/voyage', VoyageController::class)->except(['show']);
+    Route::resource('/arret', ArretController::class)->except(['show']);
+    Route::resource('/categories-colis', CategorieColisController::class)->except(['show']);
+    Route::resource('/setting', ParametreController::class)->except(['show']);
 });
 
 // Routes réservées à l'admin
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::resource('user', UserController::class)->except(['show']);
+    Route::resource('/user', UserController::class)->except(['show']);
 });
 
 require __DIR__ . '/auth.php';
