@@ -181,6 +181,13 @@ const deleteVente = (id) => {
                                                     : "---"
                                             }}
                                         </td>
+                                        <td class="text-end">
+                                            {{
+                                                vente.quantite
+                                                    ? `${vente.quantite} Billets`
+                                                    : "---"
+                                            }}
+                                        </td>
                                         <td>
                                             <span
                                                 :class="{

@@ -93,7 +93,7 @@ const submit = () => {
                     <!-- Quantité -->
                     <div class="form-group">
                         <label>Quantité de billet</label>
-                        <input type="number" v-model="form.quantite" readonly class="form-control" />
+                        <input type="number" v-model="form.quantite"  class="form-control" />
                     </div>
 
                     <!-- Bagages -->
