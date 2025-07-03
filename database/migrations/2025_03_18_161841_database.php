@@ -41,6 +41,7 @@ return new class extends Migration {
             $table->foreignId('voyage_id')->constrained('voyages')->onDelete('cascade');
             $table->foreignId('train_id')->constrained('trains')->onDelete('cascade');
             $table->decimal('prix', 8, 2);
+            $table->integer('quantite')->default(1);
             $table->boolean('bagage')->default(false);
             $table->decimal('poids_bagage', 8, 2);
             $table->enum('statut', ['payé', 'annulé', 'réservé'])->default('payé');

@@ -59,6 +59,7 @@ class VenteController extends Controller
             'voyage_id' => 'required|exists:voyages,id',
             'train_id' => 'required|exists:trains,id',
             'prix' => 'required|numeric|min:0',
+            'quantite' => 'required|numeric|min:0',
             'bagage' => 'boolean',
             'poids_bagage' => 'nullable|numeric|min:0|required_if:bagage,true',
         ]);
@@ -82,6 +83,7 @@ class VenteController extends Controller
             'voyage_id' => $validated['voyage_id'],
             'train_id' => $validated['train_id'],
             'prix' => $validated['prix'],
+            'quantite' => $validated['quantite'],
             'bagage' => $validated['bagage'],
             'poids_bagage' => $validated['bagage'] ? $validated['poids_bagage'] : 0,
         ]);
@@ -120,6 +122,7 @@ class VenteController extends Controller
             'voyage_id' => 'required|exists:voyages,id',
             'train_id' => 'required|exists:trains,id',
             'prix' => 'required|numeric|min:0',
+            'quantite' => 'required|numeric|min:0',
             'bagage' => 'boolean',
             'poids_bagage' => 'nullable|numeric|min:0|required_if:bagage,true',
         ]);
