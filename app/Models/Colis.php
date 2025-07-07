@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Http\Controllers\CategorieColisController;
+use App\Http\Controllers\categorieColisController;
 use Illuminate\Database\Eloquent\Model;
 
 class Colis extends Model
@@ -13,7 +13,7 @@ class Colis extends Model
         'user2',
         'poids',
         'tarif',
-        'categorie_coli_id',
+        'categorie_colis_id',
         'description',
         'statut',
     ];
@@ -26,9 +26,9 @@ class Colis extends Model
         });
     });
 }
-    public function categorieColi()
+    public function categorieColis()
     {
-        return $this->belongsTo(CategorieColis::class);
+        return $this->belongsTo(categorieColis::class, 'categorie_colis_id');
     }
 
 

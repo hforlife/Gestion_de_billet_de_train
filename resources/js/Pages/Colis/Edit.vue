@@ -16,7 +16,7 @@ const form = useForm({
     poids: props.colis?.poids ?? '',
     tarif: props.colis?.tarif ?? '',
     statut: props.colis?.statut ?? '',
-    categorie_coli_id: props.colis?.categorie_coli_id ?? '',
+    categorie_colis_id: props.colis?.categorie_colis_id ?? '',
 });
 
 const { errors } = form;
@@ -132,7 +132,7 @@ const submit = () => {
                                 <label for="categorie">Catégorie</label>
                                 <select
                                     class="form-control"
-                                    v-model="form.categorie_coli_id"
+                                    v-model="form.categorie_colis_id"
                                     id="categorie"
                                     required
                                 >
@@ -145,7 +145,7 @@ const submit = () => {
                                         {{ cat.nom || cat.name }}
                                     </option>
                                 </select>
-                                <div v-if="errors.categorie_coli_id" class="text-danger">{{ errors.categorie_coli_id }}</div>
+                                <div v-if="errors.categorie_colis_id" class="text-danger">{{ errors.categorie_colis_id }}</div>
                             </div>
 
                             <div class="d-flex justify-content-end mt-4">

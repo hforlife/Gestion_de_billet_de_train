@@ -15,7 +15,7 @@ const props = defineProps({
 const form = useForm({
     user1: "",
     user2: "",
-    categorie_id: "",
+    categorie_colis_id: "",
     poids: "",
     tarif: "",
     statut: "",
@@ -23,13 +23,13 @@ const form = useForm({
 
 // Calcul automatique du tarif
 watch(() => form.poids, calculateTarif);
-watch(() => form.categorie_id, calculateTarif);
+watch(() => form.categorie_colis_id, calculateTarif);
 
 
 
 function calculateTarif() {
     const poids = parseFloat(form.poids);
-    const cat = props.categories.find(c => c.id === form.categorie_id);
+    const cat = props.categories.find(c => c.id === form.categorie_colis_id);
     if (!poids || poids <= 0 || !cat) {
         form.tarif = '';
         return;
@@ -114,7 +114,7 @@ const submit = () => {
                             <div class="form-group">
                                 <label for="categorie">Catégorie</label>
                                 <select
-                                    v-model="form.categorie_id"
+                                    v-model="form.categorie_colis_id"
                                     class="form-control"
                                 >
                                     <option value="" disabled>
@@ -129,10 +129,10 @@ const submit = () => {
                                     </option>
                                 </select>
                                 <div
-                                    v-if="form.errors.categorie_id"
+                                    v-if="form.errors.categorie_colis_id"
                                     class="text-danger"
                                 >
-                                    {{ form.errors.categorie_id }}
+                                    {{ form.errors.categorie_colis_id }}
                                 </div>
                             </div>
 

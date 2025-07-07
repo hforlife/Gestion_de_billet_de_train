@@ -12,6 +12,11 @@ class Trains extends Model
         'capacite',
         'etat'
     ];
+
+    public function wagons() {
+    return $this->hasMany(Wagons::class);
+}
+
     public function scopeFilter($query, array $filters)
 {
     $query->when($filters['search'] ?? null, function ($query, $search) {

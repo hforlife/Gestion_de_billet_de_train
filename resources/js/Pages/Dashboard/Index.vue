@@ -126,7 +126,7 @@ onMounted(() => {
                                         </p>
                                     </div>
                                     <div class="wrapper my-auto ml-auto ml-lg-4">
-                                        <Bus size="50" color="#2196f3"/>
+                                        <Bus size="50" color="#2aab45"/>
                                     </div>
                                 </div>
                             </div>
@@ -144,7 +144,7 @@ onMounted(() => {
                                         </p>
                                     </div>
                                     <div class="wrapper my-auto ml-auto ml-lg-4">
-                                        <Landmark size="60" color="#2196f3"/>
+                                        <Landmark size="60" color="#2aab45"/>
                                     </div>
                                 </div>
                             </div>
@@ -162,7 +162,7 @@ onMounted(() => {
                                         </p>
                                     </div>
                                     <div class="wrapper my-auto ml-auto ml-lg-4">
-                                        <TramFront color="#2196f3" size="60"/>
+                                        <TramFront color="#2aab45" size="60"/>
                                     </div>
                                 </div>
                             </div>
@@ -180,7 +180,7 @@ onMounted(() => {
                                         </p>
                                     </div>
                                     <div class="wrapper my-auto ml-auto ml-lg-4">
-                                        <Layers color="#2196f3" size="60"/>
+                                        <Layers color="#2aab45" size="60"/>
                                     </div>
                                 </div>
                             </div>

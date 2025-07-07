@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use Illuminate\Http\Request;
-use App\Models\CategorieColis;
+use App\Models\categorieColis;
 
-class CategorieColisController extends Controller
+class categorieColisController extends Controller
 {
     //
 
@@ -14,7 +14,7 @@ class CategorieColisController extends Controller
     {
         return Inertia::render('Colis/CategoriesColis/Index', [
             'filters' => $request->only('search'),
-            'categories' => CategorieColis::orderBy('nom')
+            'categories' => categorieColis::orderBy('nom')
                 ->filter($request->only('search'))
                 ->paginate(10)
                 ->withQueryString()
@@ -39,12 +39,12 @@ class CategorieColisController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        CategorieColis::create($request->only('nom', 'description'));
+        categorieColis::create($request->only('nom', 'description'));
 
         return redirect()->route('categories-colis.index')->with('success', 'Catégorie ajoutée avec succès.');
     }
 
-    public function edit(CategorieColis $categories_coli)
+    public function edit(categorieColis $categories_coli)
     {
         return Inertia::render('Colis/CategoriesColis/Edit', [
             'categorie' => [
@@ -55,7 +55,7 @@ class CategorieColisController extends Controller
         ]);
     }
 
-    public function update(Request $request, CategorieColis $categories_coli)
+    public function update(Request $request, categorieColis $categories_coli)
     {
         $request->validate([
             'nom' => 'required|unique:categorie_colis,nom,' . $categories_coli->id,
@@ -67,7 +67,7 @@ class CategorieColisController extends Controller
         return redirect()->route('categories-colis.index')->with('success', 'Catégorie modifiée.');
     }
 
-    public function destroy(CategorieColis $categories_coli)
+    public function destroy(categorieColis $categories_coli)
     {
         $categories_coli->delete();
 

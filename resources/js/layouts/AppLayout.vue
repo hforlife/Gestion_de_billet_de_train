@@ -304,6 +304,25 @@ onMounted(() => {
                                         <span class="menu-title">Trains</span>
                                     </Link>
                                 </li>
+
+                                <!-- Wagons -->
+                                <li class="nav-item">
+                                    <!-- <a class="nav-link" href="pages/ui-features/typography.html">Trains</a> -->
+                                    <Link
+                                        class="nav-link"
+                                        :href="route('wagon.index')"
+                                        :class="{
+                                            active: $page.url.startsWith(
+                                                '/wagon'
+                                            ),
+                                        }"
+                                    >
+                                        <i
+                                            class="menu-icon typcn typcn-bell"
+                                        ></i>
+                                        <span class="menu-title">Wagons</span>
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
                     </li>

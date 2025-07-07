@@ -15,6 +15,7 @@ const form = useForm({
     voyage_id: props.ventes?.voyage_id || '',
     train_id: props.ventes?.train_id || '',
     prix: props.ventes?.prix || '',
+    quantite: props.ventes?.quantite || '',
     bagage: props.ventes?.bagage || '',
     poids_bagage: props.ventes?.poids_bagage || '',
 });
@@ -78,6 +79,12 @@ const submit = () => {
                     <!-- Prix -->
                     <div class="form-group">
                         <label>Prix du billet</label>
+                        <input type="number" v-model="form.prix" :message="form.errors.prix" readonly class="form-control" />
+                    </div>
+
+                    <!-- Prix -->
+                    <div class="form-group">
+                        <label>Quantite de billet</label>
                         <input type="number" v-model="form.prix" :message="form.errors.prix" readonly class="form-control" />
                     </div>
 

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CategorieColis;
+use App\Models\categorieColis;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\Parametres;
@@ -15,7 +15,7 @@ class ParametreController extends Controller
     {
         return Inertia::render('Setting/Parametre/Index', [
             'parametres' => Parametres::orderBy('poids_min')->get(),
-            'categories' => CategorieColis::all()->map(fn($cat) => [
+            'categories' => categorieColis::all()->map(fn($cat) => [
                 'id' => $cat->id,
                 'nom' => $cat->nom,
                 'description' => $cat->description,

@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CategorieColis extends Model
+class categorieColis extends Model
 {
     //
     protected $fillable = ['nom', 'description'];
@@ -20,7 +20,7 @@ class CategorieColis extends Model
 }
 
 
-    // app/Models/CategorieColis.php
+    // app/Models/categorieColis.php
     public function scopeFilter($query, array $filters)
     {
         if (!empty($filters['search'])) {

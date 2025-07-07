@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CategorieColis;
+use App\Models\categorieColis;
 use App\Models\Colis;
 use App\Models\Parametres;
 use Illuminate\Http\Request;
@@ -30,7 +30,7 @@ class ColisController extends Controller
                     'poids' => $bagage->poids,
                     'tarif' => $bagage->tarif,
                     'statut' => $bagage->statut,
-                    'categorie_coli_id' => $bagage->categorie_coli_id, 
+                    'categorie_colis_id' => $bagage->categorie_colis_id, 
                 ]),
         ]);
     }
@@ -38,7 +38,7 @@ class ColisController extends Controller
     // Formulaire de création
     public function create(): Response {
     return Inertia::render('Colis/Create', [
-        'categories' => CategorieColis::with('parametres')->get()->map(fn ($cat) => [
+        'categories' => categorieColis::with('parametres')->get()->map(fn ($cat) => [
             'id' => $cat->id,
             'nom' => $cat->nom,
             'tarifs' => $cat->parametres->map(fn ($p) => [
@@ -57,12 +57,13 @@ public function store(Request $request)
     $validated = $request->validate([
         'user1' => ['required'],
         'user2' => ['required'],
-        'categorie_id' => ['required', 'exists:categorie_colis,id'],
+        'categorie_colis_id' => ['required', 'exists:categorie_colis,id'],
         'poids' => ['required', 'numeric'],
         'tarif' => ['required', 'numeric'],
         'statut' => ['required'],
     ]);
 
+    // dd($validated);
     Colis::create($validated);
 
     return Redirect::route('bagage.index')->with('success', 'Ajout effectué avec succès');
@@ -76,7 +77,7 @@ public function store(Request $request)
 
         return Inertia::render('Colis/Edit', [
             'colis' => $item,
-            'categories' => CategorieColis::all()->map(fn($cat) => [
+            'categories' => categorieColis::all()->map(fn($cat) => [
                 'id' => $cat->id,
                 'nom' => $cat->nom,
             ]),
@@ -89,7 +90,7 @@ public function store(Request $request)
         $validated = $request->validate([
             'user1' => ['required', 'string'],
             'user2' => ['required', 'string'],
-            'categorie_coli_id' => ['required', 'exists:categorie_colis,id'], // ✅ corrigé
+            'categorie_colis_id' => ['required', 'exists:categorie_colis,id'], // ✅ corrigé
             'poids' => ['required', 'numeric'],
             'tarif' => ['required', 'numeric'],
             'statut' => ['required'],

@@ -11,7 +11,7 @@ class Parametres extends Model
 
     public function categorie()
 {
-    return $this->belongsTo(CategorieColis::class);
+    return $this->belongsTo(categorieColis::class);
 }
 
 }

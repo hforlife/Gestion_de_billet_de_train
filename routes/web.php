@@ -8,10 +8,11 @@ use App\Http\Controllers\{
     DashboardController,
     GareController,
     TrainController,
+    WagonController,
     VenteController,
     VoyageController,
     UserController,
-    CategorieColisController,
+    categorieColisController,
     ParametreController
 };
 
@@ -46,10 +47,11 @@ Route::middleware(['auth', 'role:admin|chef|caissier'])->group(function () {
 // Routes pour chefs et admin seulement
 Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/train', TrainController::class)->except(['show']);
+    Route::resource('/wagon', WagonController::class)->except(['show']);
     Route::resource('/gare', GareController::class)->except(['show']);
     Route::resource('/voyage', VoyageController::class)->except(['show']);
     Route::resource('/arret', ArretController::class)->except(['show']);
-    Route::resource('/categories-colis', CategorieColisController::class)->except(['show']);
+    Route::resource('/categories-colis', categorieColisController::class)->except(['show']);
     Route::resource('/setting', ParametreController::class)->except(['show']);
 });
 

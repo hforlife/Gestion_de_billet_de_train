@@ -22,6 +22,14 @@ return new class extends Migration {
             $table->timestamps();
         });
 
+        Schema::create('wagons', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('train_id')->constrained('trains')->onDelete('cascade');
+            $table->string('nom'); // Ex: Wagon A, B, etc.
+            $table->integer('nombre_places');
+            $table->timestamps();
+        });
+
         Schema::create('voyages', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -44,6 +52,8 @@ return new class extends Migration {
             $table->integer('quantite')->default(1);
             $table->boolean('bagage')->default(false);
             $table->decimal('poids_bagage', 8, 2);
+            $table->string('numero_place')->nullable();
+            $table->foreignId('wagon_id')->nullable()->constrained()->onDelete('set null');
             $table->enum('statut', ['payé', 'annulé', 'réservé'])->default('payé');
             $table->timestamps();
         });
@@ -70,7 +80,7 @@ return new class extends Migration {
             $table->string('user2');
             $table->decimal('poids', 8, 2);
             $table->decimal('tarif', 10, 2);
-            $table->foreignId('categorie_coli_id')->constrained('categorie_colis')->onDelete('cascade');
+            $table->foreignId('categorie_colis_id')->constrained('categorie_colis')->onDelete('cascade');
             $table->string('description')->nullable();
             $table->enum('statut', ['enregistré', 'perdu', 'livré']);
             $table->timestamps();

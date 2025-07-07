@@ -148,6 +148,7 @@ const deleteVente = (id) => {
                                         <th>Train</th>
                                         <th class="text-end">Prix</th>
                                         <th>Bagage</th>
+                                        <th class="text-end">Quantité</th>
                                         <th class="text-end">Poids</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
