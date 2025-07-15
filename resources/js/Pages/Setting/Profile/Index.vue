@@ -1,9 +1,6 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import { defineProps, reactive, watch } from "vue";
-import { router, Link } from "@inertiajs/vue3";
-import { Pencil, Trash, Eye } from "lucide-vue-next";
-import Swal from "sweetalert2";
+import { defineProps } from "vue";
 
 const props = defineProps({
     user: Object,
@@ -12,96 +9,86 @@ const props = defineProps({
 
 <template>
     <AppLayout>
-        <div class="row page-title-header">
+        <!-- Titre de page -->
+        <div class="row page-title-header mb-4">
             <div class="col-12">
                 <div class="page-header">
-                    <h4 class="page-title">Profil Utilisateur</h4>
+                    <h4 class="page-title">Profil de {{ user.name }}</h4>
                 </div>
             </div>
         </div>
 
+        <!-- Contenu principal -->
         <div class="container">
-            <div class="main-body">
-                <div class="row gutters-sm">
-                    <div class="col-md-4 mb-3">
-                        <div class="card">
-                            <div class="card-body">
-                                <div
-                                    class="d-flex flex-column align-items-center text-center"
-                                >
-                                    <img
-                                        src="/resources/js/assets/images/icon.png"
+            <div class="row">
+                <!-- 📸 Carte Avatar -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body text-center">
+                            <center>
+                                <img
+                                        src="/resources/js/assets/images/user-icon.png"
                                         alt="Admin"
                                         class="rounded-circle"
                                         width="150"
                                     />
-                                    <div class="mt-3">
-                                        <h4>{{ user.name }}</h4>
-                                        <p
-                                            class="text-secondary mb-1"
-                                            v-for="role in user.roles"
-                                            :key="role"
-                                        >
-                                            {{ role }}
-                                        </p>
-                                        <p class="text-muted font-size-sm">
-                                            {{ user.email }}
-                                        </p>
-                                        <!-- <button class="btn btn-primary mr-1">
-                                            Follow
-                                        </button>
-                                        <button class="btn btn-outline-primary">
-                                            Message
-                                        </button> -->
-                                    </div>
-                                </div>
-                            </div>
+                             </center>
+                            <h5 class="card-title">{{ user.name }}</h5>
+                            <p
+                                v-for="role in user.roles"
+                                :key="role"
+                                class="badge bg-primary mb-1"
+                            >
+                                {{ role }}
+                            </p>
+                            <p class="text-muted">{{ user.email }}</p>
                         </div>
                     </div>
-                    <div class="col-md-8">
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-sm-3">
-                                        <h6 class="mb-0">Nom Utilisateur</h6>
-                                    </div>
-                                    <div class="col-sm-9 text-secondary">
-                                        {{ user.name }}
-                                    </div>
-                                </div>
-                                <hr />
-                                <div class="row">
-                                    <div class="col-sm-3">
-                                        <h6 class="mb-0">Email</h6>
-                                    </div>
-                                    <div class="col-sm-9 text-secondary">
-                                        {{ user.email }}
-                                    </div>
-                                </div>
-                                <hr />
-                                <div class="row">
-                                    <div class="col-sm-3">
-                                        <h6 class="mb-0">Rôle</h6>
-                                    </div>
-                                    <div
-                                        class="col-sm-9 text-secondary"
+                </div>
+
+                <!-- 📄 Infos personnelles -->
+                <div class="col-md-8">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Informations personnelles</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3 row">
+                                <label class="col-sm-4 col-form-label fw-bold"
+                                    >Nom :</label
+                                >
+                                <div class="col-sm-8">{{ user.name }}</div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label class="col-sm-4 col-form-label fw-bold"
+                                    >Email :</label
+                                >
+                                <div class="col-sm-8">{{ user.email }}</div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label class="col-sm-4 col-form-label fw-bold"
+                                    >Rôle(s) :</label
+                                >
+                                <div class="col-sm-8">
+                                    <span
                                         v-for="role in user.roles"
                                         :key="role"
+                                        class="badge bg-secondary me-2"
                                     >
                                         {{ role }}
-                                    </div>
+                                    </span>
                                 </div>
-                                <hr />
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <a
-                                            class="btn btn-info"
-                                            target="__blank"
-                                            href="https://www.bootdey.com/snippets/view/profile-edit-data-and-skills"
-                                            >Modifier</a
-                                        >
-                                    </div>
-                                </div>
+                            </div>
+
+                            <!-- Bouton Modifier -->
+                            <div class="text-end">
+                                <a
+                                    class="btn btn-outline-primary"
+                                    href="#"
+                                >
+                                    <i class="mdi mdi-account-edit-outline me-1"></i>
+                                    Modifier mon profil
+                                </a>
                             </div>
                         </div>
                     </div>

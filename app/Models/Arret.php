@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Arrets extends Model
+class Arret extends Model
 {
     //
     protected $fillable = [
@@ -36,11 +36,12 @@ class Arrets extends Model
 
     public function voyage()
     {
-        return $this->belongsTo(Voyages::class);
+        return $this->belongsTo(Voyage::class);
     }
 
     public function gare()
     {
-        return $this->belongsTo(Gares::class);
+        return $this->belongsTo(Gare::class);
     }
+
 }

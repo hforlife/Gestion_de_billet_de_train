@@ -2,28 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Arrets;
-use App\Models\Gares;
-use App\Models\Voyages;
+use App\Models\Arret;
+use App\Models\Gare;
+use App\Models\Voyage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ArretController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
+    // Liste des arrêts
+    public function index(Request $request): Response
     {
         $filters = $request->only('search');
 
-        $arrets = Arrets::with(['voyage', 'gare'])
+        $arrets = Arret::with(['voyage', 'gare'])
             ->orderBy('ordre')
-            ->filter($filters)
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->whereHas('gare', function ($q) use ($search) {
+                    $q->where('nom', 'like', "%{$search}%");
+                });
+            })
             ->paginate(10)
             ->withQueryString()
-            ->through(fn($arret) => [
+            ->through(fn ($arret) => [
                 'id' => $arret->id,
                 'voyage' => [
                     'id' => $arret->voyage->id,
@@ -44,22 +47,16 @@ class ArretController extends Controller
         ]);
     }
 
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // Formulaire de création
+    public function create(): Response
     {
         return Inertia::render('Arrets/Create', [
-            'voyages' => Voyages::where('statut', 'programmé')->get(['id', 'name']),
-            'gares' => Gares::all(['id', 'nom']),
+            'voyages' => Voyage::where('statut', 'programmé')->get(['id', 'name']),
+            'gares' => Gare::all(['id', 'nom']),
         ]);
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Enregistrement
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -69,10 +66,9 @@ class ArretController extends Controller
             'heure_depart' => ['nullable', 'date_format:H:i'],
         ]);
 
-        // Calcul de l'ordre : on prend le plus grand ordre + 1 pour le voyage donné
-        $ordre = Arrets::where('voyage_id', $validated['voyage_id'])->max('ordre') + 1;
+        $ordre = Arret::where('voyage_id', $validated['voyage_id'])->max('ordre') + 1;
 
-        Arrets::create([
+        Arret::create([
             'voyage_id' => $validated['voyage_id'],
             'gare_id' => $validated['gare_id'],
             'heure_arrivee' => $validated['heure_arrivee'],
@@ -80,24 +76,13 @@ class ArretController extends Controller
             'ordre' => $ordre,
         ]);
 
-        return redirect()->route('arret.index')->with('success', 'Arrêt ajouté avec succès');
+        return redirect()->route('arret.index')->with('success', 'Arrêt ajouté avec succès.');
     }
 
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Arrets $arrets)
+    // Formulaire d’édition
+    public function edit(int $id): Response
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        $arret = Arrets::findOrFail($id);
+        $arret = Arret::findOrFail($id);
 
         return Inertia::render('Arrets/Edit', [
             'arret' => [
@@ -108,37 +93,33 @@ class ArretController extends Controller
                 'heure_depart' => $arret->heure_depart,
                 'ordre' => $arret->ordre,
             ],
-            'voyages' => Voyages::where('statut', 'programmé')->get(['id', 'name']),
-            'gares' => Gares::all(['id', 'nom']),
+            'voyages' => Voyage::where('statut', 'programmé')->get(['id', 'name']),
+            'gares' => Gare::all(['id', 'nom']),
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Arrets $arrets)
+    // Mise à jour
+    public function update(Request $request, Arret $arret)
     {
         $validated = $request->validate([
             'voyage_id' => ['required', 'exists:voyages,id'],
             'gare_id' => ['required', 'exists:gares,id'],
-            'heure_arrivee' => ['nullable'],
-            'heure_depart' => ['nullable'],
-            'ordre' => ['nullable'],
+            'heure_arrivee' => ['nullable', 'date_format:H:i'],
+            'heure_depart' => ['nullable', 'date_format:H:i'],
+            'ordre' => ['nullable', 'integer|min:1'],
         ]);
 
-        $arrets->update($validated);
+        $arret->update($validated);
 
-        return Redirect::route('arret.index')->with('success', 'Modification effectuée avec succès');
+        return redirect()->route('arret.index')->with('success', 'Modification effectuée avec succès.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
+    // Suppression
+    public function destroy(int $id)
     {
-        $items = Arrets::find($id);
-        $items->delete();
+        $arret = Arret::findOrFail($id);
+        $arret->delete();
 
-        return redirect()->route('arret.index')->with('success', 'Suppression effectué avec succes.');
+        return redirect()->route('arret.index')->with('success', 'Suppression effectuée avec succès.');
     }
 }

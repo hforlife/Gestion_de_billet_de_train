@@ -7,7 +7,6 @@ import Swal from "sweetalert2";
 // Initialisation du formulaire
 const form = useForm({
     numero: "",
-    capacite: "",
     etat: "",
 });
 
@@ -57,17 +56,11 @@ const submit = () => {
                                     v-model="form.numero"
                                     placeholder="Entrer Nom"
                                 />
-                            </div>
-                            <!-- Capacité -->
-                            <div class="form-group">
-                                <label for="capacite">Capacité du train</label>
-                                <input
-                                    type="number"
-                                    class="form-control"
-                                    id=""
-                                    v-model="form.capacite"
-                                    placeholder="Entrer Capacité"
-                                />
+                                <span
+                                    v-if="errors.numero"
+                                    class="text-danger"
+                                    >{{ errors.numero }}</span
+                                >
                             </div>
                             <!-- Etat -->
                             <div class="form-group">
@@ -86,6 +79,11 @@ const submit = () => {
                                         Maintenance
                                     </option>
                                 </select>
+                                <span
+                                    v-if="errors.etat"
+                                    class="text-danger"
+                                    >{{ errors.etat }}</span
+                                >
                             </div>
                             <div class="d-flex justify-content-end mt-4">
                                 <button

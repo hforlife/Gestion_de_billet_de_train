@@ -4,16 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Ventes extends Model
+class Vente extends Model
 {
     protected $fillable = [
         'client_nom',
         'voyage_id',
         'prix',
-        'train_id',
+        'quantite',
         'bagage',
         'poids_bagage',
-        'status',
+        'place_id',
+        'statut',
     ];
 
     public function scopeFilter($query, array $filters)
@@ -26,14 +27,15 @@ class Ventes extends Model
         });
     }
 
-    public function voyage()
-    {
-        return $this->belongsTo(Voyages::class);
-    }
+   public function voyage()
+{
+    return $this->belongsTo(Voyage::class);
+}
 
-    public function train()
-    {
-        return $this->belongsTo(Trains::class);
-    }
+public function place()
+{
+    return $this->belongsTo(Place::class);
+}
+
 }
 

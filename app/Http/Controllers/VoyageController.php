@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-// use App\Enum\statusVoyage;
-// use Illuminate\Validation\Rules\Enum;
-use App\Http\Controllers\Controller;
-use App\Models\Gares;
-use App\Models\Trains;
-use App\Models\Voyages;
+use App\Models\Gare;
+use App\Models\Train;
+use App\Models\Voyage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,30 +16,33 @@ class VoyageController extends Controller
     {
         $filters = $request->only('search');
 
-        return Inertia::render('Voyages/Index', props: [
+        $voyages = Voyage::with(['train', 'gare_depart', 'gare_arrivee'])
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->orderByDesc('date_depart')
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Voyages/Index', [
             'filters' => $filters,
-            'voyages' => Voyages::orderBy('name')
-                ->with(['train', 'gare_depart', 'gare_arrivee'])
-                ->filter($filters)
-                ->paginate(10)
-                ->withQueryString()
-                ->through(fn($voyage) => [
-                    'id' => $voyage->id,
-                    'name' => $voyage->name,
-                    'train' => [
-                        'numero' => optional($voyage->train)->numero,
-                    ],
-                    'gare_depart' => [
-                        'nom' => optional($voyage->gare_depart)->nom,
-                    ],
-                    'gare_arrivee' => [
-                        'nom' => optional($voyage->gare_arrivee)->nom,
-                    ],
-                    'date_depart' => $voyage->date_depart,
-                    'date_arrivee' => $voyage->date_arrivee,
-                    'prix' => $voyage->prix,
-                    'statut' => $voyage->statut,
-                ]),
+            'voyages' => $voyages->through(fn ($voyage) => [
+                'id' => $voyage->id,
+                'name' => $voyage->name,
+                'train' => [
+                    'numero' => optional($voyage->train)->numero,
+                ],
+                'gare_depart' => [
+                    'nom' => optional($voyage->gare_depart)->nom,
+                ],
+                'gare_arrivee' => [
+                    'nom' => optional($voyage->gare_arrivee)->nom,
+                ],
+                'date_depart' => $voyage->date_depart,
+                'date_arrivee' => $voyage->date_arrivee,
+                'prix' => $voyage->prix,
+                'statut' => $voyage->statut,
+            ])
         ]);
     }
 
@@ -50,8 +50,8 @@ class VoyageController extends Controller
     public function create(): Response
     {
         return Inertia::render('Voyages/Create', [
-            'trains' => Trains::all(),
-            'gares' => Gares::all(),
+            'trains' => Train::select('id', 'numero')->get(),
+            'gares' => Gare::select('id', 'nom')->get(),
         ]);
     }
 
@@ -59,47 +59,45 @@ class VoyageController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required'],
-            'train_id' => ['required'],
-            'gare_depart_id' => ['required'],
-            'gare_arrivee_id' => ['required'],
-            'date_depart' => ['required'],
-            'date_arrivee' => ['nullable'],
-            'prix' => ['required'],
-            'statut' => ['required'],
+            'name' => ['required', 'string', 'max:255'],
+            'train_id' => ['required', 'exists:trains,id'],
+            'gare_depart_id' => ['required', 'exists:gares,id', 'different:gare_arrivee_id'],
+            'gare_arrivee_id' => ['required', 'exists:gares,id'],
+            'date_depart' => ['required', 'date'],
+            'date_arrivee' => ['nullable', 'date', 'after_or_equal:date_depart'],
+            'prix' => ['required', 'numeric', 'min:0'],
+            'statut' => ['required', 'in:programmé,en_cours,terminé,annulé'],
         ]);
 
-        Voyages::create($validated);
+        Voyage::create($validated);
 
         return redirect()->route('voyage.index')->with('success', 'Ajout effectué avec succès');
     }
 
     // Edit
-    public function edit(string $id)
+    public function edit(string $id): Response
     {
-        //
-        $item = Voyages::findOrFail($id);
-        $train = Trains::all();
-        $gare = Gares::all();
+        $voyage = Voyage::findOrFail($id);
+
         return Inertia::render('Voyages/Edit', [
-            'voyages' => $item,
-            'trains' => $train,
-            'gares' => $gare,
+            'voyages' => $voyage,
+            'trains' => Train::select('id', 'numero')->get(),
+            'gares' => Gare::select('id', 'nom')->get(),
         ]);
     }
 
     // Update
-    public function update(Request $request, Voyages $voyage)
+    public function update(Request $request, Voyage $voyage)
     {
         $validated = $request->validate([
-            'name' => ['required'],
-            'train_id' => ['required'],
-            'gare_depart_id' => ['required'],
-            'gare_arrivee_id' => ['required'],
-            'date_depart' => ['required'],
-            'date_arrivee' => ['nullable'],
-            'prix' => ['required'],
-            'statut' => ['required'],
+            'name' => ['required', 'string', 'max:255'],
+            'train_id' => ['required', 'exists:trains,id'],
+            'gare_depart_id' => ['required', 'exists:gares,id', 'different:gare_arrivee_id'],
+            'gare_arrivee_id' => ['required', 'exists:gares,id'],
+            'date_depart' => ['required', 'date'],
+            'date_arrivee' => ['nullable', 'date', 'after_or_equal:date_depart'],
+            'prix' => ['required', 'numeric', 'min:0'],
+            'statut' => ['required', 'in:programmé,en_cours,terminé,annulé'],
         ]);
 
         $voyage->update($validated);
@@ -108,7 +106,7 @@ class VoyageController extends Controller
     }
 
     // Destroy
-    public function destroy(Voyages $voyage)
+    public function destroy(Voyage $voyage)
     {
         $voyage->delete();
 

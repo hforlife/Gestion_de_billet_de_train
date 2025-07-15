@@ -4,20 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Voyages extends Model
+class VoyageRecurrent extends Model
 {
+    //
     protected $fillable = [
         'name',
         'train_id',
         'gare_depart_id',
         'gare_arrivee_id',
-        'date_depart',
-        'date_arrivee',
+        'heure_depart',
         'prix',
-        'statut',
+        'statut', // actif ou inactif
     ];
 
-    public function scopeFilter($query, array $filters)
+        public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($q) use ($search) {
@@ -27,22 +27,22 @@ class Voyages extends Model
         });
     }
 
-    public function train()
+        public function train()
     {
-        return $this->belongsTo(Trains::class, 'train_id');
+        return $this->belongsTo(Train::class, 'train_id');
     }
 
     public function gare_depart()
     {
-        return $this->belongsTo(Gares::class, 'gare_depart_id');
+        return $this->belongsTo(Gare::class, 'gare_depart_id');
     }
 
     public function gare_arrivee()
     {
-        return $this->belongsTo(Gares::class, 'gare_arrivee_id');
+        return $this->belongsTo(Gare::class, 'gare_arrivee_id');
     }
     public function arrets()
     {
-        return $this->hasMany(Arrets::class)->orderBy('ordre');
+        return $this->hasMany(Arret::class)->orderBy('ordre');
     }
 }

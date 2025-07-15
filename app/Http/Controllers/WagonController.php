@@ -2,41 +2,109 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Train;
+use App\Models\Wagon;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class WagonController extends Controller
 {
-    //
-    public function index(){
-        // Logique pour afficher la liste des wagons
-        return view('wagon.index');
+    // Liste des wagons
+    public function index(Request $request): Response
+    {
+        $filters = $request->only('search');
+
+        $wagons = Wagon::with('train')
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where('nom', 'like', "%{$search}%");
+            })
+            ->orderBy('nom')
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Trains/Wagons/Index', [
+            'filters' => $filters,
+            'wagons' => $wagons->through(fn ($wagon) => [
+                'id' => $wagon->id,
+                'train_id' => $wagon->train_id,
+                'train_numero' => optional($wagon->train)->numero,
+                'nom' => $wagon->nom,
+                'nombre_places' => $wagon->nombre_places,
+            ]),
+        ]);
     }
 
-    public function create(){
-        // Logique pour afficher le formulaire de création d'un wagon
-        return view('wagon.create');
+    // Formulaire de création
+    public function create(): Response
+    {
+        return Inertia::render('Trains/Wagons/Create', [
+            'trains' => Train::where('etat', 'actif')->get(),
+        ]);
     }
 
-    public function edit(){
-        // Logique pour afficher le formulaire d'édition d'un wagon
-        return view('wagon.edit');
+    // Enregistrement du wagon
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'train_id' => 'required|exists:trains,id',
+            'nom' => 'required|string|max:255',
+            'nombre_places' => 'required|integer|min:1',
+        ]);
+
+        $wagon = Wagon::create($validated);
+
+        for ($i = 1; $i <= $validated['nombre_places']; $i++) {
+            $wagon->places()->create(['numero' => $i]);
+        }
+
+        return redirect()->route('wagon.index')->with('success', 'Wagon et places créés avec succès.');
     }
 
-    public function store(Request $request){
-        // Logique pour enregistrer un nouveau wagon
-        // Validation et sauvegarde dans la base de données
-        return redirect()->route('wagon.index')->with('success', 'Wagon créé avec succès.');
+    // Formulaire d'édition
+    public function edit(int $id): Response
+    {
+        $wagon = Wagon::findOrFail($id);
+
+        return Inertia::render('Trains/Wagons/Edit', [
+            'wagons' => $wagon,
+            'trains' => Train::where('etat', 'actif')->get(),
+        ]);
     }
 
-    public function update(Request $request, $id){
-        // Logique pour mettre à jour un wagon existant
-        // Validation et mise à jour dans la base de données
+    // Mise à jour
+    public function update(Request $request, int $id)
+    {
+        $wagon = Wagon::findOrFail($id);
+
+        $validated = $request->validate([
+            'train_id' => 'required|exists:trains,id',
+            'nom' => 'required|string|max:255',
+            'nombre_places' => 'required|integer|min:1',
+        ]);
+
+        $oldPlaceCount = $wagon->nombre_places;
+        $newPlaceCount = $validated['nombre_places'];
+
+        $wagon->update($validated);
+
+        if ($newPlaceCount != $oldPlaceCount) {
+            $wagon->places()->delete();
+
+            for ($i = 1; $i <= $newPlaceCount; $i++) {
+                $wagon->places()->create(['numero' => $i]);
+            }
+        }
+
         return redirect()->route('wagon.index')->with('success', 'Wagon mis à jour avec succès.');
     }
 
-    public function destroy($id){
-        // Logique pour supprimer un wagon
-        // Suppression de l'enregistrement dans la base de données
-        return redirect()->route('wagon.index')->with('success', 'Wagon supprimé avec succès.');
+    // Suppression
+    public function destroy(int $id)
+    {
+        $wagon = Wagon::findOrFail($id);
+        $wagon->delete();
+
+        return redirect()->route('wagon.index')->with('success', 'Suppression effectuée avec succès.');
     }
 }

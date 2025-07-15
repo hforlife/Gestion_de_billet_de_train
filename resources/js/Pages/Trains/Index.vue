@@ -131,7 +131,6 @@ const deleteTrain = (id) => {
                                     <tr>
                                         <th>#</th>
                                         <th>Numéro du Train</th>
-                                        <th>Capacité(Personnes)</th>
                                         <th>Etat</th>
                                         <th class="text-center">Action</th>
                                     </tr>
@@ -143,7 +142,6 @@ const deleteTrain = (id) => {
                                     >
                                         <td class="py-1">{{ index + 1 }}</td>
                                         <td>{{ train.numero }}</td>
-                                        <td>{{ train.capacite }}</td>
                                         <td>{{ train.etat }}</td>
                                         <td>
                                             <div class="btn-group" role="group">

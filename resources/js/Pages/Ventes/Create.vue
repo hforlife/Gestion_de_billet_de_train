@@ -1,226 +1,586 @@
 <script setup>
-import { defineProps, ref, computed } from 'vue'
-import { useForm } from '@inertiajs/vue3'
-import Swal from 'sweetalert2'
+import { ref, computed } from "vue";
+import { useForm } from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
 
 const props = defineProps({
     voyages: Array,
-    trains: Array // Ajout des trains disponibles
-})
+    voyages_rec: Array,
+    trains: Array,
+});
 
 const form = useForm({
-  client_nom: '',
-  voyage_id: null,
-  train_id: null,
-  prix: 0,
-  quantite: 1,
-  bagage: false,
-  poids_bagage: 0
-})
+    client_nom: "",
+    voyage_id: null,
+    train_id: null,
+    prix: 0,
+    quantite: 1,
+    bagage: false,
+    poids_bagage: 0,
+});
 
-const panier = ref([])
-const selectedVoyage = ref(null)
+const selectedVoyage = ref(null);
+const searchQuery = ref("");
+const cart = ref([]);
+const activeTab = ref("regular"); // 'regular' ou 'recurrent'
 
-// Calcul du total
+// Filtrer les voyages selon l'onglet actif
+const currentVoyages = computed(() => {
+    return activeTab.value === "regular" ? props.voyages : props.voyages_rec;
+});
+
+// Filtrer les voyages selon la recherche
+const filteredVoyages = computed(() => {
+    return currentVoyages.value.filter(
+        (voyage) =>
+            voyage.name
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ||
+            voyage.gare_depart_id
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ||
+            voyage.gare_arrivee_id
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase())
+    );
+});
+
+// Ajouter au panier
+const addToCart = (voyage) => {
+    const existingItem = cart.value.find(
+        (item) => item.voyage.id === voyage.id
+    );
+    if (existingItem) {
+        existingItem.quantite++;
+    } else {
+        cart.value.push({
+            voyage,
+            quantite: 1,
+            prix: voyage.prix,
+            type: activeTab.value, // Stocker le type de voyage
+        });
+    }
+    updateForm();
+};
+
+const resetPOS = () => {
+    cart.value = [];
+    form.reset();
+};
+
+// Mettre à jour le formulaire
+const updateForm = () => {
+    if (cart.value.length > 0) {
+        form.voyage_id = cart.value[0].voyage.id;
+        form.prix = cart.value[0].prix;
+        form.quantite = cart.value.reduce(
+            (sum, item) => sum + item.quantite,
+            0
+        );
+    }
+};
+
+// Calculer le total
 const total = computed(() => {
-  if (!selectedVoyage.value) return 0
-  return selectedVoyage.value.prix * form.quantite
-})
+    return cart.value.reduce((sum, item) => sum + item.prix * item.quantite, 0);
+});
 
-// Sélection d'un voyage
-const selectVoyage = (voyage) => {
-  selectedVoyage.value = voyage
-  form.voyage_id = voyage.id
-  form.prix = voyage.prix
-  form.quantite = 1
-  form.train_id = null // Réinitialiser la sélection du train
-}
-
-// Soumission du formulaire
-const submit = async () => {
-  // Validation
-  if (!selectedVoyage.value) {
-    await Swal.fire('Voyage non sélectionné', 'Veuillez sélectionner un voyage', 'warning')
-    return
-  }
-
-  if (!form.train_id) {
-    await Swal.fire('Train non sélectionné', 'Veuillez sélectionner un train', 'warning')
-    return
-  }
-
-  if (form.bagage && !form.poids_bagage) {
-    await Swal.fire('Poids manquant', 'Veuillez saisir le poids du bagage', 'warning')
-    return
-  }
-
-  try {
-    await form.post(route('vente.store'), {
-      preserveScroll: true,
-      onSuccess: () => {
-        Swal.fire({
-          title: 'Succès',
-          text: 'Billet vendu avec succès',
-          icon: 'success',
-          showCancelButton: true,
-          confirmButtonText: 'Voir les ventes',
-          cancelButtonText: 'Fermer'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = route('vente.index')
-          }
-        })
-        form.reset()
-        selectedVoyage.value = null
-      },
-      onError: (errors) => {
-        let message = 'Une erreur est survenue'
-        if (errors.train_id) message = errors.train_id
-        else if (errors.voyage_id) message = 'Problème avec le voyage sélectionné'
-        Swal.fire('Erreur', message, 'error')
-      }
-    })
-  } catch (error) {
-    console.error('Erreur:', error)
-    Swal.fire('Erreur', 'Problème de connexion au serveur', 'error')
-  }
-}
+// Soumettre la vente
+const submit = () => {
+    form.post(route("vente.store"), {
+        onSuccess: () => {
+            cart.value = [];
+            form.reset();
+            alert("Vente enregistrée avec succès!");
+        },
+    });
+};
 </script>
 
 <template>
     <AppLayout>
-      <div class="container-fluid">
-        <div class="row">
-          <!-- Colonne Gauche : Sélection du voyage -->
-          <div class="col-md-6 p-4">
-            <h4 class="mb-4">Sélection du Voyage</h4>
-
-            <div class="row">
-              <div
-                v-for="voyage in voyages"
-                :key="voyage.id"
-                class="col-md-6 mb-3"
-              >
-                <div
-                  class="card h-100"
-                  :class="{ 'border-primary': selectedVoyage?.id === voyage.id }"
-                  @click="selectVoyage(voyage)"
-                  style="cursor: pointer"
-                >
-                  <div class="card-body">
-                    <h5>{{ voyage.name }}</h5>
-                    <p class="text-muted">
-                      <i class="fas fa-train"></i> {{ voyage.gare_depart.name }} →
-                      {{ voyage.gare_arrivee.name }}
-                    </p>
-                    <p class="h5 text-primary">
-                      {{ voyage.prix.toLocaleString() }} FCFA
-                    </p>
-                  </div>
+        <div class="pos-system">
+            <!-- Header -->
+            <div class="pos-header">
+                <div class="pos-logo">CANADIALE</div>
+                <div class="pos-date">
+                    {{ new Date().toLocaleDateString() }}
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Colonne Droite : Formulaire de vente -->
-          <div class="col-md-6 p-4 bg-light">
-            <h4 class="mb-4">Détails de la Vente</h4>
-
-            <div v-if="selectedVoyage" class="card mb-4">
-              <div class="card-body">
-                <h5>Voyage sélectionné</h5>
-                <p><strong>{{ selectedVoyage.name }}</strong></p>
-                <p>De {{ selectedVoyage.gare_depart.name }} à {{ selectedVoyage.gare_arrivee.name }}</p>
-                <p class="h5">Prix unitaire: {{ selectedVoyage.prix.toLocaleString() }} FCFA</p>
-              </div>
             </div>
 
-            <div class="card">
-              <div class="card-body">
-                <form @submit.prevent="submit">
-                  <div class="mb-3">
-                    <label class="form-label">Nom du client</label>
-                    <input
-                      v-model="form.client_nom"
-                      class="form-control"
-                      required
-                    />
-                  </div>
+            <!-- Main Content -->
+            <div class="pos-main">
+                <!-- Left Panel - Products -->
+                <div class="pos-products">
+                    <div class="pos-search">
+                        <input
+                            v-model="searchQuery"
+                            type="text"
+                            placeholder="Rechercher un voyage..."
+                            class="pos-search-input"
+                        />
+                    </div>
 
-                  <div class="mb-3">
-                    <label class="form-label">Train</label>
-                    <select
-                      v-model="form.train_id"
-                      class="form-control"
-                      required
-                    >
-                      <option value="">Sélectionnez un train</option>
-                      <option
-                        v-for="train in trains"
-                        :key="train.id"
-                        :value="train.id"
-                      >
-                        {{ train.name }} {{ train.numero }}
-                      </option>
-                    </select>
-                  </div>
+                    <!-- Onglets -->
+                    <div class="pos-tabs">
+                        <button
+                            @click="activeTab = 'regular'"
+                            :class="{ active: activeTab === 'regular' }"
+                        >
+                            Voyages Réguliers
+                        </button>
+                        <button
+                            @click="activeTab = 'recurrent'"
+                            :class="{ active: activeTab === 'recurrent' }"
+                        >
+                            Voyages Récurrents
+                        </button>
+                    </div>
 
-                  <div class="mb-3">
-                    <label class="form-label">Quantité</label>
-                    <input
-                      type="number"
-                      v-model.number="form.quantite"
-                      min="1"
-                      class="form-control"
-                      required
-                    />
-                  </div>
+                    <div class="pos-products-grid">
+                        <div
+                            v-for="voyage in filteredVoyages"
+                            :key="voyage.id"
+                            class="pos-product-card"
+                            @click="addToCart(voyage)"
+                        >
+                            <div class="pos-product-info">
+                                <h3>{{ voyage.name }}</h3>
+                                <p>
+                                    {{ voyage.gare_depart.nom }} →
+                                    {{ voyage.gare_arrivee.nom }}
+                                </p>
+                                <div
+                                    v-if="activeTab === 'recurrent'"
+                                    class="pos-recurrent-info"
+                                >
+                                    <span v-if="Array.isArray(voyage.jours)">
+                                        Jours: {{ voyage.jours.join(", ") }}
+                                    </span>
+                                    <span v-else>
+                                        Jours:
+                                        {{ voyage.jours || "Non spécifié" }}
+                                    </span>
+                                    <span
+                                        >Heure: {{ voyage.heure_depart }}</span
+                                    >
+                                </div>
 
-                  <div class="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      v-model="form.bagage"
-                      class="form-check-input"
-                      id="bagageCheck"
-                    />
-                    <label class="form-check-label" for="bagageCheck">Avec bagage</label>
-                  </div>
+                                <div class="pos-product-price">
+                                    {{ voyage.prix.toLocaleString() }} FCFA
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                  <div v-if="form.bagage" class="mb-3">
-                    <label class="form-label">Poids du bagage (kg)</label>
-                    <input
-                      type="number"
-                      v-model.number="form.poids_bagage"
-                      min="0"
-                      step="0.1"
-                      class="form-control"
-                      :required="form.bagage"
-                    />
-                  </div>
+                <!-- Right Panel - Cart -->
+                <div class="pos-cart">
+                    <div class="pos-cart-header">
+                        <h2>TRANSACTION EN COURS</h2>
+                        <div class="pos-cart-count">
+                            {{
+                                cart.reduce(
+                                    (acc, item) => acc + item.quantite,
+                                    0
+                                )
+                            }}
+                            articles
+                        </div>
+                    </div>
 
-                  <div class="mb-3 p-3 bg-white rounded">
-                    <h5>Total: {{ total.toLocaleString() }} FCFA</h5>
-                  </div>
+                    <div class="pos-cart-items">
+                        <div
+                            v-for="(item, index) in cart"
+                            :key="index"
+                            class="pos-cart-item"
+                        >
+                            <div class="pos-cart-item-info">
+                                <h3>{{ item.voyage.name }}</h3>
+                                <p>
+                                    {{ item.voyage.gare_depart_id }} →
+                                    {{ item.voyage.gare_arrivee_id }}
+                                </p>
+                                <small v-if="item.type === 'recurrent'"
+                                    >(Récurrent)</small
+                                >
+                            </div>
+                            <div class="pos-cart-item-qty">
+                                <button
+                                    @click="
+                                        item.quantite > 1
+                                            ? item.quantite--
+                                            : cart.splice(index, 1)
+                                    "
+                                >
+                                    -
+                                </button>
+                                <span>{{ item.quantite }}</span>
+                                <button @click="item.quantite++">+</button>
+                            </div>
+                            <div class="pos-cart-item-price">
+                                {{
+                                    (item.prix * item.quantite).toLocaleString()
+                                }}
+                                FCFA
+                            </div>
+                        </div>
+                    </div>
 
-                  <button
-                    type="submit"
-                    class="btn btn-primary w-100 py-2"
-                    :disabled="form.processing || !selectedVoyage"
-                  >
-                    <span v-if="form.processing">
-                      <span class="spinner-border spinner-border-sm" role="status"></span>
-                      Enregistrement...
-                    </span>
-                    <span v-else>
-                      Valider la vente
-                    </span>
-                  </button>
-                </form>
-              </div>
+                    <div class="pos-cart-summary">
+                        <div class="pos-summary-row">
+                            <span>Total:</span>
+                            <span class="pos-total"
+                                >{{ total.toLocaleString() }} FCFA</span
+                            >
+                        </div>
+                    </div>
+
+                    <div class="pos-cart-form">
+                        <div class="pos-form-group">
+                            <label>Nom du client</label>
+                            <input
+                                v-model="form.client_nom"
+                                type="text"
+                                class="pos-input"
+                            />
+                        </div>
+
+                        <div class="pos-form-group">
+                            <label>Train</label>
+                            <select v-model="form.train_id" class="pos-select">
+                                <option value="">Sélectionnez un train</option>
+                                <option
+                                    v-for="train in trains"
+                                    :key="train.id"
+                                    :value="train.id"
+                                >
+                                    {{ train.numero }} - {{ train.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="pos-form-group">
+                            <label>
+                                <input
+                                    v-model="form.bagage"
+                                    type="checkbox"
+                                    class="pos-checkbox"
+                                />
+                                Bagage supplémentaire
+                            </label>
+                        </div>
+
+                        <div v-if="form.bagage" class="pos-form-group">
+                            <label>Poids (kg)</label>
+                            <input
+                                v-model.number="form.poids_bagage"
+                                type="number"
+                                min="0"
+                                class="pos-input"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="pos-cart-actions">
+                        <button class="pos-cancel-btn" @click="resetPOS">Annuler</button>
+                        <button
+                            @click="submit"
+                            class="pos-pay-btn"
+                            :disabled="cart.length === 0"
+                        >
+                            Valider la vente
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.pos-system {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #f5f5f5;
+    font-family: "Arial", sans-serif;
+}
+
+.pos-header {
+    background: #2c3e50;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pos-logo {
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.pos-date {
+    font-size: 16px;
+}
+
+.pos-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.pos-products {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background: white;
+}
+
+.pos-search {
+    margin-bottom: 15px;
+}
+
+.pos-search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.pos-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.pos-product-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pos-product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pos-product-info h3 {
+    font-size: 16px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.pos-product-info p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.pos-product-price {
+    font-weight: bold;
+    color: #e74c3c;
+    font-size: 18px;
+}
+
+.pos-cart {
+    width: 400px;
+    background: #f9f9f9;
+    border-left: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+}
+
+.pos-cart-header {
+    background: #34495e;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pos-cart-header h2 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.pos-cart-count {
+    background: #e74c3c;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.pos-cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.pos-cart-item {
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pos-cart-item-info h3 {
+    font-size: 16px;
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.pos-cart-item-info p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+.pos-cart-item-qty {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.pos-cart-item-qty button {
+    width: 25px;
+    height: 25px;
+    background: #eee;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pos-cart-item-qty span {
+    margin: 0 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.pos-cart-item-price {
+    font-weight: bold;
+    color: #333;
+    text-align: right;
+}
+
+.pos-cart-summary {
+    padding: 15px;
+    background: white;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+}
+
+.pos-summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.pos-total {
+    font-weight: bold;
+    font-size: 18px;
+    color: #e74c3c;
+}
+
+.pos-cart-form {
+    padding: 15px;
+    background: white;
+}
+
+.pos-form-group {
+    margin-bottom: 15px;
+}
+
+.pos-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.pos-input,
+.pos-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.pos-checkbox {
+    margin-right: 8px;
+}
+
+.pos-cart-actions {
+    display: flex;
+    padding: 15px;
+    gap: 10px;
+}
+
+.pos-cancel-btn {
+    flex: 1;
+    padding: 12px;
+    background: #eee;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pos-pay-btn {
+    flex: 2;
+    padding: 12px;
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.pos-pay-btn:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+}
+
+.pos-tabs {
+    display: flex;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.pos-tabs button {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+}
+
+.pos-tabs button.active {
+    border-bottom-color: #3498db;
+    color: #3498db;
+    font-weight: bold;
+}
+
+.pos-recurrent-info {
+    font-size: 12px;
+    color: #666;
+    margin: 5px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pos-cart-item-info small {
+    font-size: 12px;
+    color: #e74c3c;
+    font-style: italic;
+}
+</style>

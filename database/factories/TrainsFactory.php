@@ -19,7 +19,6 @@ class TrainsFactory extends Factory
         return [
             //
             'nom' => fake()->name(),
-            'capacite' => Number::random(),
             'etat' => fake()->randomElement,
         ];
     }

@@ -13,7 +13,9 @@ use App\Http\Controllers\{
     VoyageController,
     UserController,
     categorieColisController,
-    ParametreController
+    ParametreController,
+    FeedController,
+    ReccuringVoyageController
 };
 
 Route::get('/', function () {
@@ -50,9 +52,11 @@ Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/wagon', WagonController::class)->except(['show']);
     Route::resource('/gare', GareController::class)->except(['show']);
     Route::resource('/voyage', VoyageController::class)->except(['show']);
+    Route::resource('/voyage-reccurent', ReccuringVoyageController::class)->except(['show']);
     Route::resource('/arret', ArretController::class)->except(['show']);
     Route::resource('/categories-colis', categorieColisController::class)->except(['show']);
     Route::resource('/setting', ParametreController::class)->except(['show']);
+    Route::resource('/feed', FeedController::class)->except(['show']);
 });
 
 // Routes réservées à l'admin

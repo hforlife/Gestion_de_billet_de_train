@@ -16,7 +16,7 @@ class categorieColis extends Model
 
     public function parametres()
 {
-    return $this->hasMany(Parametres::class, 'categorie_id');
+    return $this->hasMany(Parametre::class, 'categorie_id');
 }
 
 

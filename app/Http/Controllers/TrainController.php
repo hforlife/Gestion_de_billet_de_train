@@ -2,85 +2,85 @@
 
 namespace App\Http\Controllers;
 
-
-use App\Http\Controllers\Controller;
-use App\Models\Trains;
+use App\Models\Train;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TrainController extends Controller
 {
-    //
+    // Affichage de la liste des trains
     public function index(Request $request): Response
     {
         $filters = $request->only('search');
-    
-        return Inertia::render('Trains/Index', props: [
+
+        $trains = Train::orderBy('numero')
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where('numero', 'like', "%{$search}%");
+            })
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Trains/Index', [
             'filters' => $filters,
-            'trains' => Trains::orderBy('numero')
-                ->filter($filters)
-                ->paginate(10)
-                ->withQueryString()
-                ->through(fn ($train) => [
-                    'id' => $train->id,
-                    'numero' => $train->numero,
-                    'capacite' => $train->capacite,
-                    'etat' => $train->etat,
-                ]),
+            'trains' => $trains->through(fn ($train) => [
+                'id' => $train->id,
+                'numero' => $train->numero,
+                'etat' => $train->etat,
+            ]),
         ]);
     }
-    //
-    public function create(){
+
+    // Formulaire de création
+    public function create(): Response
+    {
         return Inertia::render('Trains/Create');
     }
-    //
-    public function store(Request $request){
-        $request->validate([
-            'numero' => ['required','string'],
-            'capacite' => ['required'],
-            'etat' => ['required']
+
+    // Enregistrement d'un train
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'numero' => ['required', 'string', 'max:255', 'unique:trains,numero'],
+            'etat' => ['required', 'in:actif,en_maintenance'],
         ]);
 
-        $items = new Trains();
-        $items->numero = $request->numero;
-        $items->capacite = $request->capacite;
-        $items->etat = $request->etat;
-        $items->save();
+        Train::create($validated);
 
-        return redirect()->route('train.index')->with('status', 'Ajout effectué avec succès');
+        return redirect()->route('train.index')->with('success', 'Ajout effectué avec succès');
     }
-    // Edit
-    public function edit($id): Response{
-        $item = Trains::findOrFail($id);
-        return Inertia::render('Trains/Edit',[
-            'trains' => $item
+
+    // Formulaire d’édition
+    public function edit(string $id): Response
+    {
+        $train = Train::findOrFail($id);
+
+        return Inertia::render('Trains/Edit', [
+            'trains' => $train,
         ]);
     }
-    // Update
+
+    // Mise à jour d’un train
     public function update(Request $request, string $id)
     {
-        //
-        $request->validate([
-            'numero' => ['required','string'],
-            'capacite' => ['required'],
-            'etat' => ['required']
+        $train = Train::findOrFail($id);
+
+        $validated = $request->validate([
+            'numero' => ['required', 'string', 'max:255', 'unique:trains,numero,' . $train->id],
+            'etat' => ['required', 'in:actif,en_maintenance'],
         ]);
 
-        $entrys = Trains::findOrFail($id);
-        $entrys->numero = $request->numero;
-        $entrys->capacite = $request->capacite;
-        $entrys->etat = $request->etat;
+        $train->update($validated);
 
-        $entrys->update();
-
-        return redirect()->route('train.index')->with('status', 'Modification effectué avec succès');
+        return redirect()->route('train.index')->with('success', 'Modification effectuée avec succès');
     }
-    // Destroy
-    public function destroy($id){
-        $items = Trains::find($id);
-        $items->delete();
 
-        return redirect()->route('train.index')->with('status', 'Suppression effectué avec succes.');
+    // Suppression d’un train
+    public function destroy(string $id)
+    {
+        $train = Train::findOrFail($id);
+        $train->delete();
+
+        return redirect()->route('train.index')->with('success', 'Suppression effectuée avec succès');
     }
 }

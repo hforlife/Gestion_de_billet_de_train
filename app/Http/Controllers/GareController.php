@@ -2,21 +2,25 @@
 
 namespace App\Http\Controllers;
 
-
-use App\Models\Gares;
-use Illuminate\Support\Facades\Request;
+use App\Models\Gare;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class GareController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $filters = $request->only('search');
+
         return Inertia::render('Gares/Index', [
-            'filters' => Request::only('search'),
-            'gares' => Gares::orderBy('nom')
-                ->filter(Request::only('search'))
+            'filters' => $filters,
+            'gares' => Gare::orderBy('nom')
+                ->when($filters['search'] ?? null, function ($query, $search) {
+                    $query->where('nom', 'like', "%{$search}%")
+                          ->orWhere('adresse', 'like', "%{$search}%");
+                })
                 ->paginate(10)
                 ->withQueryString()
                 ->through(fn ($gare) => [
@@ -32,34 +36,38 @@ class GareController extends Controller
         return Inertia::render('Gares/Create');
     }
 
-    public function store()
+    public function store(Request $request)
     {
-        Gares::create(Request::validate([
+        $validated = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'adresse' => ['required', 'string', 'max:255'],
-        ]));
+        ]);
 
-        return Redirect::route('gare.index')->with('success', 'Ajout effectué avec succès');
+        Gare::create($validated);
+
+        return Redirect::route('gare.index')->with('success', 'Ajout effectué avec succès.');
     }
 
-    public function edit(Gares $gare): Response
+    public function edit(Gare $gare): Response
     {
         return Inertia::render('Gares/Edit', [
-            'gares' => $gare->only('id', 'nom', 'adresse'),
+            'gare' => $gare->only('id', 'nom', 'adresse'),
         ]);
     }
 
-    public function update(Gares $gare)
+    public function update(Request $request, Gare $gare)
     {
-        $gare->update(Request::validate([
+        $validated = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'adresse' => ['required', 'string', 'max:255'],
-        ]));
+        ]);
 
-        return Redirect::route('gare.index')->with('success', 'Modification effectuée avec succès');
+        $gare->update($validated);
+
+        return Redirect::route('gare.index')->with('success', 'Modification effectuée avec succès.');
     }
 
-    public function destroy(Gares $gare)
+    public function destroy(Gare $gare)
     {
         $gare->delete();
 

@@ -11,11 +11,21 @@ const props = defineProps({
 // Formulaire de paramètre
 const form = useForm({
     categorie_id: "",
-    poids_min: "",
-    poids_max: "",
-    prix_par_kg: "",
+    poids_min: 0,
+    poids_max: 0,
+    prix_par_kg: 0,
 });
 
+watch(() => form.poids_max, (val) => {
+    if (val < form.poids_min) {
+        Swal.fire("Attention", "Le poids maximum doit être supérieur au minimum", "warning");
+    }
+});
+watch(() => form.poids_min, (val) => {
+    if (val < 0) {
+        Swal.fire("Attention", "Le poids minimum ne peut pas être négatif", "warning");
+    }
+});
 
 // Soumission du formulaire
 const submit = () => {

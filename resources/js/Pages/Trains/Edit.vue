@@ -12,7 +12,6 @@ const props = defineProps({
 // Initialisation du formulaire
 const form = useForm({
     numero: props.trains?.numero || '',
-    capacite: props.trains?.capacite || '',
     etat: props.trains?.etat || '',
 });
 
@@ -79,24 +78,7 @@ const submit = () => {
                                     {{ form.errors.numero }}
                                 </div>
                             </div>
-                            <!-- Capacité -->
-                            <div class="form-group">
-                                <label for="capacite">Capacité du train</label>
-                                <input
-                                    type="number"
-                                    class="form-control"
-                                    v-model="form.capacite"
-                                     :class="{ 'is-invalid': form.errors.capacite }"
-                                    placeholder="Entrer Capacité"
-                                    required
-                                />
-                                <div
-                                    v-if="form.errors.capacite"
-                                    class="invalid-feedback"
-                                >
-                                    {{ form.errors.capacite }}
-                                </div>
-                            </div>
+                            
                             <!-- Etat -->
                             <div class="form-group">
                                 <label for="etat"

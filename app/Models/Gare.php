@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Gares extends Model
+class Gare extends Model
 {
     //
     protected $fillable = [
@@ -24,6 +24,6 @@ class Gares extends Model
     }
     public function arrets()
     {
-        return $this->hasMany(Arrets::class);
+        return $this->hasMany(Arret::class);
     }
 }
