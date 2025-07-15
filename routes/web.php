@@ -12,7 +12,7 @@ use App\Http\Controllers\{
     VenteController,
     VoyageController,
     UserController,
-    categorieColisController,
+    CategorieColisController,
     ParametreController,
     FeedController,
     ReccuringVoyageController
@@ -54,7 +54,7 @@ Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/voyage', VoyageController::class)->except(['show']);
     Route::resource('/voyage-reccurent', ReccuringVoyageController::class)->except(['show']);
     Route::resource('/arret', ArretController::class)->except(['show']);
-    Route::resource('/categories-colis', categorieColisController::class)->except(['show']);
+    Route::resource('/categories-colis', CategorieColisController::class)->except(['show']);
     Route::resource('/setting', ParametreController::class)->except(['show']);
     Route::resource('/feed', FeedController::class)->except(['show']);
 });

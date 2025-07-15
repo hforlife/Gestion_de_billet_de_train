@@ -75,7 +75,7 @@ const deletewagon = (id) => {
                     <h4 class="page-title">Gestion des wagons</h4>
                     <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
                     <ul class="quick-links ml-auto">
-                     <li><Link :href="dashboard">Tableau de bord</Link></li>
+                     <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
                       <li><Link :href="wagon">wagons </Link></li>
                     </ul>
                   </div>

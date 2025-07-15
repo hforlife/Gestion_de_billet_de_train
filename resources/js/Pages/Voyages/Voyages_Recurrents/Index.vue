@@ -69,7 +69,7 @@ const deleteVoyage = (id) => {
         <div class="row page-title-header">
             <div class="col-12">
                 <div class="page-header d-flex justify-content-between align-items-center">
-                    <h4 class="page-title">Gestion des Voyages</h4>
+                    <h4 class="page-title">Gestion des Voyages Reccurents</h4>
                     <Link :href="route('voyage-reccurent.create')" class="btn btn-primary">
                         <Plus size="16" class="me-1" /> Nouveau Voyage
                     </Link>

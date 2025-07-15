@@ -1,7 +1,7 @@
 <script setup>
+import AppLayout from "@/Layouts/AppLayout.vue";
 import { ref, computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
-import AppLayout from "@/Layouts/AppLayout.vue";
 
 const props = defineProps({
     voyages: Array,
@@ -102,7 +102,7 @@ const submit = () => {
         <div class="pos-system">
             <!-- Header -->
             <div class="pos-header">
-                <div class="pos-logo">CANADIALE</div>
+                <div class="pos-logo">SOPAFER Vente</div>
                 <div class="pos-date">
                     {{ new Date().toLocaleDateString() }}
                 </div>
@@ -308,7 +308,7 @@ const submit = () => {
 }
 
 .pos-header {
-    background: #2c3e50;
+    background: #001737;
     color: white;
     padding: 15px 20px;
     display: flex;
@@ -397,7 +397,7 @@ const submit = () => {
 }
 
 .pos-cart-header {
-    background: #34495e;
+    background: #001737;
     color: white;
     padding: 15px;
     display: flex;
@@ -542,7 +542,7 @@ const submit = () => {
 }
 
 .pos-pay-btn:disabled {
-    background: #95a5a6;
+    background: #001737;
     cursor: not-allowed;
 }
 
@@ -564,8 +564,8 @@ const submit = () => {
 }
 
 .pos-tabs button.active {
-    border-bottom-color: #3498db;
-    color: #3498db;
+    border-bottom-color: #001737;
+    color: #001737;
     font-weight: bold;
 }
 

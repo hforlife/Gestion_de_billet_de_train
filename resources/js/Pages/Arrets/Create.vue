@@ -1,5 +1,5 @@
 <script setup>
-import AppLayout from "@/layouts/AppLayout.vue";
+import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";

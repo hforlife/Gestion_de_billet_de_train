@@ -2,7 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, onMounted, ref } from 'vue';
 import { Chart, registerables } from 'chart.js';
-import { Bus, Landmark, TramFront, Layers } from 'lucide-vue-next';
+import { TrainFront, Landmark, MapPinned, ShoppingCart } from 'lucide-vue-next';
 
 Chart.register(...registerables);
 
@@ -126,7 +126,7 @@ onMounted(() => {
                                         </p>
                                     </div>
                                     <div class="wrapper my-auto ml-auto ml-lg-4">
-                                        <Bus size="50" color="#2aab45"/>
+                                        <MapPinned color="#2aab45" size="50"/>
                                     </div>
                                 </div>
                             </div>
@@ -144,7 +144,7 @@ onMounted(() => {
                                         </p>
                                     </div>
                                     <div class="wrapper my-auto ml-auto ml-lg-4">
-                                        <Landmark size="60" color="#2aab45"/>
+                                        <ShoppingCart color="#2aab45" size="50"/>
                                     </div>
                                 </div>
                             </div>
@@ -162,7 +162,7 @@ onMounted(() => {
                                         </p>
                                     </div>
                                     <div class="wrapper my-auto ml-auto ml-lg-4">
-                                        <TramFront color="#2aab45" size="60"/>
+                                        <TrainFront color="#2aab45" size="50"/>
                                     </div>
                                 </div>
                             </div>
@@ -180,7 +180,7 @@ onMounted(() => {
                                         </p>
                                     </div>
                                     <div class="wrapper my-auto ml-auto ml-lg-4">
-                                        <Layers color="#2aab45" size="60"/>
+                                        <Landmark color="#2aab45" size="50" />
                                     </div>
                                 </div>
                             </div>

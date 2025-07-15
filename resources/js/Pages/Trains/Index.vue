@@ -75,7 +75,7 @@ const deleteTrain = (id) => {
                     <h4 class="page-title">Gestion des Trains</h4>
                     <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
                     <ul class="quick-links ml-auto">
-                     <li><a href="#">Tableau de bord</a></li>
+                     <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
                       <li><a href="#">Trains </a></li>
                     </ul>
                   </div>

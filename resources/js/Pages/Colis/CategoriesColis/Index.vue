@@ -78,7 +78,7 @@ const deleteCategorie = (id) => {
                     <h4 class="page-title">Catégories de Colis</h4>
                     <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
                         <ul class="quick-links ml-auto">
-                            <li><a href="#">Tableau de bord</a></li>
+                            <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
                             <li><a href="#">Catégories</a></li>
                         </ul>
                     </div>

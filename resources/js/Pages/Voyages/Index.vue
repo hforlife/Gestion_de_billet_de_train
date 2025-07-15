@@ -74,14 +74,9 @@ const deleteVoyage = (id) => {
                     <div
                         class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
                     >
-                        <ul class="quick-links">
-                            <li><a href="#">Dashboard</a></li>
-                            <li><a href="#">Voyages</a></li>
-                        </ul>
                         <ul class="quick-links ml-auto">
-                            <li><a href="#">Settings</a></li>
-                            <li><a href="#">Analytics</a></li>
-                            <li><a href="#">Watchlist</a></li>
+                            <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
+                            <li><a href="#">Voyages Classique</a></li>
                         </ul>
                     </div>
                 </div>
