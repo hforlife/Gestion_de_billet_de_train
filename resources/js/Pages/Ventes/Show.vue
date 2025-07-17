@@ -9,8 +9,8 @@ import Swal from "sweetalert2";
 const props = defineProps({
     vente: {
         type: Object,
-        required: true
-    }
+        required: true,
+    },
 });
 
 const generateVente = (id) => {
@@ -22,8 +22,14 @@ const form = computed(() => ({
     voyage: props.vente.voyage?.name || `Voyage #${props.vente.voyage_id}`,
     gare_depart: props.vente.voyage?.gare_depart?.nom || "Non spécifié",
     gare_arrivee: props.vente.voyage?.gare_arrivee?.nom || "Non spécifié",
-    train: props.vente.train?.numero || `Train #${props.vente.train_id}`,
-    type_train: props.vente.train?.type || "Non spécifié",
+    train:
+        props.vente.voyage?.train?.numero ||
+        `Train #${props.vente.voyage?.train_id}`,
+    // type_train: props.vente.train?.type || "Non spécifié",
+    place: props.vente.place?.numero || "Non attribuée",
+    wagon: props.vente.place?.wagon?.nom || "Inconnu",
+    type_wagon: props.vente.place?.wagon?.type || "Standard",
+    train_place: props.vente.place?.wagon?.train?.numero || "Inconnu",
     prix: `${props.vente.prix.toLocaleString()} FCFA`,
     quantite: props.vente.quantite || 1,
     bagage: props.vente.bagage ? "Oui" : "Non",
@@ -33,9 +39,9 @@ const form = computed(() => ({
         month: "long",
         year: "numeric",
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
     }),
-    place: props.vente.place?.numero_place || "Non attribuée"
+    place: props.vente.place?.numero || "Non attribuée",
 }));
 
 const confirmDelete = () => {
@@ -49,10 +55,12 @@ const confirmDelete = () => {
         confirmButtonText: "Supprimer",
         cancelButtonText: "Annuler",
         customClass: {
-            confirmButton: "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mx-2",
-            cancelButton: "bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded mx-2"
+            confirmButton:
+                "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mx-2",
+            cancelButton:
+                "bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded mx-2",
         },
-        buttonsStyling: false
+        buttonsStyling: false,
     }).then((result) => {
         if (result.isConfirmed) {
             router.delete(route("vente.destroy", { vente: props.vente.id }));
@@ -104,7 +112,9 @@ const confirmDelete = () => {
                         </div>
                         <div class="info-item">
                             <label>Arrivée</label>
-                            <div class="info-value">{{ form.gare_arrivee }}</div>
+                            <div class="info-value">
+                                {{ form.gare_arrivee }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -118,9 +128,21 @@ const confirmDelete = () => {
                             <div class="info-value">{{ form.train }}</div>
                         </div>
                         <div class="info-item">
+                            <label>Wagon</label>
+                            <div class="info-value">
+                                {{ form.wagon }} ({{ form.type_wagon }})
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <label>Place attribuée</label>
+                            <div class="info-value">
+                                N°{{ form.place }}
+                            </div>
+                        </div>
+                        <!-- <div class="info-item">
                             <label>Place attribuée</label>
                             <div class="info-value">{{ form.place }}</div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -139,7 +161,12 @@ const confirmDelete = () => {
                         <div class="info-item">
                             <label>Total</label>
                             <div class="info-value highlight">
-                                {{ (vente.prix * vente.quantite).toLocaleString() }} FCFA
+                                {{
+                                    (
+                                        vente.prix * vente.quantite
+                                    ).toLocaleString()
+                                }}
+                                FCFA
                             </div>
                         </div>
                     </div>
@@ -162,13 +189,22 @@ const confirmDelete = () => {
 
                 <!-- Actions -->
                 <div class="vente-actions">
-                    <button @click="generateVente(vente.id)" class="action-btn print-btn">
+                    <button
+                        @click="generateVente(vente.id)"
+                        class="action-btn print-btn"
+                    >
                         <File class="icon" /> Imprimer le billet
                     </button>
-                    <Link :href="route('vente.edit', vente.id)" class="action-btn edit-btn">
+                    <Link
+                        :href="route('vente.edit', vente.id)"
+                        class="action-btn edit-btn"
+                    >
                         <Pencil class="icon" /> Modifier
                     </Link>
-                    <button @click="confirmDelete" class="action-btn delete-btn">
+                    <button
+                        @click="confirmDelete"
+                        class="action-btn delete-btn"
+                    >
                         <Trash class="icon" /> Supprimer
                     </button>
                 </div>

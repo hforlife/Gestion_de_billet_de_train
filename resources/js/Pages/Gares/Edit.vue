@@ -5,24 +5,24 @@ import { defineProps } from 'vue';
 import Swal from "sweetalert2";
 
 const props = defineProps({
-    gares: Object,
+    gare: Object,
 });
 // Initialisation du formulaire
 const form = useForm({
-    nom: props.gares?.nom ?? '',
-    adresse: props.gares?.adresse ?? '',
+    nom: props.gare?.nom ?? '',
+    adresse: props.gare?.adresse ?? '',
 });
 
 const { errors } = form;
 
 // Fonction d'envoi du formulaire
 const submit = () => {
-    if (!props.gares?.id) {
+    if (!props.gare?.id) {
         alert("Erreur", "ID de la gare introuvable.", "error");
         return;
     }
 
-    form.put(route("gare.update", props.gares.id), {
+    form.put(route("gare.update", props.gare.id), {
         onSuccess: () => {
             Swal.fire("Succès", "Gare modifiée avec succès.", "success");
         },

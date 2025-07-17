@@ -46,7 +46,7 @@ function calculateTarif() {
 
 // Soumission
 const submit = () => {
-    form.post(route("bagage.store"), {
+    form.post(route("colis.store"), {
         preserveScroll: true,
         onSuccess: () => {
             Swal.fire("Succès", "Colis enregistré avec succès.", "success");

@@ -50,22 +50,23 @@ class ReccuringVoyageController extends Controller
     public function create(): Response
     {
         return Inertia::render('Voyages/Voyages_Recurrents/Create', [
-            'trains' => Train::where('etat', 'actif')->get(),
             'gares' => Gare::all(),
-            'jours' => JoursSemaine::all(),
+            'trains' => Train::where('etat', 'actif')->get(),
+            'joursSemaine' => JoursSemaine::all(['id', 'nom', 'code']),
         ]);
     }
 
     // Enregistrement
     public function store(Request $request)
     {
+        dd($request);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'train_id' => 'required|exists:trains,id',
             'gare_depart_id' => 'required|exists:gares,id',
             'gare_arrivee_id' => 'required|exists:gares,id',
-            'jours' => 'required|array|min:1',
-            'jours.*' => 'exists:jours_semaine,id',
+            'jour' => 'required|array|min:1',
+            'jour.*' => ['integer', 'exists:jours_semaine,id'],
             'heure_depart' => 'required|date_format:H:i',
             'prix' => 'required|numeric|min:0',
         ]);

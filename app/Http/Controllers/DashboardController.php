@@ -29,7 +29,7 @@ class DashboardController extends Controller
 
         // Total de colis express transférés par l'utilisateur connecté
         $colisExpressCount = Colis::where('statut', 'enregistré')
-                                   ->count();
+            ->count();
 
         // Revenus mensuels (12 derniers mois)
         $revenusMensuels = Vente::selectRaw("
@@ -77,51 +77,49 @@ class DashboardController extends Controller
     }
 
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // app/Http/Controllers/VoyageController.php
+    public function getVoyagesForCalendar()
     {
-        //
+        $voyages = Voyage::with(['gareDepart', 'gareArrivee', 'train'])
+            ->select(
+                'id',
+                'date_depart',
+                'heure_depart',
+                'heure_arrivee',
+                'gare_depart_id',
+                'gare_arrivee_id',
+                'train_id'
+            )
+            ->get()
+            ->map(function ($voyage) {
+                return [
+                    'id' => $voyage->id,
+                    'title' => $voyage->train->numero . ' → ' .
+                        $voyage->gareDepart->nom . ' - ' .
+                        $voyage->gareArrivee->nom,
+                    'start' => $voyage->date_depart->format('Y-m-d') . 'T' . $voyage->heure_depart,
+                    'end' => $voyage->date_depart->format('Y-m-d') . 'T' . $voyage->heure_arrivee,
+                    'color' => $this->getTrainColor($voyage->train->type),
+                    'extendedProps' => [
+                        'train' => $voyage->train->numero,
+                        'depart' => $voyage->gareDepart->nom,
+                        'arrivee' => $voyage->gareArrivee->nom,
+                        'heure_depart' => $voyage->heure_depart,
+                        'heure_arrivee' => $voyage->heure_arrivee
+                    ]
+                ];
+            });
+
+        return response()->json($voyages);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    private function getTrainColor($type)
     {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return match ($type) {
+            'TGV' => '#3b82f6',
+            'TER' => '#10b981',
+            'Intercités' => '#f59e0b',
+            default => '#6b7280'
+        };
     }
 }

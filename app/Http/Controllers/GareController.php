@@ -48,10 +48,10 @@ class GareController extends Controller
         return Redirect::route('gare.index')->with('success', 'Ajout effectué avec succès.');
     }
 
-    public function edit(Gare $gare): Response
+    public function edit($id): Response
     {
         return Inertia::render('Gares/Edit', [
-            'gare' => $gare->only('id', 'nom', 'adresse'),
+            'gare' => Gare::findOrFail($id),
         ]);
     }
 

@@ -17,28 +17,42 @@ class Voyage extends Model
         'statut',
     ];
 
-        public function scopeFilter($query, array $filters)
-        {
-            $query->when($filters['search'] ?? null, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('prix', 'like', "%{$search}%");
-                });
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('prix', 'like', "%{$search}%");
             });
-        }
-        public function train()
-        {
-            return $this->belongsTo(Train::class);
-        }
+        });
+    }
+    public function train()
+    {
+        return $this->belongsTo(Train::class);
+    }
 
-        public function gare_depart()
-        {
-            return $this->belongsTo(Gare::class, 'gare_depart_id');
-        }
+    public function gare_depart()
+    {
+        return $this->belongsTo(Gare::class, 'gare_depart_id');
+    }
 
-        public function gare_arrivee()
-        {
-            return $this->belongsTo(Gare::class, 'gare_arrivee_id');
-        }
+    public function gare_arrivee()
+    {
+        return $this->belongsTo(Gare::class, 'gare_arrivee_id');
+    }
+    public function arrets()
+    {
+        return $this->hasMany(Arret::class)->orderBy('ordre');
+    }
 
+    public function ventes()
+    {
+        return $this->hasMany(Vente::class);
+    }
+
+    protected $casts = [
+    'date_depart' => 'datetime',
+    'date_arrivee' => 'datetime',
+    'prix' => 'decimal:2'
+];
 }

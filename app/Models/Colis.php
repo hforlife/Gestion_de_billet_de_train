@@ -28,7 +28,7 @@ class Colis extends Model
 }
     public function categorieColis()
     {
-        return $this->belongsTo(categorieColis::class, 'categorie_colis_id');
+        return $this->belongsTo(CategorieColis::class);
     }
 
 

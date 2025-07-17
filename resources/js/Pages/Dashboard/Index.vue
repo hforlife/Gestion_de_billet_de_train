@@ -1,5 +1,6 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
+import Calendar from "@/Components/Calendar.vue";
 import { defineProps, onMounted, ref } from 'vue';
 import { Chart, registerables } from 'chart.js';
 import { TrainFront, Landmark, MapPinned, ShoppingCart } from 'lucide-vue-next';
@@ -282,5 +283,12 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+
+        <!-- Calendrier -->
+         <div class="row">
+            <div class="lg:col-span-2">
+                <Calendar :events="events" />
+            </div>
+         </div>
     </AppLayout>
 </template>

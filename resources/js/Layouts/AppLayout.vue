@@ -376,10 +376,10 @@ onMounted(() => {
                                 <li class="nav-item">
                                     <Link
                                         class="nav-link"
-                                        :href="route('bagage.index')"
+                                        :href="route('colis.index')"
                                         :class="{
                                             active: $page.url.startsWith(
-                                                '/bagage'
+                                                '/colis'
                                             ),
                                         }"
                                     >

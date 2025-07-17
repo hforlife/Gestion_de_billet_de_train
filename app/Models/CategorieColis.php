@@ -4,17 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class categorieColis extends Model
+class CategorieColis extends Model
 {
     //
     protected $fillable = ['nom', 'description'];
 
     public function colis()
     {
-        return $this->hasMany(Colis::class, 'categorie_id');
+        return $this->hasMany(Colis::class);
     }
 
-    public function parametres()
+    public function parametre()
 {
     return $this->hasMany(Parametre::class, 'categorie_id');
 }

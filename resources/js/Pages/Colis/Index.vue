@@ -6,11 +6,11 @@ import { Pencil, Trash, Eye, Plus } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
-    bagages: Object, // ✅ c’est un objet paginé, pas Array !
+    colis: Object, // ✅ c’est un objet paginé, pas Array !
     filters: Object,
     flash: Object, // ✅ pour les messages flash
 });
-console.log(props.bagages);
+// console.log(props.colis);
 
 const getResults = () => {
   router.get(
@@ -118,7 +118,7 @@ const deleteBagage = (id) => {
             </div>
         </div>
 
-        <!-- 📋 Tableau des bagages -->
+        <!-- 📋 Tableau des colis -->
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -130,7 +130,7 @@ const deleteBagage = (id) => {
                             <h4 class="card-title mb-0">Liste des colis</h4>
                             <!-- ➕ Bouton création -->
                             <Link
-                                :href="route('bagage.create')"
+                                :href="route('colis.create')"
                                 class="btn btn-primary btn-icon-text"
                             >
                                 <Plus size="16" class="me-1" />
@@ -163,16 +163,16 @@ const deleteBagage = (id) => {
                                 </thead>
                                 <tbody>
                                     <tr
-                                        v-for="(bagage, index) in bagages.data"
-                                        :key="bagage.id"
+                                        v-for="(coli, index) in colis.data"
+                                        :key="coli.id"
                                     >
                                         <td class="py-1">{{ index + 1 }}</td>
-                                        <td>{{ bagage.user1 }}</td>
-                                        <td>{{ bagage.user2 }}</td>
-                                        <td>{{ bagage.categorie_colis_id}}</td>
-                                        <td>{{ bagage.poids }}</td>
-                                        <td>{{ bagage.tarif }}</td>
-                                        <td>{{ bagage.statut }}</td>
+                                        <td>{{ coli.user1 }}</td>
+                                        <td>{{ coli.user2 }}</td>
+                                        <td>{{ coli.categorie_nom}}</td>
+                                        <td>{{ coli.poids }}</td>
+                                        <td>{{ coli.tarif }}</td>
+                                        <td>{{ coli.statut }}</td>
                                         <td>
                                             <div class="btn-group">
                                                 <button
@@ -194,7 +194,7 @@ const deleteBagage = (id) => {
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr v-if="bagages.data.length === 0">
+                                    <tr v-if="colis.data.length === 0">
                                         <td
                                             colspan="8"
                                             class="text-center py-4 text-muted"
@@ -210,16 +210,16 @@ const deleteBagage = (id) => {
                         <div class="row mt-4">
                             <div class="col-md-6">
                                 <p class="text-muted">
-                                    Affichage de {{ bagages.from }} à
-                                    {{ bagages.to }} sur
-                                    {{ bagages.total }} bagages
+                                    Affichage de {{ colis.from }} à
+                                    {{ colis.to }} sur
+                                    {{ colis.total }} colis
                                 </p>
                             </div>
                             <div class="col-md-6">
                                 <nav class="float-end">
                                     <ul class="pagination">
                                         <li
-                                            v-for="link in bagages.links"
+                                            v-for="link in colis.links"
                                             :key="link.label"
                                             class="page-item"
                                             :class="{

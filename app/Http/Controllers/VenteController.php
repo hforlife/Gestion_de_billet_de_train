@@ -20,7 +20,7 @@ class VenteController extends Controller
 
         $voyages = Voyage::whereIn('statut', ['programmé', 'en_cours'])->get();
 
-        $ventes = Vente::with(['voyage', 'place.wagon.train'])
+        $ventes = Vente::with(['voyage', 'train','place.wagon.train'])
             ->when($search, function ($query, $search) {
                 $query->where('client_nom', 'like', "%{$search}%");
             })
@@ -41,16 +41,17 @@ class VenteController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        $voyagesClassiques = Voyage::all();
-        $voyagesReccurents = VoyageRecurrent::all();
+  public function create()
+{
+    $voyagesClassiques = Voyage::with(['gare_depart', 'gare_arrivee', 'train'])->get();
+    $voyagesReccurents = VoyageRecurrent::with(['gare_depart', 'gare_arrivee', 'train'])->get();
 
-        return Inertia::render('Ventes/Create', [
-            'voyages' => $voyagesClassiques,
-            'voyages_rec' => $voyagesReccurents,
-        ]);
-    }
+
+    return Inertia::render('Ventes/Create', [
+        'voyages' => $voyagesClassiques,
+        'voyages_rec' => $voyagesReccurents,
+    ]);
+}
 
     public function store(Request $request)
     {
@@ -98,6 +99,7 @@ class VenteController extends Controller
         $items = Vente::with([
             'voyage.gare_depart',
             'voyage.gare_arrivee',
+            'voyage.train',
             'place.wagon.train'
         ])->findOrFail($id);
 

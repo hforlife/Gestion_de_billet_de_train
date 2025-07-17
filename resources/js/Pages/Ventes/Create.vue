@@ -2,6 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { ref, computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
+import { watch } from "vue";
 
 const props = defineProps({
     voyages: Array,
@@ -84,6 +85,28 @@ const updateForm = () => {
 const total = computed(() => {
     return cart.value.reduce((sum, item) => sum + item.prix * item.quantite, 0);
 });
+
+watch(
+    () => form.voyage_id,
+    (newVal) => {
+        const voyage = [...props.voyages, ...props.voyages_rec].find(
+            (v) => v.id === newVal
+        );
+        if (voyage && voyage.train) {
+            form.train_id = voyage.train.id;
+        } else {
+            form.train_id = null;
+        }
+    }
+);
+
+const getSelectedTrainInfo = () => {
+    const voyage = props.voyages
+        .concat(props.voyages_rec)
+        .find((v) => v.id === form.voyage_id);
+    if (!voyage || !voyage.train) return "Non défini";
+    return `${voyage.train.numero} - ${voyage.train.name}`;
+};
 
 // Soumettre la vente
 const submit = () => {
@@ -198,8 +221,8 @@ const submit = () => {
                             <div class="pos-cart-item-info">
                                 <h3>{{ item.voyage.name }}</h3>
                                 <p>
-                                    {{ item.voyage.gare_depart_id }} →
-                                    {{ item.voyage.gare_arrivee_id }}
+                                    {{ item.voyage.gare_depart.nom }} →
+                                    {{ item.voyage.gare_arrivee.nom }}
                                 </p>
                                 <small v-if="item.type === 'recurrent'"
                                     >(Récurrent)</small
@@ -248,16 +271,13 @@ const submit = () => {
 
                         <div class="pos-form-group">
                             <label>Train</label>
-                            <select v-model="form.train_id" class="pos-select">
-                                <option value="">Sélectionnez un train</option>
-                                <option
-                                    v-for="train in trains"
-                                    :key="train.id"
-                                    :value="train.id"
-                                >
-                                    {{ train.numero }} - {{ train.name }}
-                                </option>
-                            </select>
+                            <input
+                                type="text"
+                                :value="getSelectedTrainInfo()"
+                                class="pos-input"
+                                
+                                readonly
+                            />
                         </div>
 
                         <div class="pos-form-group">
@@ -283,7 +303,9 @@ const submit = () => {
                     </div>
 
                     <div class="pos-cart-actions">
-                        <button class="pos-cancel-btn" @click="resetPOS">Annuler</button>
+                        <button class="pos-cancel-btn" @click="resetPOS">
+                            Annuler
+                        </button>
                         <button
                             @click="submit"
                             class="pos-pay-btn"

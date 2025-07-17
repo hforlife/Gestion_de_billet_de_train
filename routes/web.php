@@ -43,7 +43,7 @@ Route::middleware(['auth', 'role:admin|chef|caissier'])->group(function () {
     });
 
     Route::get('/billet/{id}', [BilletController::class, 'generateBillet'])->name('vente.generate');
-    Route::resource('/bagage', ColisController::class)->except(['show']);
+    Route::resource('/colis', ColisController::class)->except(['show']);
 });
 
 // Routes pour chefs et admin seulement

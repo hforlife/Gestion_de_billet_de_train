@@ -13,29 +13,30 @@ class ColisController extends Controller
 {
     // Affichage de la liste des colis
     public function index(Request $request): Response
-    {
-        $filters = $request->only('search');
+{
+    $filters = $request->only('search');
 
-        return Inertia::render('Colis/Index', [
-            'filters' => $filters,
-            'colis' => Colis::orderBy('user1')
-                ->when($filters['search'] ?? null, function ($query, $search) {
-                    $query->where('user1', 'like', "%{$search}%")
-                          ->orWhere('user2', 'like', "%{$search}%");
-                })
-                ->paginate(10)
-                ->withQueryString()
-                ->through(fn ($item) => [
-                    'id' => $item->id,
-                    'user1' => $item->user1,
-                    'user2' => $item->user2,
-                    'poids' => $item->poids,
-                    'tarif' => $item->tarif,
-                    'statut' => $item->statut,
-                    'categorie_colis_id' => $item->categorie_colis_id,
-                ]),
-        ]);
-    }
+    return Inertia::render('Colis/Index', [
+        'filters' => $filters,
+        'colis' => Colis::with('categorieColis') // ⬅️ Charger la relation
+            ->orderBy('user1')
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where('user1', 'like', "%{$search}%")
+                      ->orWhere('user2', 'like', "%{$search}%");
+            })
+            ->paginate(10)
+            ->through(fn ($item) => [
+                'id' => $item->id,
+                'user1' => $item->user1,
+                'user2' => $item->user2,
+                'categorie' => $item->categorieColis,
+                'poids' => $item->poids,
+                'tarif' => $item->tarif,
+                'statut' => $item->statut,
+
+            ]),
+    ]);
+}
 
     // Formulaire de création
     public function create(): Response
