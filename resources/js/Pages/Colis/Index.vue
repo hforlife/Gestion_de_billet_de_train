@@ -169,7 +169,7 @@ const deleteBagage = (id) => {
                                         <td class="py-1">{{ index + 1 }}</td>
                                         <td>{{ coli.user1 }}</td>
                                         <td>{{ coli.user2 }}</td>
-                                        <td>{{ coli.categorie_nom}}</td>
+                                        <td>{{ coli.categorie.nom}}</td>
                                         <td>{{ coli.poids }}</td>
                                         <td>{{ coli.tarif }}</td>
                                         <td>{{ coli.statut }}</td>

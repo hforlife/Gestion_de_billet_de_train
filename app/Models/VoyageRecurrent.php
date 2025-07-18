@@ -17,7 +17,7 @@ class VoyageRecurrent extends Model
         'statut', // actif ou inactif
     ];
 
-        public function scopeFilter($query, array $filters)
+    public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($q) use ($search) {
@@ -27,7 +27,7 @@ class VoyageRecurrent extends Model
         });
     }
 
-        public function train()
+    public function train()
     {
         return $this->belongsTo(Train::class, 'train_id');
     }
@@ -44,5 +44,9 @@ class VoyageRecurrent extends Model
     public function arrets()
     {
         return $this->hasMany(Arret::class)->orderBy('ordre');
+    }
+    public function jours()
+    {
+        return $this->belongsToMany(JoursSemaine::class, 'voyage_recurrent_jour', 'voyage_recurrent_id', 'jour_semaine_id');
     }
 }

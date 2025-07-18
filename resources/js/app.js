@@ -18,6 +18,7 @@ createInertiaApp({
       throw new Error(`❌ Page not found: ./Pages/${name}.vue`);
     }
 
+
     return page();
   },
   setup({ el, App, props, plugin }) {
@@ -27,6 +28,7 @@ createInertiaApp({
       .use(ZiggyVue)
       .mount(el);
   },
+
 });
 
 InertiaProgress.init();

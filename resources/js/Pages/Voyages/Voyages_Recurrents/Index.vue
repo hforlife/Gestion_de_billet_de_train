@@ -38,7 +38,7 @@ if (props.flash && props.flash.success) {
 
 // Actions
 const editVoyage = (id) => {
-    router.visit(route("voyage.edit", id));
+    router.visit(route("voyage-reccurent.edit", id));
 };
 
 const deleteVoyage = (id) => {
@@ -53,7 +53,7 @@ const deleteVoyage = (id) => {
         cancelButtonText: "Annuler",
     }).then((result) => {
         if (result.isConfirmed) {
-            router.delete(route("voyage.destroy", id), {
+            router.delete(route("voyage-reccurent.destroy", id), {
                 onSuccess: () => {
                     Swal.fire("Supprimé !", "Le voyage a été supprimé.", "success");
                 },

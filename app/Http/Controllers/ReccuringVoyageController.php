@@ -26,7 +26,7 @@ class ReccuringVoyageController extends Controller
                 ->orderBy('name')
                 ->paginate(10)
                 ->withQueryString()
-                ->through(fn ($voyage) => [
+                ->through(fn($voyage) => [
                     'id' => $voyage->id,
                     'name' => $voyage->name,
                     'train' => [
@@ -59,14 +59,14 @@ class ReccuringVoyageController extends Controller
     // Enregistrement
     public function store(Request $request)
     {
-        dd($request);
+        // dd($request);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'train_id' => 'required|exists:trains,id',
             'gare_depart_id' => 'required|exists:gares,id',
             'gare_arrivee_id' => 'required|exists:gares,id',
-            'jour' => 'required|array|min:1',
-            'jour.*' => ['integer', 'exists:jours_semaine,id'],
+            'jours' => 'required|array|min:1',
+            'jours.*' => ['integer', 'exists:jours_semaine,id'],
             'heure_depart' => 'required|date_format:H:i',
             'prix' => 'required|numeric|min:0',
         ]);
@@ -81,7 +81,8 @@ class ReccuringVoyageController extends Controller
             'statut' => 'actif',
         ]);
 
-        $voyage->jours()->attach($validated['jours']);
+           // Attachement des jours via la relation
+            $voyage->jours()->attach($validated['jours']);
 
         return redirect()->route('voyage-reccurent.index')->with('success', 'Voyage récurrent créé avec succès.');
     }

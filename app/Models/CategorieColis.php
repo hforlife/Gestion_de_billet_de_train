@@ -15,9 +15,9 @@ class CategorieColis extends Model
     }
 
     public function parametre()
-{
-    return $this->hasMany(Parametre::class, 'categorie_id');
-}
+    {
+        return $this->hasMany(Parametre::class, 'categorie_id');
+    }
 
 
     // app/Models/categorieColis.php
@@ -27,6 +27,4 @@ class CategorieColis extends Model
             $query->where('nom', 'ILIKE', '%' . $filters['search'] . '%');
         }
     }
-
-
 }

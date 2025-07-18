@@ -20,7 +20,7 @@ class VenteController extends Controller
 
         $voyages = Voyage::whereIn('statut', ['programmé', 'en_cours'])->get();
 
-        $ventes = Vente::with(['voyage', 'train','place.wagon.train'])
+        $ventes = Vente::with(['voyage', 'train', 'place.wagon.train'])
             ->when($search, function ($query, $search) {
                 $query->where('client_nom', 'like', "%{$search}%");
             })
@@ -41,17 +41,17 @@ class VenteController extends Controller
         ]);
     }
 
-  public function create()
-{
-    $voyagesClassiques = Voyage::with(['gare_depart', 'gare_arrivee', 'train'])->get();
-    $voyagesReccurents = VoyageRecurrent::with(['gare_depart', 'gare_arrivee', 'train'])->get();
+    public function create()
+    {
+        $voyagesClassiques = Voyage::with(['gare_depart', 'gare_arrivee', 'train'])->get();
+        $voyagesReccurents = VoyageRecurrent::with(['gare_depart', 'gare_arrivee', 'train'])->get();
 
 
-    return Inertia::render('Ventes/Create', [
-        'voyages' => $voyagesClassiques,
-        'voyages_rec' => $voyagesReccurents,
-    ]);
-}
+        return Inertia::render('Ventes/Create', [
+            'voyages' => $voyagesClassiques,
+            'voyages_rec' => $voyagesReccurents,
+        ]);
+    }
 
     public function store(Request $request)
     {
@@ -110,40 +110,88 @@ class VenteController extends Controller
 
     public function edit($id)
     {
-        $items = Vente::findOrFail($id);
-        $voyage = Voyage::all();
-        $voyage_rec = VoyageRecurrent::all();
+        $vente = Vente::with([
+            'voyage.gare_depart',
+            'voyage.gare_arrivee',
+            'voyage.train',
+            'place.wagon.train'
+        ])->findOrFail($id);
+
+        // Récupérer tous les voyages disponibles (réguliers et récurrents)
+        $voyages = Voyage::whereIn('statut', ['programmé', 'en_cours'])
+            ->with(['gare_depart', 'gare_arrivee', 'train'])
+            ->get();
+
+        $voyagesRecurrents = VoyageRecurrent::whereIn('statut', ['programmé', 'en_cours'])
+            ->with(['gare_depart', 'gare_arrivee', 'train'])
+            ->get();
 
         return Inertia::render('Ventes/Edit', [
-            'ventes' => $items,
-            'voyages' => $voyage,
-            'voyages_rec' => $voyage_rec
+            'ventes' => $vente,
+            'voyages' => $voyages,
+            'voyages_rec' => $voyagesRecurrents,
+            'trainInfo' => $vente->voyage->train ?? null,
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $vente = Vente::findOrFail($id);
+        $vente = Vente::with(['voyage.train'])->findOrFail($id);
 
         $validated = $request->validate([
             'client_nom' => 'required|string|max:255',
             'voyage_id' => 'required|exists:voyages,id',
             'prix' => 'required|numeric|min:0',
-            'quantite' => 'required|numeric|min:1',
+            'quantite' => 'required|integer|min:1',
             'bagage' => 'boolean',
             'poids_bagage' => 'nullable|numeric|min:0|required_if:bagage,true',
+            'place_id' => 'nullable|exists:places,id',
         ]);
 
-        $vente->update([
-            'client_nom' => $validated['client_nom'],
-            'voyage_id' => $validated['voyage_id'],
-            'prix' => $validated['prix'],
-            'quantite' => $validated['quantite'],
-            'bagage' => $validated['bagage'],
-            'poids_bagage' => $validated['bagage'] ? $validated['poids_bagage'] : 0,
-        ]);
+        // Vérifier si le voyage a changé
+        if ($vente->voyage_id != $validated['voyage_id']) {
+            $newVoyage = Voyage::with('train.wagons.places')->findOrFail($validated['voyage_id']);
 
-        return redirect()->route('vente.index')->with('success', 'Modification effectuée avec succès');
+            // Trouver une nouvelle place disponible si nécessaire
+            if (!$request->place_id) {
+                $placeLibre = Place::whereIn('id', function ($query) use ($newVoyage) {
+                    $query->select('places.id')
+                        ->from('places')
+                        ->join('wagons', 'places.wagon_id', '=', 'wagons.id')
+                        ->whereIn('wagons.id', $newVoyage->train->wagons->pluck('id'))
+                        ->whereNotIn('places.id', function ($sub) {
+                            $sub->select('place_id')->from('ventes')->whereNotNull('place_id');
+                        });
+                })->first();
+
+                if (!$placeLibre) {
+                    return back()->withErrors([
+                        'train_id' => 'Aucune place disponible dans le train associé à ce nouveau voyage'
+                    ]);
+                }
+
+                $validated['place_id'] = $placeLibre->id;
+            }
+        }
+
+        try {
+            $vente->update([
+                'client_nom' => $validated['client_nom'],
+                'voyage_id' => $validated['voyage_id'],
+                'prix' => $validated['prix'],
+                'quantite' => $validated['quantite'],
+                'bagage' => $validated['bagage'],
+                'poids_bagage' => $validated['bagage'] ? $validated['poids_bagage'] : 0,
+                'place_id' => $validated['place_id'] ?? $vente->place_id,
+            ]);
+
+            return redirect()->route('vente.index')
+                ->with('success', 'Vente mise à jour avec succès');
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'error' => 'Une erreur est survenue lors de la mise à jour: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function destroy(Vente $vente)

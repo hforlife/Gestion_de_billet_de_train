@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { usePage } from "@inertiajs/vue3";
 import { Plus } from "lucide-vue-next";
 
@@ -10,19 +10,14 @@ const sidebarActive = ref(false);
 const userDropdownOpen = ref(false);
 
 const userRoles = computed(() => {
-    // Cas 1: Spatie renvoie un tableau de noms de rôles (format ['admin', 'chef'])
     if (Array.isArray(page.props.auth?.user?.roles)) {
         return page.props.auth.user.roles;
-    }
-    // Cas 2: Spatie renvoie une collection d'objets (format [{id: 1, name: 'admin'}, ...])
-    else if (page.props.auth?.user?.roles?.every((role) => role?.name)) {
+    } else if (page.props.auth?.user?.roles?.every((role) => role?.name)) {
         return page.props.auth.user.roles.map((role) => role.name);
     }
-    // Cas 3: Aucun rôle trouvé
     return [];
 });
 
-// Propriétés calculées pour les accès
 const hasAdminAccess = computed(() => userRoles.value.includes("admin"));
 const hasChefAccess = computed(() => userRoles.value.includes("chef"));
 const hasCaissierAccess = computed(() => userRoles.value.includes("caissier"));
@@ -33,30 +28,25 @@ const hasAdminOrChefOrCaissierAccess = computed(
     () => hasAdminAccess.value || hasChefAccess.value || hasCaissierAccess.value
 );
 
-// Gestion du toggle sidebar
 const toggleSidebar = () => {
     sidebarActive.value = !sidebarActive.value;
 };
 
-// Gestion du dropdown utilisateur
 const toggleUserDropdown = () => {
     userDropdownOpen.value = !userDropdownOpen.value;
 };
 
-// Fermer les dropdowns quand on clique ailleurs
 const closeAllDropdowns = () => {
     userDropdownOpen.value = false;
 };
 
 onMounted(() => {
-    // Ajoute un écouteur pour fermer les dropdowns au clic externe
     document.addEventListener("click", (e) => {
         if (!e.target.closest(".user-dropdown")) {
             userDropdownOpen.value = false;
         }
     });
 
-    // Active l'élément de menu correspondant à l'URL
     const currentPath = window.location.pathname.split("/").pop();
     document.querySelectorAll("#sidebar .nav-link").forEach((link) => {
         const href = link.getAttribute("href") || "";
@@ -69,156 +59,84 @@ onMounted(() => {
 </script>
 
 <template>
+  <transition name="fade">
     <div class="container-scroller" @click="closeAllDropdowns">
-        <!-- Navbar -->
-        <nav
-            class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex flex-row"
-        >
-            <div
-                class="text-center navbar-brand-wrapper d-flex align-items-top justify-content-center"
-            >
-                <Link
-                    class="navbar-brand brand-logo"
-                    :href="route('dashboard')"
-                >
-                    <img
-                        src="/resources/js/assets/images/icon_white.png"
-                        alt="logo"
-                    />
+      <!-- Navbar -->
+      <nav class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex flex-row animate-navbar">
+        <!-- Logo & Mini Logo -->
+        <div class="text-center navbar-brand-wrapper d-flex align-items-top justify-content-center">
+          <Link class="navbar-brand brand-logo" :href="route('dashboard')">
+            <img src="/resources/js/assets/images/icon_white.png" alt="logo" />
+          </Link>
+          <Link class="navbar-brand brand-logo-mini" :href="route('dashboard')">
+            <img src="/resources/js/assets/images/icon.png" alt="logo" style="width: 50px; height: 50px" class="rounded-circle" />
+          </Link>
+        </div>
+
+        <div class="navbar-menu-wrapper d-flex align-items-center">
+          <Link :href="route('vente.create')" class="btn btn-primary btn-icon-text animate-fade">
+            Effectuer une Vente
+          </Link>
+
+          <ul class="navbar-nav ml-auto">
+            <!-- Paramètres -->
+            <li class="nav-item">
+              <div>
+                <Link class="btn btn-primary text-white animate-fade" :href="route('setting.index')">
+                  <i class="mdi mdi-cogs mr-2"></i> Paramètres
                 </Link>
-                <Link
-                    class="navbar-brand brand-logo-mini"
-                    :href="route('dashboard')"
-                >
-                    <img
-                        src="/resources/js/assets/images/icon.png"
-                        alt="logo"
-                        style="width: 50px; height: 50px"
-                        class="rounded-circle"
-                    />
-                </Link>
-            </div>
+              </div>
+            </li>
 
-            <div class="navbar-menu-wrapper d-flex align-items-center">
-                <Link
-                    :href="route('vente.create')"
-                    class="btn btn-primary btn-icon-text"
-                >
-                    Effectuer une Vente
-                    <!-- <Plus size="16" class="me-1" /> -->
-                </Link>
-                <ul class="navbar-nav ml-auto">
-                    <!-- Dropdown Utilisateur -->
-                    <!-- Paramètre -->
-                    <li class="nav-item">
-                        <div>
-                            <Link
-                                class="btn btn-primary text-white"
-                                :href="route('setting.index')"
-                            >
-                                <i class="mdi mdi-cogs mr-2"></i>
-                                Paramètres
-                            </Link>
-                        </div>
-                    </li>
-                    <!-- Profil -->
-                    <li
-                        class="nav-item dropdown d-none d-xl-inline-block user-dropdown"
-                        @click.stop
-                    >
-                        <a
-                            class="nav-link dropdown-toggle"
-                            id="UserDropdown"
-                            href="#"
-                            @click="toggleUserDropdown"
-                        >
-                            <img
-                                class="img-xs rounded-circle"
-                                src="/resources/js/assets/images/user-icon.png"
-                                alt="Profile image"
-                            />
-                        </a>
-                        <div
-                            class="dropdown-menu dropdown-menu-right navbar-dropdown"
-                            :class="{ show: userDropdownOpen }"
-                            aria-labelledby="UserDropdown"
-                        >
-                            <div class="dropdown-header text-center">
-                                <center>
-                                    <img
-                                        class="img-md rounded-circle"
-                                        src="/resources/js/assets/images/user-icon.png"
-                                        alt="Profile image"
-                                    />
-                                </center>
+            <!-- Profil Utilisateur -->
+            <li class="nav-item dropdown d-none d-xl-inline-block user-dropdown animate-fade" @click.stop>
+              <a class="nav-link dropdown-toggle" id="UserDropdown" href="#" @click="toggleUserDropdown">
+                <img class="img-xs rounded-circle" src="/resources/js/assets/images/user-icon.png" alt="Profile image" />
+              </a>
+              <transition name="fade">
+                <div class="dropdown-menu dropdown-menu-right navbar-dropdown" :class="{ show: userDropdownOpen }" aria-labelledby="UserDropdown">
+                  <div class="dropdown-header text-center">
+                    <center>
+                      <img class="img-md rounded-circle" src="/resources/js/assets/images/user-icon.png" alt="Profile image" />
+                    </center>
+                    <p class="mb-1 mt-3 font-weight-semibold">{{ user.name }}</p>
+                    <p class="font-weight-light text-muted mb-0">{{ user.email }}</p>
+                  </div>
+                  <Link class="dropdown-item" :href="route('user.profile')">
+                    <i class="dropdown-item-icon ti-dashboard"></i> Mon Profil
+                  </Link>
+                  <Link as="button" method="post" :href="route('logout')" class="dropdown-item">
+                    <i class="dropdown-item-icon ti-power-off"></i> Déconnexion
+                  </Link>
+                </div>
+              </transition>
+            </li>
+          </ul>
 
-                                <p class="mb-1 mt-3 font-weight-semibold">
-                                    {{ user.name }}
-                                </p>
-                                <p class="font-weight-light text-muted mb-0">
-                                    {{ user.email }}
-                                </p>
-                            </div>
-                            <Link
-                                class="dropdown-item"
-                                :href="route('user.profile')"
-                            >
-                                <i class="dropdown-item-icon ti-dashboard"></i>
-                                Mon Profil
-                            </Link>
-                            <Link
-                                as="button"
-                                method="post"
-                                :href="route('logout')"
-                                class="dropdown-item"
-                            >
-                                <i class="dropdown-item-icon ti-power-off"></i>
-                                Déconnexion
-                            </Link>
-                        </div>
-                    </li>
-                </ul>
+          <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" @click="toggleSidebar">
+            <span class="mdi mdi-menu"></span>
+          </button>
+        </div>
+      </nav>
 
-                <button
-                    class="navbar-toggler navbar-toggler-right d-lg-none align-self-center"
-                    type="button"
-                    @click="toggleSidebar"
-                >
-                    <span class="mdi mdi-menu"></span>
-                </button>
-            </div>
-        </nav>
-
-        <!-- Sidebar -->
-        <div class="container-fluid page-body-wrapper">
-            <nav
-                class="sidebar sidebar-offcanvas"
-                :class="{ active: sidebarActive }"
-                id="sidebar"
-            >
-                <ul class="nav">
-                    <li class="nav-item nav-profile">
-                        <a href="#" class="nav-link">
-                            <div class="profile-image">
-                                <img
-                                    class="img-xs rounded-circle"
-                                    src="/resources/js/assets/images/user-icon.png"
-                                    alt="profile image"
-                                />
-                                <div class="dot-indicator bg-success"></div>
-                            </div>
-                            <div class="text-wrapper">
-                                <p class="profile-name">{{ user.name }}</p>
-                                <p class="designation">
-                                    {{
-                                        user.roles?.join(", ") || "Utilisateur"
-                                    }}
-                                </p>
-                            </div>
-                        </a>
-                    </li>
-
-                    <li class="nav-item nav-category">Menu Principal</li>
+      <!-- Sidebar & Main Content -->
+      <div class="container-fluid page-body-wrapper">
+        <transition name="slide">
+          <nav class="sidebar sidebar-offcanvas" :class="{ active: sidebarActive }" id="sidebar">
+            <ul class="nav">
+              <li class="nav-item nav-profile animate-fade">
+                <a href="#" class="nav-link">
+                  <div class="profile-image">
+                    <img class="img-xs rounded-circle" src="/resources/js/assets/images/user-icon.png" alt="profile image" />
+                    <div class="dot-indicator bg-success"></div>
+                  </div>
+                  <div class="text-wrapper">
+                    <p class="profile-name">{{ user.name }}</p>
+                    <p class="designation">{{ user.roles?.join(", ") || "Utilisateur" }}</p>
+                  </div>
+                </a>
+              </li>
+              <li class="nav-item nav-category">Menu Principal</li>
 
                     <!-- Dashboard -->
                     <li class="nav-item">
@@ -460,7 +378,7 @@ onMounted(() => {
                         </Link>
                     </li>
 
-                    <!-- Rapport -->
+                    <!-- Rapport
                     <li class="nav-item">
                         <Link
                             class="nav-link"
@@ -472,86 +390,125 @@ onMounted(() => {
                             <i class="menu-icon typcn typcn-user-outline"></i>
                             <span class="menu-title">Rapport</span>
                         </Link>
-                    </li>
-                </ul>
-            </nav>
+                    </li> -->
+            </ul>
+          </nav>
+        </transition>
 
-            <!-- Contenu principal -->
-            <div class="main-panel">
-                <div class="content-wrapper">
-                    <div v-if="$page.props.flash.message" class="alert">
-                        {{ $page.props.flash.message }}
-                    </div>
-                    <slot />
-                </div>
+        <div class="main-panel">
+          <div class="content-wrapper">
+            <transition name="fade">
+              <div v-if="$page.props.flash.message" class="alert alert-success">
+                {{ $page.props.flash.message }}
+              </div>
+            </transition>
+            <slot />
+          </div>
 
-                <!-- Footer -->
-                <footer class="footer">
-                    <div class="container-fluid clearfix">
-                        <span
-                            class="text-muted d-block text-center text-sm-left d-sm-inline-block"
-                        >
-                            Copyright © Doucsoft {{ new Date().getFullYear() }}
-                        </span>
-                        <span
-                            class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center"
-                        >
-                            Site
-                            <a href="#" target="_blank"
-                                >Doucsoft Technologies</a
-                            >
-                            par doucsoft.com
-                        </span>
-                    </div>
-                </footer>
+          <footer class="footer">
+            <div class="container-fluid clearfix">
+              <span class="text-muted d-block text-center text-sm-left d-sm-inline-block">
+                Copyright © Doucsoft {{ new Date().getFullYear() }}
+              </span>
+              <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">
+                Site <a href="#" target="_blank">Doucsoft Technologies</a> par doucsoft.com
+              </span>
             </div>
+          </footer>
         </div>
+      </div>
     </div>
+  </transition>
 </template>
 
 <style scoped>
-/* Style pour les dropdowns */
 .user-dropdown {
-    position: relative;
+  position: relative;
 }
 
 .dropdown-menu {
-    display: none;
-    position: absolute;
-    right: 0;
-    z-index: 1000;
+  display: none;
+  position: absolute;
+  right: 0;
+  z-index: 1000;
 }
 
 .dropdown-menu.show {
-    display: block;
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Animation pour la sidebar */
 .sidebar-offcanvas {
-    transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out;
 }
 
 .sidebar-offcanvas.active {
-    transform: translateX(0);
+  transform: translateX(0);
 }
 
-/* Style pour les liens actifs */
 .nav-link.active {
-    background-color: rgba(75, 73, 172, 0.1);
-    border-left: 3px solid var(--primary);
+  background-color: rgba(75, 73, 172, 0.1);
+  border-left: 3px solid var(--primary);
 }
 
-/* Style pour les alertes */
 .alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid transparent;
-    border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: opacity 0.5s ease-in-out;
 }
 
 .alert-success {
-    color: #3c763d;
-    background-color: #dff0d8;
-    border-color: #d6e9c6;
+  color: #3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+
+/* Animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease-in-out;
+}
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(-100%);
+}
+
+.animate-fade {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.animate-navbar {
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 </style>

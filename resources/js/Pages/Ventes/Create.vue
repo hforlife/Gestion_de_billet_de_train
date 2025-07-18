@@ -46,6 +46,22 @@ const filteredVoyages = computed(() => {
     );
 });
 
+// Mettre à jour le formulaire
+const updateForm = () => {
+    if (cart.value.length > 0) {
+        form.voyage_id = cart.value[0].voyage.id;
+        form.prix = cart.value[0].prix;
+        form.quantite = cart.value.reduce(
+            (sum, item) => sum + item.quantite,
+            0
+        );
+    } else {
+        form.voyage_id = null;
+        form.prix = 0;
+        form.quantite = 0;
+    }
+};
+
 // Ajouter au panier
 const addToCart = (voyage) => {
     const existingItem = cart.value.find(
@@ -69,17 +85,10 @@ const resetPOS = () => {
     form.reset();
 };
 
-// Mettre à jour le formulaire
-const updateForm = () => {
-    if (cart.value.length > 0) {
-        form.voyage_id = cart.value[0].voyage.id;
-        form.prix = cart.value[0].prix;
-        form.quantite = cart.value.reduce(
-            (sum, item) => sum + item.quantite,
-            0
-        );
-    }
-};
+watch(cart, () => {
+    updateForm();
+}, { deep: true });
+
 
 // Calculer le total
 const total = computed(() => {
@@ -112,10 +121,30 @@ const getSelectedTrainInfo = () => {
 const submit = () => {
     form.post(route("vente.store"), {
         onSuccess: () => {
-            cart.value = [];
-            form.reset();
-            alert("Vente enregistrée avec succès!");
+            Swal.fire({
+                title: 'Succès!',
+                text: 'La modification a été enregistrée',
+                icon: 'success',
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded'
+                }
+            });
         },
+        onError: (errors) => {
+            let errorMessage = errors.message || "Une erreur est survenue";
+
+            if (errors.train_id) {
+                errorMessage = "Aucune place disponible dans ce train";
+            }
+
+            Swal.fire({
+                title: 'Erreur',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
     });
 };
 </script>
@@ -275,7 +304,7 @@ const submit = () => {
                                 type="text"
                                 :value="getSelectedTrainInfo()"
                                 class="pos-input"
-                                
+
                                 readonly
                             />
                         </div>

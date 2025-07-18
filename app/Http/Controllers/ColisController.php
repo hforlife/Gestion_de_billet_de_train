@@ -42,10 +42,10 @@ class ColisController extends Controller
     public function create(): Response
     {
         return Inertia::render('Colis/Create', [
-            'categories' => CategorieColis::with('parametres')->get()->map(fn ($cat) => [
+            'categories' => CategorieColis::with('parametre')->get()->map(fn ($cat) => [
                 'id' => $cat->id,
                 'nom' => $cat->nom,
-                'tarifs' => $cat->parametres->map(fn ($p) => [
+                'tarifs' => $cat->parametre->map(fn ($p) => [
                     'poids_min' => $p->poids_min,
                     'poids_max' => $p->poids_max,
                     'prix_par_kg' => $p->prix_par_kg,

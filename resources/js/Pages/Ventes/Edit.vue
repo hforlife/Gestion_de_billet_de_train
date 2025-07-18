@@ -1,7 +1,7 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
-import { defineProps, computed } from "vue";
+import { defineProps, computed, watch } from "vue";
 import { ArrowLeft } from "lucide-vue-next";
 import Swal from "sweetalert2";
 import { Link } from "@inertiajs/vue3";
@@ -9,6 +9,7 @@ import { Link } from "@inertiajs/vue3";
 const props = defineProps({
     ventes: Object,
     voyages: Array,
+    voyages_rec: Array,
     trains: Array,
 });
 
@@ -23,21 +24,40 @@ const form = useForm({
     place_id: props.ventes.place_id || null,
 });
 
+// Fonction pour formater les nombres avec espaces comme séparateurs de milliers
+const formatNumber = (value) => {
+    if (!value) return '0';
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+};
+
 const selectedVoyage = computed(() => {
-    return props.voyages.find(v => v.id === form.voyage_id);
+    return [...props.voyages, ...props.voyages_rec].find(v => v.id === form.voyage_id);
+});
+
+// Calcul du total formaté
+const totalFormatted = computed(() => {
+    return formatNumber(form.prix * form.quantite) + ' FCFA';
+});
+
+const prixFormatted = computed(() => {
+    return formatNumber(form.prix);
 });
 
 const updateVoyageDetails = () => {
     if (selectedVoyage.value) {
         form.prix = selectedVoyage.value.prix;
         form.train_id = selectedVoyage.value.train_id;
-        // Réinitialiser la place si le voyage change
         form.place_id = null;
     }
 };
 
+watch(() => form.voyage_id, (newVal) => {
+    updateVoyageDetails();
+});
+
 const submit = () => {
     form.put(route("vente.update", props.ventes.id), {
+        preserveScroll: true,
         onSuccess: () => {
             Swal.fire({
                 title: 'Succès!',
@@ -50,17 +70,22 @@ const submit = () => {
             });
         },
         onError: (errors) => {
-            let errorMessage = errors.message || "Une erreur est survenue";
-            
+            let errorMessage = "Une erreur est survenue lors de la modification";
+
             if (errors.train_id) {
                 errorMessage = "Aucune place disponible dans ce train";
+            } else if (errors.message) {
+                errorMessage = errors.message;
             }
-            
+
             Swal.fire({
                 title: 'Erreur',
                 text: errorMessage,
                 icon: 'error',
-                confirmButtonText: 'OK'
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded'
+                }
             });
         }
     });
@@ -91,14 +116,18 @@ const submit = () => {
                             Informations client
                         </h2>
                         <div class="form-group">
-                            <label>Nom du client</label>
-                            <input 
-                                type="text" 
-                                v-model="form.client_nom" 
+                            <label>Nom du client <span class="required">*</span></label>
+                            <input
+                                type="text"
+                                v-model="form.client_nom"
                                 class="form-input"
+                                :class="{ 'error': form.errors.client_nom }"
                                 placeholder="Nom complet du client"
                                 required
                             >
+                            <span v-if="form.errors.client_nom" class="error-message">
+                                {{ form.errors.client_nom }}
+                            </span>
                         </div>
                     </div>
 
@@ -109,29 +138,43 @@ const submit = () => {
                             Détails du voyage
                         </h2>
                         <div class="form-group">
-                            <label>Voyage</label>
-                            <select 
-                                v-model="form.voyage_id" 
-                                @change="updateVoyageDetails"
+                            <label>Voyage <span class="required">*</span></label>
+                            <select
+                                v-model="form.voyage_id"
                                 class="form-select"
+                                :class="{ 'error': form.errors.voyage_id }"
                                 required
                             >
                                 <option disabled value="">-- Choisir un voyage --</option>
-                                <option 
-                                    v-for="voyage in voyages" 
-                                    :key="voyage.id" 
-                                    :value="voyage.id"
-                                >
-                                    {{ voyage.name }} ({{ voyage.gare_depart }} → {{ voyage.gare_arrivee }})
-                                </option>
+                                <optgroup label="Voyages Réguliers">
+                                    <option
+                                        v-for="voyage in voyages"
+                                        :key="voyage.id"
+                                        :value="voyage.id"
+                                    >
+                                        {{ voyage.name }} ({{ voyage.gare_depart.nom }} → {{ voyage.gare_arrivee.nom }})
+                                    </option>
+                                </optgroup>
+                                <optgroup label="Voyages Récurrents">
+                                    <option
+                                        v-for="voyage in voyages_rec"
+                                        :key="voyage.id"
+                                        :value="voyage.id"
+                                    >
+                                        {{ voyage.name }} ({{ voyage.gare_depart.nom }} → {{ voyage.gare_arrivee.nom }})
+                                    </option>
+                                </optgroup>
                             </select>
+                            <span v-if="form.errors.voyage_id" class="error-message">
+                                {{ form.errors.voyage_id }}
+                            </span>
                         </div>
 
                         <div class="form-group">
                             <label>Train attribué</label>
-                            <input 
-                                type="text" 
-                                :value="selectedVoyage ? `${selectedVoyage.train} (${selectedVoyage.train})` : 'Non défini'"
+                            <input
+                                type="text"
+                                :value="selectedVoyage ? `${selectedVoyage.train.numero} - ${selectedVoyage.train.name}` : 'Non défini'"
                                 class="form-input"
                                 readonly
                             >
@@ -147,28 +190,32 @@ const submit = () => {
                         </h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="form-group">
-                                <label>Prix unitaire (FCFA)</label>
-                                <input 
-                                    type="number" 
-                                    v-model="form.prix" 
+                                <label>Prix unitaire (FCFA) <span class="required">*</span></label>
+                                <input
+                                    type="text"
+                                    :value="prixFormatted"
                                     class="form-input"
                                     readonly
                                 >
                             </div>
 
                             <div class="form-group">
-                                <label>Quantité</label>
-                                <input 
-                                    type="number" 
-                                    v-model="form.quantite" 
+                                <label>Quantité <span class="required">*</span></label>
+                                <input
+                                    type="number"
+                                    v-model.number="form.quantite"
                                     min="1"
                                     class="form-input"
+                                    :class="{ 'error': form.errors.quantite }"
                                     required
                                 >
+                                <span v-if="form.errors.quantite" class="error-message">
+                                    {{ form.errors.quantite }}
+                                </span>
                             </div>
                         </div>
                         <div class="total-price">
-                            Total: <span>{{ (form.prix * form.quantite).toLocaleString() }} FCFA</span>
+                            Total: <span>{{ totalFormatted }}</span>
                         </div>
                     </div>
 
@@ -180,8 +227,8 @@ const submit = () => {
                         </h2>
                         <div class="form-group checkbox-group">
                             <label>
-                                <input 
-                                    type="checkbox" 
+                                <input
+                                    type="checkbox"
                                     v-model="form.bagage"
                                     class="form-checkbox"
                                 >
@@ -190,28 +237,32 @@ const submit = () => {
                         </div>
 
                         <div v-if="form.bagage" class="form-group">
-                            <label>Poids du bagage (kg)</label>
-                            <input 
-                                type="number" 
-                                v-model="form.poids_bagage" 
+                            <label>Poids du bagage (kg) <span class="required">*</span></label>
+                            <input
+                                type="number"
+                                v-model.number="form.poids_bagage"
                                 min="0"
                                 step="0.1"
                                 class="form-input"
-                                :required="form.bagage"
+                                :class="{ 'error': form.errors.poids_bagage }"
+                                required
                             >
+                            <span v-if="form.errors.poids_bagage" class="error-message">
+                                {{ form.errors.poids_bagage }}
+                            </span>
                         </div>
                     </div>
 
                     <!-- Actions -->
                     <div class="form-actions">
-                        <Link 
-                            :href="route('vente.index')" 
+                        <Link
+                            :href="route('vente.index')"
                             class="cancel-button"
                         >
                             Annuler
                         </Link>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             class="submit-button"
                             :disabled="form.processing"
                         >
@@ -252,6 +303,8 @@ const submit = () => {
     color: #3b82f6;
     font-weight: 500;
     margin-bottom: 16px;
+    text-decoration: none;
+    transition: color 0.2s;
 }
 
 .back-button:hover {
@@ -314,6 +367,7 @@ const submit = () => {
 
 .form-group {
     margin-bottom: 20px;
+    position: relative;
 }
 
 .form-group label {
@@ -323,13 +377,17 @@ const submit = () => {
     color: #374151;
 }
 
+.required {
+    color: #ef4444;
+}
+
 .form-input, .form-select {
     width: 100%;
     padding: 10px 14px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
     font-size: 1rem;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
 }
 
 .form-input:focus, .form-select:focus {
@@ -341,6 +399,17 @@ const submit = () => {
 .form-input[readonly] {
     background-color: #f3f4f6;
     cursor: not-allowed;
+}
+
+.error {
+    border-color: #ef4444;
+}
+
+.error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 4px;
+    display: block;
 }
 
 .checkbox-group label {
@@ -435,16 +504,16 @@ const submit = () => {
     .edit-container {
         padding: 16px;
     }
-    
+
     .edit-form {
         padding: 16px;
     }
-    
+
     .form-actions {
         flex-direction: column-reverse;
         gap: 12px;
     }
-    
+
     .cancel-button, .submit-button {
         width: 100%;
     }

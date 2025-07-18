@@ -158,7 +158,7 @@ const formatDate = (dateString) => {
                                         <th scope="col">Client</th>
                                         <th scope="col">Voyage</th>
                                         <th scope="col">Train</th>
-                                        <th scope="col" class="text-end">Prix</th>
+                                        <th scope="col" class="text-end">Prix Unitaire(PU)</th>
                                         <th scope="col">Bagage</th>
                                         <th scope="col" class="text-end">Quantité</th>
                                         <th scope="col" class="text-end">Poids</th>
