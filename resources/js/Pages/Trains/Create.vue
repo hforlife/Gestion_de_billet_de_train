@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 const form = useForm({
     numero: "",
     etat: "",
+    nombre_agents: 0, // Ajout d'un champ pour le nombre d'agents
 });
 
 const {errors} = form;
@@ -62,6 +63,7 @@ const submit = () => {
                                     >{{ errors.numero }}</span
                                 >
                             </div>
+
                             <!-- Etat -->
                             <div class="form-group">
                                 <label for="exampleInputPassword1"
@@ -83,6 +85,23 @@ const submit = () => {
                                     v-if="errors.etat"
                                     class="text-danger"
                                     >{{ errors.etat }}</span
+                                >
+                            </div>
+
+                            <!-- Nombre d'agents -->
+                            <div class="form-group">
+                                <label for="numero">Nombre d'agents</label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="numero"
+                                    v-model="form.nombre_agents"
+                                    placeholder="Entrer Nom"
+                                />
+                                <span
+                                    v-if="errors.nombre_agents"
+                                    class="text-danger"
+                                    >{{ errors.nombre_agents }}</span
                                 >
                             </div>
                             <div class="d-flex justify-content-end mt-4">

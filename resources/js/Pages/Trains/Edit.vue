@@ -13,6 +13,7 @@ const props = defineProps({
 const form = useForm({
     numero: props.trains?.numero || '',
     etat: props.trains?.etat || '',
+    nombre_agents: props.trains?.nombre_agents || 0, // Ajout d'un champ pour le nombre d'agents
 });
 
 // Fonction d'envoi du formulaire
@@ -78,7 +79,7 @@ const submit = () => {
                                     {{ form.errors.numero }}
                                 </div>
                             </div>
-                            
+
                             <!-- Etat -->
                             <div class="form-group">
                                 <label for="etat"
@@ -87,8 +88,8 @@ const submit = () => {
                                 <select
                                     class="form-control"
                                     v-model="form.etat"
-                                     :class="{ 'is-invalid': form.errors.etat }"
-                                >
+                                    :class="{ 'is-invalid': form.errors.etat }"
+                                    >
                                     <option value="" disabled>
                                         -- Choisissez un etat --
                                     </option>
@@ -98,12 +99,31 @@ const submit = () => {
                                     </option>
                                 </select>
                                 <div
-                                    v-if="form.errors.etat"
-                                    class="invalid-feedback"
+                                v-if="form.errors.etat"
+                                class="invalid-feedback"
                                 >
-                                    {{ form.errors.etat }}
-                                </div>
+                                {{ form.errors.etat }}
                             </div>
+                        </div>
+
+                        <!-- Nombre d'agents -->
+                        <div class="form-group">
+                            <label for="numero">Nombre d'agents</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                v-model="form.nombre_agents"
+                                 :class="{ 'is-invalid': form.errors.nombre_agents }"
+                                placeholder="Entrer Nom"
+                                required
+                            />
+                            <div
+                                v-if="form.errors.nombre_agents"
+                                class="invalid-feedback"
+                            >
+                                {{ form.errors.nombre_agents }}
+                            </div>
+                        </div>
                             <div class="d-flex justify-content-end mt-4">
                                 <button
                                     type="reset"

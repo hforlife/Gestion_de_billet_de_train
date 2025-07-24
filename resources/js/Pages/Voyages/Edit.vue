@@ -1,149 +1,221 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
-import { defineProps } from "vue";
+import { computed, watch } from "vue";
 import Swal from "sweetalert2";
 
 const props = defineProps({
-    voyages: Object,
-    gares: Array,
+    voyage: Object,
     trains: Array,
+    lignes: Array,
+    tarifs: Array,
 });
 
 const form = useForm({
-    name: props.voyages?.name ?? '',
-    train_id: props.voyages?.train_id ?? '',
-    gare_depart_id: props.voyages?.gare_depart_id ?? '',
-    gare_arrivee_id: props.voyages?.gare_arrivee_id ?? '',
-    date_depart: props.voyages?.date_depart ?? '',
-    date_arrivee: props.voyages?.date_arrivee ?? '',
-    prix: props.voyages?.prix ?? '',
-    statut: props.voyages?.statut ?? '',
+    name: props.voyage.name,
+    train_id: props.voyage.train_id,
+    ligne_id: props.voyage.ligne_id,
+    tarif_id: props.voyage.tarif_id,
+    date_depart: props.voyage.date_depart,
+    date_arrivee: props.voyage.date_arrivee,
+    statut: props.voyage.statut,
+});
+
+const tarifsDisponibles = computed(() => {
+    return props.tarifs.filter(t => t.ligne_id == form.ligne_id);
+});
+
+watch(() => form.ligne_id, (newLigneId) => {
+    if (newLigneId && tarifsDisponibles.value.length) {
+        form.tarif_id = tarifsDisponibles.value[0].id;
+    }
 });
 
 const submit = () => {
-    form.put(route('voyage.update', props.voyages.id), {
+    form.put(route('voyage.update', props.voyage.id), {
         onSuccess: () => {
-            Swal.fire("Succès", "Voyage modifié avec succès.", "success");
+            Swal.fire("Succès", "Voyage modifié avec succès", "success");
         },
         onError: () => {
-            Swal.fire("Erreur", "Une erreur est survenue.", "error");
+            Swal.fire("Erreur", "Veuillez vérifier le formulaire", "error");
         },
     });
 };
 </script>
 
-
 <template>
     <AppLayout>
         <div class="page-header">
             <h4 class="page-title">Modification de Voyage</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <Link :href="route('dashboard')">Tableau de bord</Link>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <Link :href="route('voyage.index')">Voyages</Link>
+                    </li>
+                    <li class="breadcrumb-item active">Modification</li>
+                </ol>
+            </nav>
         </div>
 
-        <div class="card">
-            <div class="card-body">
-                <form @submit.prevent="submit">
-                     <!-- Nom du voyage -->
-                     <div class="form-group">
-                        <label :for="form.name">Nom du Voyage</label>
-                        <input type="string" v-model="form.name" :id="form.name" class="form-control" placeholder="Bamako - Dakar" required>
-                        <span v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</span>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title">Modification du voyage #{{ voyage.id }}</h3>
                     </div>
 
-                    <!-- N°Train -->
-                    <div class="form-group">
-                        <label :for="form.train_id">N°Train</label>
-                        <select v-model="form.train_id" :id="form.train_id" class="form-control" required>
-                            <option value="" disabled>-- Sélectionner un train --</option>
-                            <option v-for="train in props.trains" :key="train.id" :value="train.id">{{ train.numero }}</option>
-                        </select>
-                        <span v-if="form.errors.train_id" class="text-red-500">{{ form.errors.train_id }}</span>
-                    </div>
-                    
+                    <div class="card-body">
+                        <form @submit.prevent="submit">
+                            <div class="row">
+                                <!-- Nom du voyage -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nom du voyage</label>
+                                    <input
+                                        v-model="form.name"
+                                        type="text"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.name }"
+                                        required
+                                    />
+                                    <div v-if="form.errors.name" class="invalid-feedback">
+                                        {{ form.errors.name }}
+                                    </div>
+                                </div>
 
-                    <!-- Gare de départ -->
-                    <div class="form-group">
-                        <label :for="form.gare_depart_id">Gare de départ</label>
-                        <select v-model="form.gare_depart_id" :id="form.gare_depart_id" class="form-control">
-                            <option value="" disabled>-- Sélectionner une gare de depart --</option>
-                            <option v-for="gare in props.gares" :key="gare.id" :value="gare.id">{{ gare.nom }}</option>
-                        </select>
-                        <span v-if="form.errors.gare_depart_id" class="text-red-500">{{ form.errors.gare_depart_id }}</span>
-                    </div>
+                                <!-- Train -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Train</label>
+                                    <select
+                                        v-model="form.train_id"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.train_id }"
+                                        required
+                                    >
+                                        <option value="" disabled>Sélectionnez un train</option>
+                                        <option v-for="train in trains" :key="train.id" :value="train.id">
+                                            Train N°{{ train.numero }}
+                                        </option>
+                                    </select>
+                                    <div v-if="form.errors.train_id" class="invalid-feedback">
+                                        {{ form.errors.train_id }}
+                                    </div>
+                                </div>
+                            </div>
 
-                    <!-- Gare d'arrivée -->
-                    <div class="form-group">
-                        <label :for="form.gare_arrivee_id">Gare d'arrivée</label>
-                        <select v-model="form.gare_arrivee_id" :id="form.gare_arrivee_id" class="form-control">
-                            <option value="" disabled>-- Sélectionner une gare d'arrivée --</option>
-                            <option v-for="gare in props.gares" :key="gare.id" :value="gare.id">{{ gare.nom }}</option>
-                        </select>
-                        <span v-if="form.errors.gare_arrivee_id" class="text-red-500">{{ form.errors.gare_arrivee_id }}</span>
-                    </div>
+                            <div class="row">
+                                <!-- Ligne -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Ligne</label>
+                                    <select
+                                        v-model="form.ligne_id"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.ligne_id }"
+                                        required
+                                    >
+                                        <option value="" disabled>Sélectionnez une ligne</option>
+                                        <option v-for="ligne in lignes" :key="ligne.id" :value="ligne.id">
+                                            {{ ligne.nom }} ({{ ligne.gare_depart.nom }} → {{ ligne.gare_arrivee.nom }})
+                                        </option>
+                                    </select>
+                                    <div v-if="form.errors.ligne_id" class="invalid-feedback">
+                                        {{ form.errors.ligne_id }}
+                                    </div>
+                                </div>
 
-                    <!-- Date de départ -->
-                    <div class="form-group">
-                        <label :for="form.date_depart">Date de  départ</label>
-                        <input type="datetime-local" v-model="form.date_depart" :id="form.date_depart" class="form-control" required>
-                        <span v-if="form.errors.date_depart" class="text-red-500">{{ form.errors.date_depart }}</span>
-                    </div>
+                                <!-- Tarif -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tarif appliqué</label>
+                                    <select
+                                        v-model="form.tarif_id"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.tarif_id }"
+                                        :disabled="!form.ligne_id"
+                                        required
+                                    >
+                                        <option value="" disabled>Sélectionnez un tarif</option>
+                                        <option v-for="tarif in tarifsDisponibles" :key="tarif.id" :value="tarif.id">
+                                            {{ tarif.classe_wagon.nom }} - {{ tarif.prix_base }} FCFA
+                                        </option>
+                                    </select>
+                                    <div v-if="form.errors.tarif_id" class="invalid-feedback">
+                                        {{ form.errors.tarif_id }}
+                                    </div>
+                                </div>
+                            </div>
 
-                    <!-- Date d'arrivée -->
-                    <div class="form-group">
-                        <label :for="form.date_arrivee">Date d'arrivée</label>
-                        <input type="datetime-local" v-model="form.date_arrivee" :id="form.date_arrivee" class="form-control">
-                        <span v-if="form.errors.date_arrivee" class="text-red-500">{{ form.errors.date_arrivee }}</span>
-                    </div>
+                            <div class="row">
+                                <!-- Date de départ -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Date de départ</label>
+                                    <input
+                                        v-model="form.date_depart"
+                                        type="datetime-local"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.date_depart }"
+                                        required
+                                    />
+                                    <div v-if="form.errors.date_depart" class="invalid-feedback">
+                                        {{ form.errors.date_depart }}
+                                    </div>
+                                </div>
 
-                    <!-- Prix du voyage -->
-                    <div class="form-group">
-                        <label :for="form.prix">Prix du voyage(FCFA)</label>
-                        <input type="number" v-model="form.prix" :id="form.prix" class="form-control" placeholder="00.000" required>
-                        <span v-if="form.errors.prix" class="text-red-500">{{ form.errors.prix }}</span>
-                    </div>
+                                <!-- Date d'arrivée -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Date d'arrivée</label>
+                                    <input
+                                        v-model="form.date_arrivee"
+                                        type="datetime-local"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.date_arrivee }"
+                                        required
+                                    />
+                                    <div v-if="form.errors.date_arrivee" class="invalid-feedback">
+                                        {{ form.errors.date_arrivee }}
+                                    </div>
+                                </div>
+                            </div>
 
-                    <!-- statut -->
-                    <div class="form-group">
-                        <label :for="form.statut">statut</label>
-                        <select v-model="form.statut" :id="form.statut" class="form-control" required>
-                            <option value="" disabled>-- Sélectionner un statut --</option>
-                            <option value="programmé">Programmé</option>
-                            <option value="en_cours">En Cours</option>
-                            <option value="terminé">Terminé</option>
-                            <option value="annulé">Annulé</option>
-                        </select>
-                        <span v-if="form.errors.statut" class="text-red-500">{{ form.errors.statut }}</span>
-                    </div>
+                            <!-- Statut -->
+                            <div class="mb-3">
+                                <label class="form-label">Statut</label>
+                                <select
+                                    v-model="form.statut"
+                                    class="form-control"
+                                    :class="{ 'is-invalid': form.errors.statut }"
+                                    required
+                                >
+                                    <option value="programmé">Programmé</option>
+                                    <option value="en_cours">En cours</option>
+                                    <option value="terminé">Terminé</option>
+                                    <option value="annulé">Annulé</option>
+                                </select>
+                                <div v-if="form.errors.statut" class="invalid-feedback">
+                                    {{ form.errors.statut }}
+                                </div>
+                            </div>
 
-                    <!-- Boutons -->
-                    <div class="d-flex justify-content-end mt-4">
-                                <button
-                                    type="reset"
-                                    class="btn btn-light mr-2"
-                                    @click="form.reset()"
+                            <div class="d-flex justify-content-end mt-4">
+                                <Link
+                                    :href="route('voyage.index')"
+                                    class="btn btn-light me-2"
                                 >
                                     Annuler
-                                </button>
+                                </Link>
                                 <button
                                     type="submit"
                                     class="btn btn-primary"
                                     :disabled="form.processing"
                                 >
-                                    <span
-                                        v-if="form.processing"
-                                        class="spinner-border spinner-border-sm"
-                                        role="status"
-                                        aria-hidden="true"
-                                    ></span>
-                                    {{
-                                        form.processing
-                                            ? "En cours..."
-                                            : "Valider"
-                                    }}
+                                    <span v-if="form.processing" class="spinner-border spinner-border-sm me-2"></span>
+                                    {{ form.processing ? 'Enregistrement...' : 'Enregistrer' }}
                                 </button>
                             </div>
-
-                </form>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>

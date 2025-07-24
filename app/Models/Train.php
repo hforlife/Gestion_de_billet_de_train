@@ -9,7 +9,8 @@ class Train extends Model
     //
     protected $fillable = [
         'numero',
-        'etat'
+        'etat',
+        'nombre_agents',
     ];
 
     public function scopeFilter($query, array $filters)

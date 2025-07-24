@@ -25,7 +25,6 @@ const form = computed(() => ({
     train:
         props.vente.voyage?.train?.numero ||
         `Train #${props.vente.voyage?.train_id}`,
-    // type_train: props.vente.train?.type || "Non spécifié",
     place: props.vente.place?.numero || "Non attribuée",
     wagon: props.vente.place?.wagon?.nom || "Inconnu",
     type_wagon: props.vente.place?.wagon?.type || "Standard",
@@ -41,7 +40,8 @@ const form = computed(() => ({
         hour: "2-digit",
         minute: "2-digit",
     }),
-    place: props.vente.place?.numero || "Non attribuée",
+    mode_paiement: props.vente.mode_paiement?.type || "Inconnu",
+    point_vente: props.vente.point_vente?.gare?.nom || "Inconnu",
 }));
 
 const confirmDelete = () => {
@@ -55,10 +55,8 @@ const confirmDelete = () => {
         confirmButtonText: "Supprimer",
         cancelButtonText: "Annuler",
         customClass: {
-            confirmButton:
-                "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mx-2",
-            cancelButton:
-                "bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded mx-2",
+            confirmButton: "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mx-2",
+            cancelButton: "bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded mx-2",
         },
         buttonsStyling: false,
     }).then((result) => {
@@ -71,142 +69,132 @@ const confirmDelete = () => {
 
 <template>
     <AppLayout>
-        <div class="vente-detail-container">
+        <div class="pos-system">
             <!-- Header -->
-            <div class="vente-header">
+            <div class="pos-header">
                 <Link :href="route('vente.index')" class="back-button">
                     <ArrowLeft class="icon" /> Retour aux ventes
                 </Link>
-                <h1>Détails du billet</h1>
-                <div class="vente-reference">Réf: #{{ vente.id }}</div>
+                <div class="pos-logo">Détails du billet</div>
+                <div class="pos-date">Réf: #{{ vente.id }}</div>
             </div>
 
-            <!-- Main Card -->
-            <div class="vente-card">
-                <!-- Client Info -->
-                <div class="vente-section">
-                    <h2 class="section-title">👤 Informations client</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="info-item">
-                            <label>Nom du client</label>
-                            <div class="info-value">{{ form.client_nom }}</div>
-                        </div>
-                        <div class="info-item">
-                            <label>Date d'émission</label>
-                            <div class="info-value">{{ form.date }}</div>
+            <!-- Main Content -->
+            <div class="pos-main">
+                <!-- Left Panel - Details -->
+                <div class="pos-products">
+                    <!-- Client Info -->
+                    <div class="pos-section">
+                        <h2 class="section-title">👤 Informations client</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="pos-form-group">
+                                <label>Nom du client</label>
+                                <div class="pos-input">{{ form.client_nom }}</div>
+                            </div>
+                            <div class="pos-form-group">
+                                <label>Date d'émission</label>
+                                <div class="pos-input">{{ form.date }}</div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Voyage Info -->
-                <div class="vente-section">
-                    <h2 class="section-title">🚆 Détails du voyage</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="info-item">
-                            <label>Itinéraire</label>
-                            <div class="info-value">{{ form.voyage }}</div>
+                    <!-- Voyage Info -->
+                    <div class="pos-section">
+                        <h2 class="section-title">🚆 Détails du voyage</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="pos-form-group">
+                                <label>Itinéraire</label>
+                                <div class="pos-input">{{ form.voyage }}</div>
+                            </div>
+                            <div class="pos-form-group">
+                                <label>Départ</label>
+                                <div class="pos-input">{{ form.gare_depart }}</div>
+                            </div>
+                            <div class="pos-form-group">
+                                <label>Arrivée</label>
+                                <div class="pos-input">{{ form.gare_arrivee }}</div>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <label>Départ</label>
-                            <div class="info-value">{{ form.gare_depart }}</div>
-                        </div>
-                        <div class="info-item">
-                            <label>Arrivée</label>
-                            <div class="info-value">
-                                {{ form.gare_arrivee }}
+                    </div>
+
+                    <!-- Train Info -->
+                    <div class="pos-section">
+                        <h2 class="section-title">🚄 Informations train</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="pos-form-group">
+                                <label>Numéro du train</label>
+                                <div class="pos-input">{{ form.train }}</div>
+                            </div>
+                            <div class="pos-form-group">
+                                <label>Wagon</label>
+                                <div class="pos-input">{{ form.wagon }} ({{ form.type_wagon }})</div>
+                            </div>
+                            <div class="pos-form-group">
+                                <label>Place attribuée</label>
+                                <div class="pos-input">N°{{ form.place }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Train Info -->
-                <div class="vente-section">
-                    <h2 class="section-title">🚄 Informations train</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="info-item">
-                            <label>Numéro du train</label>
-                            <div class="info-value">{{ form.train }}</div>
-                        </div>
-                        <div class="info-item">
-                            <label>Wagon</label>
-                            <div class="info-value">
-                                {{ form.wagon }} ({{ form.type_wagon }})
+                <!-- Right Panel - Payment & Actions -->
+                <div class="pos-cart">
+                    <!-- Payment Info -->
+                    <div class="pos-section">
+                        <h2 class="section-title">💰 Détails de paiement</h2>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="pos-form-group">
+                                <label>Prix unitaire</label>
+                                <div class="pos-input">{{ form.prix }}</div>
                             </div>
-                        </div>
-                        <div class="info-item">
-                            <label>Place attribuée</label>
-                            <div class="info-value">
-                                N°{{ form.place }}
+                            <div class="pos-form-group">
+                                <label>Quantité</label>
+                                <div class="pos-input">{{ form.quantite }}</div>
                             </div>
-                        </div>
-                        <!-- <div class="info-item">
-                            <label>Place attribuée</label>
-                            <div class="info-value">{{ form.place }}</div>
-                        </div> -->
-                    </div>
-                </div>
-
-                <!-- Payment Info -->
-                <div class="vente-section">
-                    <h2 class="section-title">💰 Détails de paiement</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="info-item">
-                            <label>Prix unitaire</label>
-                            <div class="info-value">{{ form.prix }}</div>
-                        </div>
-                        <div class="info-item">
-                            <label>Quantité</label>
-                            <div class="info-value">{{ form.quantite }}</div>
-                        </div>
-                        <div class="info-item">
-                            <label>Total</label>
-                            <div class="info-value highlight">
-                                {{
-                                    (
-                                        vente.prix * vente.quantite
-                                    ).toLocaleString()
-                                }}
-                                FCFA
+                            <div class="pos-form-group">
+                                <label>Total</label>
+                                <div class="pos-input highlight">
+                                    {{ (vente.prix * vente.quantite).toLocaleString() }} FCFA
+                                </div>
+                            </div>
+                            <div class="pos-form-group">
+                                <label>Mode de paiement</label>
+                                <div class="pos-input">{{ form.mode_paiement }}</div>
+                            </div>
+                            <div class="pos-form-group">
+                                <label>Point de vente</label>
+                                <div class="pos-input">{{ form.point_vente }}</div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Baggage Info -->
-                <div class="vente-section">
-                    <h2 class="section-title">🧳 Informations bagages</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="info-item">
-                            <label>Bagage enregistré</label>
-                            <div class="info-value">{{ form.bagage }}</div>
-                        </div>
-                        <div class="info-item">
-                            <label>Poids total</label>
-                            <div class="info-value">{{ form.poids }}</div>
+                    <!-- Baggage Info -->
+                    <div class="pos-section">
+                        <h2 class="section-title">🧳 Informations bagages</h2>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="pos-form-group">
+                                <label>Bagage enregistré</label>
+                                <div class="pos-input">{{ form.bagage }}</div>
+                            </div>
+                            <div class="pos-form-group">
+                                <label>Poids total</label>
+                                <div class="pos-input">{{ form.poids }}</div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Actions -->
-                <div class="vente-actions">
-                    <button
-                        @click="generateVente(vente.id)"
-                        class="action-btn print-btn"
-                    >
-                        <File class="icon" /> Imprimer le billet
-                    </button>
-                    <Link
-                        :href="route('vente.edit', vente.id)"
-                        class="action-btn edit-btn"
-                    >
-                        <Pencil class="icon" /> Modifier
-                    </Link>
-                    <button
-                        @click="confirmDelete"
-                        class="action-btn delete-btn"
-                    >
-                        <Trash class="icon" /> Supprimer
-                    </button>
+                    <!-- Actions -->
+                    <div class="pos-cart-actions">
+                        <button @click="generateVente(vente.id)" class="pos-pay-btn">
+                            <File class="icon" /> Imprimer le billet
+                        </button>
+                        <Link :href="route('vente.edit', vente.id)" class="pos-pay-btn edit-btn">
+                            <Pencil class="icon" /> Modifier
+                        </Link>
+                        <button @click="confirmDelete" class="pos-cancel-btn delete-btn">
+                            <Trash class="icon" /> Supprimer
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -214,148 +202,163 @@ const confirmDelete = () => {
 </template>
 
 <style scoped>
-.vente-detail-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 24px;
-}
-
-.vente-header {
+.pos-system {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 32px;
-    gap: 16px;
-}
-@media (min-width: 768px) {
-    .vente-header {
-        flex-direction: row;
-        align-items: center;
-    }
+    height: 100vh;
+    background: #f5f5f5;
+    font-family: "Arial", sans-serif;
 }
 
-.vente-header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1f2937;
-    flex: 1;
-    text-align: center;
-}
-@media (min-width: 768px) {
-    .vente-header h1 {
-        text-align: left;
-    }
-}
-
-.vente-reference {
-    background-color: #dbeafe;
-    color: #1e40af;
-    padding: 4px 12px;
-    border-radius: 9999px;
-    font-size: 0.875rem;
-    font-weight: 500;
+.pos-header {
+    background: #001737;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .back-button {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #2563eb;
+    color: white;
     transition: color 0.2s;
 }
+
 .back-button:hover {
-    color: #1e40af;
+    color: #ddd;
 }
 
-.vente-card {
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+.pos-logo {
+    font-size: 18px;
+    font-weight: bold;
+    flex: 1;
+    text-align: center;
+}
+
+.pos-date {
+    font-size: 14px;
+    background-color: #dbeafe;
+    color: #1e40af;
+    padding: 4px 12px;
+    border-radius: 9999px;
+}
+
+.pos-main {
+    display: flex;
+    flex: 1;
     overflow: hidden;
 }
 
-.vente-section {
-    padding: 24px;
-    border-bottom: 1px solid #e5e7eb;
+.pos-products {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background: white;
 }
-.vente-section:last-child {
-    border-bottom: none;
+
+.pos-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 6px;
+    background: #f9f9f9;
 }
 
 .section-title {
-    font-size: 1.125rem;
+    font-size: 18px;
     font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 16px;
+    color: #001737;
+    margin-bottom: 15px;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.info-item {
+.pos-form-group {
+    margin-bottom: 15px;
+}
+
+.pos-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #666;
+    font-size: 14px;
+}
+
+.pos-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-height: 38px;
+}
+
+.highlight {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.pos-cart {
+    width: 400px;
+    background: #f9f9f9;
+    border-left: 1px solid #ddd;
     display: flex;
     flex-direction: column;
 }
-.info-item label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #6b7280;
-    margin-bottom: 4px;
-}
-.info-value {
-    color: #1f2937;
-    font-weight: 500;
-}
-.highlight {
-    color: #059669;
-    font-weight: 700;
+
+.pos-cart-actions {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    gap: 10px;
+    margin-top: auto;
 }
 
-.vente-actions {
-    padding: 24px;
-    background-color: #f9fafb;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: flex-end;
-}
-.action-btn {
+.pos-cancel-btn {
+    padding: 12px;
+    background: #eee;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: background-color 0.2s;
 }
-.print-btn {
-    background-color: #2563eb;
+
+.pos-pay-btn {
+    padding: 12px;
+    background: #001737;
     color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
-.print-btn:hover {
-    background-color: #1d4ed8;
-}
+
 .edit-btn {
-    background-color: #d97706;
-    color: white;
+    background: #d97706;
 }
-.edit-btn:hover {
-    background-color: #b45309;
-}
+
 .delete-btn {
-    background-color: #dc2626;
-    color: white;
+    background: #dc2626;
 }
-.delete-btn:hover {
-    background-color: #b91c1c;
-}
-.action-btn .icon {
+
+.icon {
     width: 16px;
     height: 16px;
 }
 
 @media print {
-    .vente-actions,
+    .pos-cart-actions,
     .back-button {
         display: none !important;
     }

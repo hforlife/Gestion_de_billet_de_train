@@ -133,6 +133,12 @@ const deleteGare = (id) => {
                                         <th>#</th>
                                         <th>Nom</th>
                                         <th>Adresse</th>
+                                        <th>Type de Gare</th>
+                                        <th>Internet</th>
+                                        <th>Electricité</th>
+                                        <th>Nombre de guichets</th>
+                                        <th>Controle Bagage</th>
+                                        <th>Distance Km</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -144,6 +150,12 @@ const deleteGare = (id) => {
                                         <td>{{ index + 1 }}</td>
                                         <td>{{ gare.nom }}</td>
                                         <td>{{ gare.adresse }}</td>
+                                        <td>{{ gare.type_gare }}</td>
+                                        <td>{{ gare.internet }}</td>
+                                        <td>{{ gare.electricite }}</td>
+                                        <td>{{ gare.nombre_guichets }}</td>
+                                        <td>{{ gare.controle_bagage }}</td>
+                                        <td>{{ gare.distance_km }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
                                             <button

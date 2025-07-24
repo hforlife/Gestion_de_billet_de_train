@@ -107,7 +107,7 @@ const formatDate = (dateString) => {
                             :key="voyage.id"
                             :value="voyage.id"
                         >
-                            {{ voyage.name }} ({{ formatDate(voyage.date_depart) }})
+                            {{ voyage.nom }} ({{ formatDate(voyage.date_depart) }})
                         </option>
                     </select>
                 </div>
@@ -171,7 +171,7 @@ const formatDate = (dateString) => {
                                         <td>{{ vente.client_nom || "---" }}</td>
                                         <td>
                                             <template v-if="vente.voyage">
-                                                {{ vente.voyage.name }}
+                                                {{ vente.voyage.nom }}
                                                 <small class="text-muted d-block">
                                                     {{ formatDate(vente.voyage.date_depart) }}
                                                 </small>

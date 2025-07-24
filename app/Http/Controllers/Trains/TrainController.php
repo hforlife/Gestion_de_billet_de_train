@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Trains;
 
 use App\Models\Train;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class TrainController extends Controller
+class TrainController
 {
     // Affichage de la liste des trains
     public function index(Request $request): Response
@@ -27,6 +27,7 @@ class TrainController extends Controller
                 'id' => $train->id,
                 'numero' => $train->numero,
                 'etat' => $train->etat,
+                'nombre_agents' => $train->nombre_agents,
             ]),
         ]);
     }
@@ -43,6 +44,7 @@ class TrainController extends Controller
         $validated = $request->validate([
             'numero' => ['required', 'string', 'max:255', 'unique:trains,numero'],
             'etat' => ['required', 'in:actif,en_maintenance'],
+            'nombre_agents' => ['required', 'string', 'max:255', 'regex:/^\d+$/'], // Assure que c'est un nombre entier
         ]);
 
         Train::create($validated);
@@ -68,6 +70,7 @@ class TrainController extends Controller
         $validated = $request->validate([
             'numero' => ['required', 'string', 'max:255', 'unique:trains,numero,' . $train->id],
             'etat' => ['required', 'in:actif,en_maintenance'],
+            'nombre_agents' => ['required', 'string', 'max:255', 'regex:/^\d+$/'], // Assure que c'est un nombre entier
         ]);
 
         $train->update($validated);

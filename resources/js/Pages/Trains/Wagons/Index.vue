@@ -2,31 +2,26 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, reactive, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
-import { Plus, Pencil, Trash, Eye, Search, Download } from "lucide-vue-next";
+import { Plus, Pencil, Trash } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
-    wagons: Array,
+    wagons: Object,
     filters: Object,
     flash: Object,
 });
 
-// 🔍 Filtres réactifs
 const filters = reactive({
     search: props.filters.search || "",
 });
 
-// 🔍 Watch pour mise à jour auto lors de la recherche
 watch(
     () => filters.search,
     (newValue) => {
         router.get(
             route("wagon.index"),
             { search: newValue },
-            {
-                preserveState: true,
-                replace: true,
-            }
+            { preserveState: true, replace: true }
         );
     }
 );
@@ -35,7 +30,6 @@ if (props.flash && props.flash.success) {
     Swal.fire("Succès", props.flash.success, "success");
 }
 
-// Fonction pour rediriger vers la page d’édition avec l'ID
 const editwagon = (id) => {
     router.visit(route("wagon.edit", id));
 };
@@ -56,7 +50,7 @@ const deletewagon = (id) => {
                 onSuccess: () => {
                     Swal.fire(
                         "Supprimé !",
-                        "Le wagon a été supprimée avec succès.",
+                        "Le wagon a été supprimé avec succès.",
                         "success"
                     );
                 },
@@ -73,12 +67,18 @@ const deletewagon = (id) => {
             <div class="col-12">
                 <div class="page-header">
                     <h4 class="page-title">Gestion des wagons</h4>
-                    <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
-                    <ul class="quick-links ml-auto">
-                     <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
-                      <li><Link :href="wagon">wagons </Link></li>
-                    </ul>
-                  </div>
+                    <div
+                        class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
+                    >
+                        <ul class="quick-links ml-auto">
+                            <li>
+                                <Link :href="route('dashboard')"
+                                    >Tableau de bord</Link
+                                >
+                            </li>
+                            <li><Link :href="wagon">wagons </Link></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -92,8 +92,12 @@ const deletewagon = (id) => {
                         v-model="filters.search"
                         placeholder="Rechercher par nom..."
                         class="form-control"
+                    />
+                    <button
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        @click="getResults"
                     >
-                    <button class="btn btn-outline-secondary" type="button" @click="getResults">
                         <i class="mdi mdi-magnify"></i>
                     </button>
                 </div>
@@ -101,11 +105,13 @@ const deletewagon = (id) => {
         </div>
 
         <!-- 📋 Tableau des wagons -->
-         <div class="row">
+        <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-4"
+                        >
                             <h4 class="card-title mb-0">Liste des wagons</h4>
                             <!-- ➕ Bouton de création -->
                             <Link
@@ -113,7 +119,7 @@ const deletewagon = (id) => {
                                 class="btn btn-primary btn-icon-text"
                             >
                                 <Plus size="16" class="me-1" />
-                                Nouveaux wagon
+                                Nouveaux wagons
                             </Link>
                         </div>
 
@@ -131,8 +137,10 @@ const deletewagon = (id) => {
                                     <tr>
                                         <th>#</th>
                                         <th>Train d'affiliation</th>
-                                        <th>Nom du Wagon</th>
-                                        <th>Nombre de Places</th>
+                                        <th>Classe Voiture</th>
+                                        <th>Numero du Wagon</th>
+                                        <th>Nombre de Sièges</th>
+                                        <th>Sièges Disponibles</th>
                                         <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
@@ -142,9 +150,11 @@ const deletewagon = (id) => {
                                         :key="wagon.id"
                                     >
                                         <td class="py-1">{{ index + 1 }}</td>
-                                        <td>{{ wagon.train_id }}</td>
-                                        <td>{{ wagon.nom }}</td>
-                                        <td>{{ wagon.nombre_places }}</td>
+                                        <td>{{ wagon.train_numero }}</td>
+                                        <td>{{ wagon.classe_nom }}</td>
+                                        <td>{{ wagon.numero_wagon }}</td>
+                                        <td>{{ wagon.nombre_sieges }}</td>
+                                        <td>{{ wagon.sieges_disponibles }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
                                                 <button
@@ -154,7 +164,9 @@ const deletewagon = (id) => {
                                                     <Pencil size="16" />
                                                 </button>
                                                 <button
-                                                    @click="deletewagon(wagon.id)"
+                                                    @click="
+                                                        deletewagon(wagon.id)
+                                                    "
                                                     class="btn btn-danger btn-sm"
                                                 >
                                                     <Trash size="16" />

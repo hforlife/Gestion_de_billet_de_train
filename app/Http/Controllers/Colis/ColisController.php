@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Colis;
 
 use App\Models\CategorieColis;
 use App\Models\Colis;
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class ColisController extends Controller
+class ColisController
 {
     // Affichage de la liste des colis
     public function index(Request $request): Response

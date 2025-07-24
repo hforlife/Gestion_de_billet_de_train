@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Colis;
 
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use App\Models\CategorieColis;
 
-class CategorieColisController extends Controller
+class CategorieColisController
 {
     // Index
     public function index(Request $request): Response

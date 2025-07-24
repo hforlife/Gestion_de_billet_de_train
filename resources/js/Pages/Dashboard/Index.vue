@@ -285,10 +285,10 @@ onMounted(() => {
         </div>
 
         <!-- Calendrier -->
-         <div class="row">
+         <!-- <div class="row">
             <div class="lg:col-span-2">
                 <Calendar :events="events" />
             </div>
-         </div>
+         </div> -->
     </AppLayout>
 </template>

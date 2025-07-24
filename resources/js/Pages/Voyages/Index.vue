@@ -2,39 +2,29 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, reactive, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
-import { Pencil, Trash, Eye, Plus } from "lucide-vue-next";
+import { Pencil, Trash, Plus } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
     voyages: Object,
     filters: Object,
-    flash: Object,
 });
 
-// 🔍 Filtres réactifs
 const filters = reactive({
     search: props.filters.search || "",
 });
-// 🔍 Watch pour mise à jour auto lors de la recherche
+
 watch(
     () => filters.search,
     (newValue) => {
         router.get(
             route("voyage.index"),
             { search: newValue },
-            {
-                preserveState: true,
-                replace: true,
-            }
+            { preserveState: true, replace: true }
         );
     }
 );
-// Affichage du message flash
-if (props.flash && props.flash.success) {
-    Swal.fire("Succès", props.flash.success, "success");
-}
 
-// Fonction pour rediriger vers la page d’édition avec l'ID
 const editVoyage = (id) => {
     router.visit(route("voyage.edit", id));
 };
@@ -55,7 +45,7 @@ const deleteVoyage = (id) => {
                 onSuccess: () => {
                     Swal.fire(
                         "Supprimé !",
-                        "Le Voyage a été supprimée avec succès.",
+                        "Le voyage a été supprimé avec succès.",
                         "success"
                     );
                 },
@@ -63,131 +53,135 @@ const deleteVoyage = (id) => {
         }
     });
 };
+
+const formatDate = (date) => {
+    return new Date(date).toLocaleString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+const getStatusClass = (statut) => {
+    return statut.replace('é', 'e').replace(' ', '_');
+};
+
+const formatStatus = (statut) => {
+    return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
+};
 </script>
+
 <template>
     <AppLayout>
-        <!-- 🧭 Titre -->
         <div class="row page-title-header">
             <div class="col-12">
                 <div class="page-header">
                     <h4 class="page-title">Gestion des Voyages</h4>
-                    <div
-                        class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
-                    >
+                    <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
                         <ul class="quick-links ml-auto">
                             <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
-                            <li><a href="#">Voyages Classique</a></li>
+                            <li><a href="#">Voyages</a></li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 🔍 Barre de recherche -->
-         <div class="row mb-3">
+        <div class="row mb-3">
             <div class="col-md-6">
                 <div class="input-group">
                     <input
                         type="text"
                         v-model="filters.search"
-                        placeholder="Rechercher par nom..."
+                        placeholder="Rechercher un voyage..."
                         class="form-control"
                     />
-                    <button
-                        class="btn btn-outline-secondary"
-                        type="button"
-                        @click="getResults"
-                    >
+                    <button class="btn btn-outline-secondary" type="button">
                         <i class="mdi mdi-magnify"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 📋 Tableau des Voyages -->
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <!-- Titre -->
-                        <div
-                            class="d-flex justify-content-between align-items-center mb-4"
-                            >
+                        <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="card-title mb-0">Liste des voyages</h4>
-                            <!-- ➕ Bouton de création -->
                             <Link
                                 :href="route('voyage.create')"
                                 class="btn btn-primary btn-icon-text"
                             >
                                 <Plus size="16" class="me-1" />
-                                Nouveaux Voyages
+                                Nouveau Voyage
                             </Link>
                         </div>
 
-                        <!-- Formulaire -->
-                         <div class="table-responsive">
+                        <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
                                         <th>#</th>
-                                        <th>Nom du voyage</th>
+                                        <th>Nom</th>
                                         <th>Train</th>
-                                        <th>Gare de Depart</th>
-                                        <th>Gare d'Arrivée</th>
-                                        <th>Date Depart</th>
-                                        <th>Date Arrivée</th>
-                                        <th>Tarif (FCFA)</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
+                                        <th>Ligne</th>
+                                        <th>Classe/Tarif</th>
+                                        <th>Départ</th>
+                                        <th>Arrivée</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr
-                                        v-for="(voyage, index) in voyages.data"
-                                        :key="voyage.id"
-                                    >
-                                        <td class="py-1">
-                                            {{ index + 1 }}
-                                        </td>
-                                        <td>{{ voyage.name }}</td>
+                                    <tr v-for="(voyage, index) in voyages.data" :key="voyage.id">
+                                        <td>{{ index + 1 }}</td>
+                                        <td>{{ voyage.nom }}</td>
                                         <td>{{ voyage.train.numero }}</td>
-                                        <td>{{ voyage.gare_depart.nom }}</td>
-                                        <td>{{ voyage.gare_arrivee.nom }}</td>
-                                        <td>{{ voyage.date_depart }}</td>
-                                        <td>{{ voyage.date_arrivee }}</td>
-                                        <td>{{ voyage.prix }}</td>
-                                        <td>{{ voyage.statut }}</td>
+                                        <td>{{ voyage.ligne.nom }}</td>
                                         <td>
-                                            <div class="btn-group">
+                                            <span class="badge bg-info">
+                                                {{ voyage.tarif.classe_wagon.nom }}:
+                                                {{ voyage.tarif.prix_base }} €
+                                            </span>
+                                        </td>
+                                        <td>{{ formatDate(voyage.date_depart) }}</td>
+                                        <td>{{ formatDate(voyage.date_arrivee) }}</td>
+                                        <td>
+                                            <span :class="`badge badge-${getStatusClass(voyage.statut)}`">
+                                                {{ formatStatus(voyage.statut) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
                                                 <button
                                                     @click="editVoyage(voyage.id)"
                                                     class="btn btn-warning btn-sm"
+                                                    title="Modifier"
                                                 >
                                                     <Pencil size="16" />
                                                 </button>
                                                 <button
                                                     @click="deleteVoyage(voyage.id)"
                                                     class="btn btn-danger btn-sm"
+                                                    title="Supprimer"
                                                 >
                                                     <Trash size="16" />
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-
-                                     <tr v-if="voyages.data.length === 0">
-                                        <td
-                                            colspan="8"
-                                            class="text-center py-4 text-muted"
-                                        >
-                                            Aucune vente trouvée
+                                    <tr v-if="voyages.data.length === 0">
+                                        <td colspan="9" class="text-center py-4 text-muted">
+                                            Aucun voyage trouvé
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        <!-- 📄 Pagination -->
                         <div class="row mt-4">
                             <div class="col-md-6">
                                 <p class="text-muted">
@@ -230,3 +224,10 @@ const deleteVoyage = (id) => {
         </div>
     </AppLayout>
 </template>
+
+<style>
+.badge-programmé { background-color: #17a2b8; }
+.badge-en_cours { background-color: #28a745; }
+.badge-terminé { background-color: #6c757d; }
+.badge-annulé { background-color: #dc3545; }
+</style>

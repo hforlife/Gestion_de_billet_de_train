@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Voyages;
 
 use App\Models\Gare;
 use App\Models\Train;
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class ReccuringVoyageController extends Controller
+class ReccuringVoyageController
 {
     // Index
     public function index(Request $request): Response

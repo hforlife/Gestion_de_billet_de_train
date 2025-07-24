@@ -3,56 +3,61 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Voyage extends Model
 {
     protected $fillable = [
-        'name',
+        'nom',
         'train_id',
-        'gare_depart_id',
-        'gare_arrivee_id',
+        'ligne_id',
+        'tarif_id',
         'date_depart',
         'date_arrivee',
-        'prix',
         'statut',
     ];
 
-    public function scopeFilter($query, array $filters)
-    {
-        $query->when($filters['search'] ?? null, function ($query, $search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('prix', 'like', "%{$search}%");
-            });
-        });
-    }
-    public function train()
+    protected $casts = [
+        'date_depart' => 'datetime',
+        'date_arrivee' => 'datetime',
+    ];
+
+    public function train(): BelongsTo
     {
         return $this->belongsTo(Train::class);
     }
 
-    public function gare_depart()
+    public function ligne(): BelongsTo
     {
-        return $this->belongsTo(Gare::class, 'gare_depart_id');
+        return $this->belongsTo(Ligne::class);
     }
 
-    public function gare_arrivee()
+    public function tarif(): BelongsTo
     {
-        return $this->belongsTo(Gare::class, 'gare_arrivee_id');
-    }
-    public function arrets()
-    {
-        return $this->hasMany(Arret::class)->orderBy('ordre');
+        return $this->belongsTo(Tarif::class);
     }
 
-    public function ventes()
+    public function arrets(): HasMany
+    {
+        return $this->hasMany(ArretsLigne::class)->orderBy('ordre');
+    }
+
+    public function ventes(): HasMany
     {
         return $this->hasMany(Vente::class);
     }
 
-    protected $casts = [
-    'date_depart' => 'datetime',
-    'date_arrivee' => 'datetime',
-    'prix' => 'decimal:2'
-];
+    // Calcul du prix en fonction de la classe
+    public function getPrixForClasse($classeWagonId)
+    {
+        return $this->tarif->where('classe_wagon_id', $classeWagonId)
+            ->where('date_effet', '<=', now())
+            ->where(function($query) {
+                $query->where('date_expiration', '>=', now())
+                      ->orWhereNull('date_expiration');
+            })
+            ->first()
+            ?->prix_base ?? 0;
+    }
 }

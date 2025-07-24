@@ -9,7 +9,9 @@ class Vente extends Model
     protected $fillable = [
         'client_nom',
         'voyage_id',
+        'mode_paiement_id',
         'prix',
+        'point_vente_id',
         'quantite',
         'bagage',
         'poids_bagage',
@@ -17,14 +19,11 @@ class Vente extends Model
         'statut',
     ];
 
-    public function scopeFilter($query, array $filters)
+    public function scopeFiltrer($query, $search, $voyageId)
     {
-        $query->when($filters['search'] ?? null, function ($query, $search) {
-            $query->where(function ($query) use ($search) {
-                $query->where('client_nom', 'like', "%{$search}%")
-                    ->orWhereHas('voyage', fn($q) => $q->where('destination', 'like', "%{$search}%"));
-            });
-        });
+        return $query
+            ->when($search, fn($q) => $q->where('client_nom', 'like', "%{$search}%"))
+            ->when($voyageId, fn($q) => $q->where('voyage_id', $voyageId));
     }
 
     public function voyage()
@@ -46,5 +45,14 @@ class Vente extends Model
             'voyage_id', // Foreign key in Vente
             'train_id'  // Foreign key in Voyage
         );
+    }
+    public function modePaiement()
+    {
+        return $this->belongsTo(ModesPaiement::class);
+    }
+
+    public function pointVente()
+    {
+        return $this->belongsTo(PointsVente::class);
     }
 }

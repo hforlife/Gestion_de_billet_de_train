@@ -1,22 +1,22 @@
 <?php
 
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
-    ArretController,
-    BilletController,
-    ColisController,
     DashboardController,
-    GareController,
-    TrainController,
-    WagonController,
-    VenteController,
-    VoyageController,
     UserController,
-    CategorieColisController,
     ParametreController,
     FeedController,
-    ReccuringVoyageController
+    BilletController,
+    PaiementController
 };
+
+// Contrôleurs par module
+use App\Http\Controllers\Gares\{GareController, ArretController, LigneController, TypeController};
+use App\Http\Controllers\Trains\{ClasseController, TrainController, WagonController, MaintenanceController};
+use App\Http\Controllers\Ventes\{VenteController, PointVenteController};
+use App\Http\Controllers\Voyages\{VoyageController, ReccuringVoyageController, TarifController};
+use App\Http\Controllers\Colis\{ColisController, CategorieColisController};
 
 Route::get('/', function () {
     return redirect('login');
@@ -48,15 +48,33 @@ Route::middleware(['auth', 'role:admin|chef|caissier'])->group(function () {
 
 // Routes pour chefs et admin seulement
 Route::middleware(['auth', 'role:admin|chef'])->group(function () {
-    Route::resource('/train', TrainController::class)->except(['show']);
-    Route::resource('/wagon', WagonController::class)->except(['show']);
-    Route::resource('/gare', GareController::class)->except(['show']);
-    Route::resource('/voyage', VoyageController::class)->except(['show']);
-    Route::resource('/voyage-reccurent', ReccuringVoyageController::class)->except(['show']);
-    Route::resource('/arret', ArretController::class)->except(['show']);
-    Route::resource('/categories-colis', CategorieColisController::class)->except(['show']);
-    Route::resource('/setting', ParametreController::class)->except(['show']);
-    Route::resource('/feed', FeedController::class)->except(['show']);
+    Route::resource('/points-vente', PointVenteController::class)->except(['show']);            // Pour les points de vente
+    Route::resource('/train', TrainController::class)->except(['show']);                        // Pour les trains
+    Route::resource('/wagon', WagonController::class)->except(['show']);                        // Pour les wagons
+    Route::resource('/classe', ClasseController::class)->except(['show']);                      // Pour les classes de train
+    Route::resource('/gare', GareController::class)->except(['show']);                          // Pour les gares
+    Route::resource('/ligne', LigneController::class)->except(['show']);                        // Pour les lignes de train
+    Route::resource('/type', TypeController::class)->except(['show']);                          // Pour les Type de train
+    Route::resource('/arret', ArretController::class)->except(['show']);                        // Pour les arrêts
+    Route::resource('/voyage', VoyageController::class)->except(['show']);                      // Pour les voyages
+    Route::resource('/voyage-reccurent', ReccuringVoyageController::class)->except(['show']);   // Pour les voyages récurrents
+    Route::resource('/categories-colis', CategorieColisController::class)->except(['show']);    // Pour les catégories de colis
+    Route::resource('/setting', ParametreController::class)->except(['show']);                  // Pour les paramètres
+    Route::resource('/feed', FeedController::class)->except(['show']);                          //Pour les rapports
+    Route::resource('/paiement', PaiementController::class)->except(['show']);                  //Pour les Paiements
+    Route::resource('/tarif', TarifController::class)->except(['show']);
+    Route::resource('/maintenance', MaintenanceController::class)->except(['show']);
+
+    Route::get(
+        'maintenances/dashboard',
+        [MaintenanceController::class, 'dashboard']
+    )
+        ->name('maintenances.dashboard');
+    Route::post(
+        'maintenances/{maintenance}/terminer',
+        [MaintenanceController::class, 'terminer']
+    )
+        ->name('maintenances.terminer');
 });
 
 // Routes réservées à l'admin

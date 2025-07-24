@@ -3,19 +3,24 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { ref, computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import { watch } from "vue";
+import Swal from "sweetalert2";
 
 const props = defineProps({
     voyages: Array,
     voyages_rec: Array,
     trains: Array,
+    modesPaiement: Array,
+    pointsVente: Array,
 });
 
 const form = useForm({
     client_nom: "",
     voyage_id: null,
     train_id: null,
+    mode_paiement_id: props.modesPaiement.length ? props.modesPaiement[0].id : null,
+    point_vente_id: props.pointsVente.length ? props.pointsVente[0].id : null,
     prix: 0,
-    quantite: 1,
+    quantite: 1, // Nouveau champ pour la classe
     bagage: false,
     poids_bagage: 0,
 });
@@ -23,7 +28,7 @@ const form = useForm({
 const selectedVoyage = ref(null);
 const searchQuery = ref("");
 const cart = ref([]);
-const activeTab = ref("regular"); // 'regular' ou 'recurrent'
+const activeTab = ref("regular");
 
 // Filtrer les voyages selon l'onglet actif
 const currentVoyages = computed(() => {
@@ -34,15 +39,17 @@ const currentVoyages = computed(() => {
 const filteredVoyages = computed(() => {
     return currentVoyages.value.filter(
         (voyage) =>
-            voyage.name
+            voyage.nom
                 .toLowerCase()
                 .includes(searchQuery.value.toLowerCase()) ||
-            voyage.gare_depart_id
-                .toLowerCase()
-                .includes(searchQuery.value.toLowerCase()) ||
-            voyage.gare_arrivee_id
-                .toLowerCase()
-                .includes(searchQuery.value.toLowerCase())
+            (voyage.ligne.gareDepart?.nom
+                ?.toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ??
+                false) ||
+            (voyage.ligne.gareArrivee?.nom
+                ?.toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ??
+                false)
     );
 });
 
@@ -73,8 +80,8 @@ const addToCart = (voyage) => {
         cart.value.push({
             voyage,
             quantite: 1,
-            prix: voyage.prix,
-            type: activeTab.value, // Stocker le type de voyage
+            prix: voyage.tarif?.prix_base ?? voyage.prix,
+            type: activeTab.value,
         });
     }
     updateForm();
@@ -85,10 +92,7 @@ const resetPOS = () => {
     form.reset();
 };
 
-watch(cart, () => {
-    updateForm();
-}, { deep: true });
-
+watch(cart, updateForm, { deep: true });
 
 // Calculer le total
 const total = computed(() => {
@@ -114,7 +118,7 @@ const getSelectedTrainInfo = () => {
         .concat(props.voyages_rec)
         .find((v) => v.id === form.voyage_id);
     if (!voyage || !voyage.train) return "Non défini";
-    return `${voyage.train.numero} - ${voyage.train.name}`;
+    return `${voyage.train.numero} - ${voyage.train.nom}`;
 };
 
 // Soumettre la vente
@@ -122,13 +126,16 @@ const submit = () => {
     form.post(route("vente.store"), {
         onSuccess: () => {
             Swal.fire({
-                title: 'Succès!',
-                text: 'La modification a été enregistrée',
-                icon: 'success',
-                confirmButtonText: 'OK',
+                title: "Succès!",
+                text: "La vente a été enregistrée",
+                icon: "success",
+                confirmButtonText: "OK",
                 customClass: {
-                    confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded'
-                }
+                    confirmButton:
+                        "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded",
+                },
+            }).then(() => {
+                resetPOS();
             });
         },
         onError: (errors) => {
@@ -139,12 +146,12 @@ const submit = () => {
             }
 
             Swal.fire({
-                title: 'Erreur',
+                title: "Erreur",
                 text: errorMessage,
-                icon: 'error',
-                confirmButtonText: 'OK'
+                icon: "error",
+                confirmButtonText: "OK",
             });
-        }
+        },
     });
 };
 </script>
@@ -197,10 +204,17 @@ const submit = () => {
                             @click="addToCart(voyage)"
                         >
                             <div class="pos-product-info">
-                                <h3>{{ voyage.name }}</h3>
+                                <h3>{{ voyage.nom }}</h3>
                                 <p>
-                                    {{ voyage.gare_depart.nom }} →
-                                    {{ voyage.gare_arrivee.nom }}
+                                    {{
+                                        voyage.ligne.gare_depart?.nom ??
+                                        "Gare inconnue"
+                                    }}
+                                    →
+                                    {{
+                                        voyage.ligne.gare_arrivee?.nom ??
+                                        "Gare inconnue"
+                                    }}
                                 </p>
                                 <div
                                     v-if="activeTab === 'recurrent'"
@@ -219,7 +233,14 @@ const submit = () => {
                                 </div>
 
                                 <div class="pos-product-price">
-                                    {{ voyage.prix.toLocaleString() }} FCFA
+                                    {{
+                                        (
+                                            voyage.tarif?.prix_base ??
+                                            voyage.ligne.tarif?.prix_base ??
+                                            voyage.prix
+                                        ).toLocaleString()
+                                    }}
+                                    FCFA
                                 </div>
                             </div>
                         </div>
@@ -248,10 +269,17 @@ const submit = () => {
                             class="pos-cart-item"
                         >
                             <div class="pos-cart-item-info">
-                                <h3>{{ item.voyage.name }}</h3>
+                                <h3>{{ item.voyage.nom }}</h3>
                                 <p>
-                                    {{ item.voyage.gare_depart.nom }} →
-                                    {{ item.voyage.gare_arrivee.nom }}
+                                    {{
+                                        item.voyage.ligne.gare_depart?.nom ??
+                                        "Gare inconnue"
+                                    }}
+                                    →
+                                    {{
+                                        item.voyage.ligne?.gare_arrivee?.nom ??
+                                        "Gare inconnue"
+                                    }}
                                 </p>
                                 <small v-if="item.type === 'recurrent'"
                                     >(Récurrent)</small
@@ -259,7 +287,7 @@ const submit = () => {
                             </div>
                             <div class="pos-cart-item-qty">
                                 <button
-                                    @click="
+                                    @click.stop="
                                         item.quantite > 1
                                             ? item.quantite--
                                             : cart.splice(index, 1)
@@ -268,7 +296,7 @@ const submit = () => {
                                     -
                                 </button>
                                 <span>{{ item.quantite }}</span>
-                                <button @click="item.quantite++">+</button>
+                                <button @click.stop="item.quantite++">+</button>
                             </div>
                             <div class="pos-cart-item-price">
                                 {{
@@ -295,7 +323,42 @@ const submit = () => {
                                 v-model="form.client_nom"
                                 type="text"
                                 class="pos-input"
+                                required
                             />
+                        </div>
+
+                        <div class="pos-form-group">
+                            <label>Mode de Paiement</label>
+                            <select
+                                v-model="form.mode_paiement_id"
+                                class="pos-select"
+                                required
+                            >
+                                <option
+                                    v-for="mode in props.modesPaiement"
+                                    :key="mode.id"
+                                    :value="mode.id"
+                                >
+                                    {{ mode.type }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="pos-form-group">
+                            <label>Point de Vente</label>
+                            <select
+                                v-model="form.point_vente_id"
+                                class="pos-select"
+                                required
+                            >
+                                <option
+                                    v-for="point in props.pointsVente"
+                                    :key="point.id"
+                                    :value="point.id"
+                                >
+                                    {{ point.gare.nom }}
+                                </option>
+                            </select>
                         </div>
 
                         <div class="pos-form-group">
@@ -304,7 +367,6 @@ const submit = () => {
                                 type="text"
                                 :value="getSelectedTrainInfo()"
                                 class="pos-input"
-
                                 readonly
                             />
                         </div>
@@ -338,7 +400,7 @@ const submit = () => {
                         <button
                             @click="submit"
                             class="pos-pay-btn"
-                            :disabled="cart.length === 0"
+                            :disabled="cart.length === 0 || !form.client_nom"
                         >
                             Valider la vente
                         </button>
@@ -593,7 +655,7 @@ const submit = () => {
 }
 
 .pos-pay-btn:disabled {
-    background: #001737;
+    background: #ccc;
     cursor: not-allowed;
 }
 
