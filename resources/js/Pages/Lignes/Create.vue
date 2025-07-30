@@ -12,7 +12,16 @@ const form = useForm({
     gare_depart_id: "",
     gare_arrivee_id: "",
     distance_totale: 0,
+    arrets: [], // 👈 tableau d’objets { gare_id, distance }
 });
+
+const ajouterArret = () => {
+    form.arrets.push({ gare_id: "", distance: 0 });
+};
+
+const supprimerArret = (index) => {
+    form.arrets.splice(index, 1);
+};
 
 const submit = () => {
     form.post(route("ligne.store"), {
@@ -44,17 +53,24 @@ const submit = () => {
         <!-- En-tête de page -->
         <div class="row page-title-header">
             <div class="col-12">
-                <div class="page-header d-flex justify-content-between align-items-center">
+                <div
+                    class="page-header d-flex justify-content-between align-items-center"
+                >
                     <h4 class="page-title">Création d'une nouvelle ligne</h4>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item">
-                                <Link :href="route('dashboard')">Tableau de bord</Link>
+                                <Link :href="route('dashboard')"
+                                    >Tableau de bord</Link
+                                >
                             </li>
                             <li class="breadcrumb-item">
                                 <Link :href="route('ligne.index')">Lignes</Link>
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">
+                            <li
+                                class="breadcrumb-item active"
+                                aria-current="page"
+                            >
                                 Nouvelle ligne
                             </li>
                         </ol>
@@ -72,14 +88,18 @@ const submit = () => {
                         <form @submit.prevent="submit" class="pt-3">
                             <!-- Section 1: Informations de base -->
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Nom de la ligne *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Nom de la ligne *</label
+                                >
                                 <div class="col-sm-9">
                                     <input
                                         type="text"
                                         class="form-control"
                                         v-model="form.nom"
                                         placeholder="Ex: Bamako-Kayes"
-                                        :class="{ 'is-invalid': form.errors.nom }"
+                                        :class="{
+                                            'is-invalid': form.errors.nom,
+                                        }"
                                         required
                                     />
                                     <div class="invalid-feedback">
@@ -90,15 +110,22 @@ const submit = () => {
 
                             <!-- Section 2: Gares -->
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Gare de départ *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Gare de départ *</label
+                                >
                                 <div class="col-sm-9">
                                     <select
                                         class="form-control"
                                         v-model="form.gare_depart_id"
-                                        :class="{ 'is-invalid': form.errors.gare_depart_id }"
+                                        :class="{
+                                            'is-invalid':
+                                                form.errors.gare_depart_id,
+                                        }"
                                         required
                                     >
-                                        <option value="">Sélectionnez une gare</option>
+                                        <option value="">
+                                            Sélectionnez une gare
+                                        </option>
                                         <option
                                             v-for="gare in gares"
                                             :key="gare.id"
@@ -114,20 +141,29 @@ const submit = () => {
                             </div>
 
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Gare d'arrivée *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Gare d'arrivée *</label
+                                >
                                 <div class="col-sm-9">
                                     <select
                                         class="form-control"
                                         v-model="form.gare_arrivee_id"
-                                        :class="{ 'is-invalid': form.errors.gare_arrivee_id }"
+                                        :class="{
+                                            'is-invalid':
+                                                form.errors.gare_arrivee_id,
+                                        }"
                                         required
                                     >
-                                        <option value="">Sélectionnez une gare</option>
+                                        <option value="">
+                                            Sélectionnez une gare
+                                        </option>
                                         <option
                                             v-for="gare in gares"
                                             :key="gare.id"
                                             :value="gare.id"
-                                            :disabled="gare.id === form.gare_depart_id"
+                                            :disabled="
+                                                gare.id === form.gare_depart_id
+                                            "
                                         >
                                             {{ gare.nom }}
                                         </option>
@@ -139,7 +175,9 @@ const submit = () => {
                             </div>
 
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Distance totale (km) *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Distance totale (km) *</label
+                                >
                                 <div class="col-sm-9">
                                     <input
                                         type="number"
@@ -148,7 +186,10 @@ const submit = () => {
                                         class="form-control"
                                         v-model="form.distance_totale"
                                         placeholder="Distance en kilomètres"
-                                        :class="{ 'is-invalid': form.errors.distance_totale }"
+                                        :class="{
+                                            'is-invalid':
+                                                form.errors.distance_totale,
+                                        }"
                                         required
                                     />
                                     <div class="invalid-feedback">
@@ -157,9 +198,70 @@ const submit = () => {
                                 </div>
                             </div>
 
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label"
+                                    >Arrêts intermédiaires</label
+                                >
+                                <div class="col-sm-9">
+                                    <div
+                                        v-for="(arret, index) in form.arrets"
+                                        :key="index"
+                                        class="d-flex align-items-center mb-2"
+                                    >
+                                        <select
+                                            v-model="arret.gare_id"
+                                            class="form-control mr-2"
+                                            required
+                                        >
+                                            <option value="">
+                                                Sélectionner une gare
+                                            </option>
+                                            <option
+                                                v-for="gare in gares"
+                                                :key="gare.id"
+                                                :value="gare.id"
+                                                :disabled="
+                                                    [
+                                                        form.gare_depart_id,
+                                                        form.gare_arrivee_id,
+                                                    ].includes(gare.id)
+                                                "
+                                            >
+                                                {{ gare.nom }}
+                                            </option>
+                                        </select>
+                                        <input
+                                            type="number"
+                                            v-model="arret.distance_depart"
+                                            placeholder="Distance (km)"
+                                            class="form-control mr-2"
+                                            min="0"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            class="btn btn-danger btn-sm"
+                                            @click="supprimerArret(index)"
+                                        >
+                                            Supprimer
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-primary mt-2"
+                                        @click="ajouterArret"
+                                    >
+                                        Ajouter un arrêt
+                                    </button>
+                                </div>
+                            </div>
+
                             <!-- Boutons de soumission -->
                             <div class="form-group row mt-4">
-                                <div class="col-sm-12 d-flex justify-content-end">
+                                <div
+                                    class="col-sm-12 d-flex justify-content-end"
+                                >
                                     <Link
                                         :href="route('ligne.index')"
                                         class="btn btn-light mr-2"

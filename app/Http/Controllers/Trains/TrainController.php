@@ -26,6 +26,7 @@ class TrainController
             'trains' => $trains->through(fn ($train) => [
                 'id' => $train->id,
                 'numero' => $train->numero,
+                'sens' => $train->sens,
                 'etat' => $train->etat,
                 'nombre_agents' => $train->nombre_agents,
             ]),
@@ -43,6 +44,7 @@ class TrainController
     {
         $validated = $request->validate([
             'numero' => ['required', 'string', 'max:255', 'unique:trains,numero'],
+            'sens' => ['required', 'in:Bamako-Kayes,Kayes-Bamako'],
             'etat' => ['required', 'in:actif,en_maintenance'],
             'nombre_agents' => ['required', 'string', 'max:255', 'regex:/^\d+$/'], // Assure que c'est un nombre entier
         ]);

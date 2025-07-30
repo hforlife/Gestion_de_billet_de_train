@@ -20,22 +20,22 @@ class LigneController
             'lignes' => Ligne::with(['gareDepart', 'gareArrivee'])
                 ->orderBy('nom')
                 ->when($filters['search'] ?? null, function ($query, $search) {
-                    $query->where('nom', 'like', '%'.$search.'%')
-                          ->orWhereHas('gareDepart', function($q) use ($search) {
-                              $q->where('nom', 'like', '%'.$search.'%');
-                          })
-                          ->orWhereHas('gareArrivee', function($q) use ($search) {
-                              $q->where('nom', 'like', '%'.$search.'%');
-                          });
+                    $query->where('nom', 'like', '%' . $search . '%')
+                        ->orWhereHas('gareDepart', function ($q) use ($search) {
+                            $q->where('nom', 'like', '%' . $search . '%');
+                        })
+                        ->orWhereHas('gareArrivee', function ($q) use ($search) {
+                            $q->where('nom', 'like', '%' . $search . '%');
+                        });
                 })
                 ->paginate(10)
                 ->withQueryString()
-                ->through(fn ($ligne) => [
+                ->through(fn($ligne) => [
                     'id' => $ligne->id,
                     'nom' => $ligne->nom,
                     'gare_depart' => $ligne->gareDepart->nom,
                     'gare_arrivee' => $ligne->gareArrivee->nom,
-                    'distance_totale' => $ligne->distance_totale.' km',
+                    'distance_totale' => $ligne->distance_totale . ' km',
                 ]),
         ]);
     }
@@ -54,9 +54,26 @@ class LigneController
             'gare_depart_id' => ['required', 'exists:gares,id'],
             'gare_arrivee_id' => ['required', 'exists:gares,id', 'different:gare_depart_id'],
             'distance_totale' => ['required', 'numeric', 'min:1'],
+            'arrets' => 'array',
+            'arrets.*.gare_id' => 'required|exists:gares,id|distinct',
+            'arrets.*.distance_depart' => 'required|numeric|min:0',
         ]);
 
-        Ligne::create($validated);
+        // Exclure les arrêts du tableau
+        $arrets = $validated['arrets'] ?? [];
+        unset($validated['arrets']);
+
+        // Créer la ligne sans les arrêts
+        $ligne = Ligne::create($validated);
+
+        // Ajouter les arrêts s'ils existent
+        foreach ($arrets as $index => $arret) {
+            $ligne->arrets()->create([
+                'gare_id' => $arret['gare_id'],
+                'distance_depart' => $arret['distance_depart'],
+                'ordre' => $index + 1,
+            ]);
+        }
 
         return Redirect::route('ligne.index')->with('success', 'Ligne créée avec succès.');
     }

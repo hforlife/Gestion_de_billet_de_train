@@ -8,7 +8,8 @@ use App\Http\Controllers\{
     ParametreController,
     FeedController,
     BilletController,
-    PaiementController
+    PaiementController,
+    SystemSettingController
 };
 
 // Contrôleurs par module
@@ -60,6 +61,7 @@ Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/voyage-reccurent', ReccuringVoyageController::class)->except(['show']);   // Pour les voyages récurrents
     Route::resource('/categories-colis', CategorieColisController::class)->except(['show']);    // Pour les catégories de colis
     Route::resource('/setting', ParametreController::class)->except(['show']);                  // Pour les paramètres
+    Route::resource('/system', SystemSettingController::class)->except(['show', 'index', 'destroy']);                  // Pour les paramètres
     Route::resource('/feed', FeedController::class)->except(['show']);                          //Pour les rapports
     Route::resource('/paiement', PaiementController::class)->except(['show']);                  //Pour les Paiements
     Route::resource('/tarif', TarifController::class)->except(['show']);

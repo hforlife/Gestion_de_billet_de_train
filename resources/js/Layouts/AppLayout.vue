@@ -107,7 +107,7 @@ onMounted(() => {
                                     class="btn btn-primary text-white animate-fade"
                                     :href="route('setting.index')"
                                 >
-                                    <i class="mdi mdi-cogs mr-2"></i> Paramètres
+                                    <i class="mdi mdi-cogs mr-2"></i> <!--Paramètres-->
                                 </Link>
                             </div>
                         </li>
@@ -345,8 +345,8 @@ onMounted(() => {
                                         </li>
 
                                         <!-- Types Gare -->
-                                        <li class="nav-item">
-                                            <!-- <a class="nav-link" href="pages/ui-features/typography.html">Trains</a> -->
+                                        <!-- <li class="nav-item">
+                                            <a class="nav-link" href="pages/ui-features/typography.html">Trains</a>
                                             <Link
                                                 class="nav-link"
                                                 :href="route('type.index')"
@@ -363,7 +363,7 @@ onMounted(() => {
                                                     >Types Gare</span
                                                 >
                                             </Link>
-                                        </li>
+                                        </li> -->
 
                                         <!-- Ligne -->
                                         <li class="nav-item">
@@ -449,8 +449,7 @@ onMounted(() => {
                                         </li>
 
                                         <!-- Classes Wagons -->
-                                        <li class="nav-item">
-                                            <!-- <a class="nav-link" href="pages/ui-features/typography.html">Trains</a> -->
+                                        <!-- <li class="nav-item">
                                             <Link
                                                 class="nav-link"
                                                 :href="route('classe.index')"
@@ -467,7 +466,7 @@ onMounted(() => {
                                                     >Classes Wagon</span
                                                 >
                                             </Link>
-                                        </li>
+                                        </li> -->
 
                                         <!-- Wagons -->
                                         <li class="nav-item">
@@ -491,8 +490,7 @@ onMounted(() => {
                                         </li>
 
                                         <!-- Maintenance -->
-                                        <li class="nav-item">
-                                            <!-- <a class="nav-link" href="pages/ui-features/typography.html">Trains</a> -->
+                                        <!-- <li class="nav-item">
                                             <Link
                                                 class="nav-link"
                                                 :href="route('maintenance.index')"
@@ -509,7 +507,7 @@ onMounted(() => {
                                                     >Maintenance</span
                                                 >
                                             </Link>
-                                        </li>
+                                        </li> -->
                                     </ul>
                                 </div>
                             </li>
@@ -700,8 +698,9 @@ onMounted(() => {
                                                 >
                                             </Link>
                                         </li>
+
                                         <!-- Rapport -->
-                                        <li class="nav-item">
+                                        <!-- <li class="nav-item">
                                             <Link
                                                 class="nav-link"
                                                 :class="{
@@ -718,10 +717,10 @@ onMounted(() => {
                                                     >Rapport</span
                                                 >
                                             </Link>
-                                        </li>
+                                        </li> -->
 
                                         <!-- Modes de Paiements -->
-                                        <li class="nav-item">
+                                        <!-- <li class="nav-item">
                                             <Link
                                                 class="nav-link"
                                                 :class="{
@@ -738,10 +737,90 @@ onMounted(() => {
                                                     >Mode de Paiements</span
                                                 >
                                             </Link>
-                                        </li>
+                                        </li> -->
                                     </ul>
                                 </div>
                             </li>
+                            <!-- Administration -->
+                            <li class="nav-item">
+                                <a
+                                    class="nav-link"
+                                    data-toggle="collapse"
+                                    href="#ui-ze"
+                                    aria-expanded="false"
+                                    aria-controls="ui-ze"
+                                >
+                                    <i class="menu-icon typcn typcn-coffee"></i>
+                                    <span class="menu-title"
+                                        >Paramètres</span
+                                    >
+                                    <i class="menu-arrow"></i>
+                                </a>
+                                <div class="collapse" id="ui-ze">
+                                    <ul class="nav flex-column sub-menu">
+                                        <!-- Rôles -->
+                                        <li class="nav-item">
+                                            <Link
+                                                class="nav-link"
+                                                :class="{
+                                                    active: $page.url.startsWith(
+                                                        '/user'
+                                                    ),
+                                                }"
+                                                :href="route('user.index')"
+                                            >
+                                                <i
+                                                    class="menu-icon typcn typcn-user-outline"
+                                                ></i>
+                                                <span class="menu-title"
+                                                    >Rôles & Permissions</span
+                                                >
+                                            </Link>
+                                        </li>
+
+                                        <!-- Rapport -->
+                                        <li class="nav-item">
+                                            <Link
+                                                class="nav-link"
+                                                :class="{
+                                                    active: $page.url.startsWith(
+                                                        '/setting'
+                                                    ),
+                                                }"
+                                                :href="route('setting.index')"
+                                            >
+                                                <i
+                                                    class="menu-icon typcn typcn-user-outline"
+                                                ></i>
+                                                <span class="menu-title"
+                                                    >Paramètres Systèmes</span
+                                                >
+                                            </Link>
+                                        </li>
+
+                                        <!-- Modes de Paiements -->
+                                        <!-- <li class="nav-item">
+                                            <Link
+                                                class="nav-link"
+                                                :class="{
+                                                    active: $page.url.startsWith(
+                                                        '/paiement'
+                                                    ),
+                                                }"
+                                                :href="route('paiement.index')"
+                                            >
+                                                <i
+                                                    class="menu-icon typcn typcn-user-outline"
+                                                ></i>
+                                                <span class="menu-title"
+                                                    >Mode de Paiements</span
+                                                >
+                                            </Link>
+                                        </li> -->
+                                    </ul>
+                                </div>
+                            </li>
+
                         </ul>
                     </nav>
                 </transition>

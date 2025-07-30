@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
         $this->call(RoleSeeder::class);
         $this->call(AdminSeeder::class);
         $this->call(PermissionSeeder::class);
+        $this->call(GareSeeder::class);
+        $this->call(TrainSeeder::class);
 
         // Optionnel : créer des utilisateurs de test
         User::factory(5)->create()->each(function ($user) {

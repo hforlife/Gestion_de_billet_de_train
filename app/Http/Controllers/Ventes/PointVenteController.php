@@ -31,7 +31,6 @@ class PointVenteController
                 'type' => $point->type,
                 'actif' => $point->actif ? 'Actif' : 'Inactif',
                 'gare_nom' => $point->gare->nom,
-                'gare_type' => $point->gare->typeGare->type,
             ]),
         ]);
     }
@@ -39,10 +38,10 @@ class PointVenteController
     public function create(): Response
     {
         return Inertia::render('PointsVente/Create', [
-            'gares' => Gare::with('typeGare')->get()->map(fn($gare) => [
+            'gares' => Gare::query()->get()->map(fn($gare) => [
                 'id' => $gare->id,
                 'nom' => $gare->nom,
-                'type' => $gare->typeGare->type,
+                'type' => $gare->type,
             ]),
         ]);
     }
@@ -51,7 +50,7 @@ class PointVenteController
     {
         $validated = $request->validate([
             'gare_id' => ['required', 'exists:gares,id'],
-            'type' => ['required', 'in:gare,externe'],
+            'type' => ['required'],
             'actif' => ['required', 'boolean'],
         ]);
 
@@ -82,7 +81,7 @@ class PointVenteController
     {
         $validated = $request->validate([
             'gare_id' => ['required', 'exists:gares,id'],
-            'type' => ['required', 'in:gare,externe'],
+            'type' => ['required'],
             'actif' => ['required', 'boolean'],
         ]);
 

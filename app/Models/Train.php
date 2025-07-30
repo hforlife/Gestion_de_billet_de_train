@@ -9,6 +9,7 @@ class Train extends Model
     //
     protected $fillable = [
         'numero',
+        'sens', // Sens du train, par exemple 'Bamako-Kayes' ou 'Kayes-Bamako'
         'etat',
         'nombre_agents',
     ];

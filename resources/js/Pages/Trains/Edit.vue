@@ -12,6 +12,7 @@ const props = defineProps({
 // Initialisation du formulaire
 const form = useForm({
     numero: props.trains?.numero || '',
+    sens: props.trains?.sens || '',
     etat: props.trains?.etat || '',
     nombre_agents: props.trains?.nombre_agents || 0, // Ajout d'un champ pour le nombre d'agents
 });
@@ -79,6 +80,30 @@ const submit = () => {
                                     {{ form.errors.numero }}
                                 </div>
                             </div>
+
+                             <!-- Sens -->
+                            <div class="form-group">
+                                <label for="sens"
+                                    >Sens du train</label
+                                >
+                                <select
+                                    class="form-control"
+                                    v-model="form.sens"
+                                    :class="{ 'is-invalid': form.errors.sens }"
+                                    >
+                                    <option value="" disabled>
+                                        -- Choisissez un sens --
+                                    </option>
+                                    <option value="Bamako-Kayes">Bamako-Kayes</option>
+                                    <option value="Kayes-Bamako">Kayes-Bamako</option>
+                                </select>
+                                <div
+                                v-if="form.errors.sens"
+                                class="invalid-feedback"
+                                >
+                                {{ form.errors.sens }}
+                            </div>
+                        </div>
 
                             <!-- Etat -->
                             <div class="form-group">

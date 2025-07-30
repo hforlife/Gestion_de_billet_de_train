@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 const form = useForm({
     nom: "",
     adresse: "",
-    type_gare_id: "",
+    type: "",
     distance_km: 0,
     internet: false,
     electricite: false,
@@ -120,35 +120,36 @@ const submit = () => {
                                 </div>
                             </div>
 
+
                             <!-- Section 2: Type et caractéristiques -->
                             <div class="form-group row">
                                 <label
-                                    for="type_gare_id"
+                                    for="type"
                                     class="col-sm-3 col-form-label"
                                     >Type de gare *</label
                                 >
                                 <div class="col-sm-9">
                                     <select
-                                        id="type_gare_id"
+                                        id="type"
                                         class="form-control"
-                                        v-model="form.type_gare_id"
+                                        v-model="form.type"
                                         :class="{
                                             'is-invalid':
-                                                form.errors.type_gare_id,
+                                                form.errors.type,
                                         }"
                                         required
                                     >
-                                        <option value="">Sélectionnez un type</option>
-                                        <option :value="1">Principale</option>
-                                        <option :value="2">Passage</option>
-                                        <option :value="3">Halte</option>
-                                        <option :value="4">Fermée</option>
+                                        <option value="">-- Sélectionnez un type --</option>
+                                        <option value="principale">Principale</option>
+                                        <option value="passage">Passage</option>
+                                        <option value="halte">Halte</option>
+                                        <option value="fermee">Fermée</option>
                                     </select>
                                     <div
-                                        v-if="form.errors.type_gare_id"
+                                        v-if="form.errors.type"
                                         class="invalid-feedback"
                                     >
-                                        {{ form.errors.type_gare_id }}
+                                        {{ form.errors.type }}
                                     </div>
                                 </div>
                             </div>

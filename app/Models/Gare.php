@@ -9,7 +9,7 @@ class Gare extends Model
 {
     //
         protected $fillable = [
-        'nom', 'adresse', 'type_gare_id', 'distance_km',
+        'nom', 'adresse', 'type', 'distance_km',
         'internet', 'electricite', 'nombre_guichets', 'controle_bagage'
     ];
 
@@ -30,10 +30,7 @@ class Gare extends Model
             });
     }
 
-    public function typeGare()
-    {
-        return $this->belongsTo(TypesGare::class);
-    }
+
     public function arrets()
     {
         return $this->hasMany(ArretsLigne::class);

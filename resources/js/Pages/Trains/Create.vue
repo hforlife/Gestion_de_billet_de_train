@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 // Initialisation du formulaire
 const form = useForm({
     numero: "",
+    sens: "",
     etat: "",
     nombre_agents: 0, // Ajout d'un champ pour le nombre d'agents
 });
@@ -64,9 +65,33 @@ const submit = () => {
                                 >
                             </div>
 
+                            <!-- Sens -->
+                              <div class="form-group">
+                                <label for="sens"
+                                    >Sens du train</label
+                                >
+                                <select
+                                    class="form-control"
+                                    v-model="form.sens"
+                                >
+                                    <option value="" disabled>
+                                        -- Choisissez un sens --
+                                    </option>
+                                    <option value="Bamako-Kayes">Bamako-Kayes</option>
+                                    <option value="Kayes-Bamako">
+                                        kayes-Bamako
+                                    </option>
+                                </select>
+                                <span
+                                    v-if="errors.sens"
+                                    class="text-danger"
+                                    >{{ errors.sens }}</span
+                                >
+                            </div>
+
                             <!-- Etat -->
                             <div class="form-group">
-                                <label for="exampleInputPassword1"
+                                <label for="etat"
                                     >Etat du train</label
                                 >
                                 <select
@@ -90,11 +115,11 @@ const submit = () => {
 
                             <!-- Nombre d'agents -->
                             <div class="form-group">
-                                <label for="numero">Nombre d'agents</label>
+                                <label for="nombre_agents">Nombre d'agents</label>
                                 <input
                                     type="text"
                                     class="form-control"
-                                    id="numero"
+                                    id="nombre_agents"
                                     v-model="form.nombre_agents"
                                     placeholder="Entrer Nom"
                                 />

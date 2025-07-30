@@ -94,6 +94,7 @@ const submit = () => {
                                         :class="{ 'is-invalid': form.errors.type }"
                                         required
                                     >
+                                        <option value="" disabled>-- Type de Point De Vente --</option>
                                         <option value="gare">Interne</option>
                                         <option value="externe">Externe</option>
                                     </select>

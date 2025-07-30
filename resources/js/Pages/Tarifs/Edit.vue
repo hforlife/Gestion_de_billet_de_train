@@ -1,121 +1,211 @@
 <!-- Create.vue -->
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue';
-import { useForm } from '@inertiajs/vue3';
+import AppLayout from "@/Layouts/AppLayout.vue";
+import { useForm } from "@inertiajs/vue3";
 
 const props = defineProps({
-    lignes: Array,
+    tarifs: Array,
+    gares: Array,
     classes: Array,
 });
 
 const form = useForm({
-    ligne_id: '',
-    classe_wagon_id: '',
-    prix_base: '',
-    date_effet: new Date().toISOString().split('T')[0],
-    date_expiration: '',
+    gare_depart_id: props.tarifs?.gare_depart_id || '',
+    gare_arrivee_id: props.tarifs?.gare_arrivee_id || '',
+    classe_wagon_id: props.tarifs?.classe_wagon_id || '',
+    prix: props.tarifs?.prix || '',
+    date_effet: new Date().toISOString().split("T")[0],
+    date_expiration: "",
 });
 
+
+const {errors} = form;
+
 const submit = () => {
-    form.post(route('tarifs.store'));
+    form.post(route("tarif.store"), {
+         onSuccess: () => {
+            Swal.fire("Succès", "Tarif ajouté avec succès.", "success");
+        },
+        onError: (errors) => {
+            Swal.fire("Erreur", "Merci de vérifier le formulaire.", "errors");
+        },
+    });
 };
 </script>
 
 <template>
     <AppLayout title="Créer un Tarif">
-        <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Créer un Nouveau Tarif
-            </h2>
-        </template>
-
-        <div class="py-6">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <form @submit.prevent="submit">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Ligne -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Ligne</label>
-                                    <select
-                                        v-model="form.ligne_id"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                                        required
+        <!-- Page Title Header Starts-->
+        <div class="row page-title-header">
+            <div class="col-12">
+                <div class="page-header">
+                    <h4 class="page-title">Nouveau Tarif</h4>
+                </div>
+            </div>
+        </div>
+        <!-- Page Title Header Ends-->
+        <div></div>
+        <!-- Fromulaire -->
+        <div class="row flex-grow">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Formulaire d'ajout de tarif</h4>
+                        <!-- <p class="card-description"> Basic form layout </p> -->
+                        <form class="forms-sample" @submit.prevent="submit">
+                            <!-- Gare de départ -->
+                            <div class="form-group">
+                                <label>Gare de Départ</label>
+                                <select
+                                    v-model="form.gare_depart_id"
+                                    class="form-control"
+                                    required
+                                >
+                                    <option value="" disabled>
+                                        Sélectionnez une gare
+                                    </option>
+                                    <option
+                                        v-for="gare in gares"
+                                        :key="gare.id"
+                                        :value="gare.id"
                                     >
-                                        <option value="" disabled>Sélectionnez une ligne</option>
-                                        <option
-                                            v-for="ligne in lignes"
-                                            :key="ligne.id"
-                                            :value="ligne.id"
-                                        >
-                                            {{ ligne.nom }}
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <!-- Classe -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Classe</label>
-                                    <select
-                                        v-model="form.classe_wagon_id"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                                        required
-                                    >
-                                        <option value="" disabled>Sélectionnez une classe</option>
-                                        <option
-                                            v-for="classe in classes"
-                                            :key="classe.id"
-                                            :value="classe.id"
-                                        >
-                                            {{ classe.nom }}
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <!-- Prix -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Prix de base (FCFA)</label>
-                                    <input
-                                        v-model="form.prix_base"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                                        required
-                                    />
-                                </div>
-
-                                <!-- Date effet -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Date d'effet</label>
-                                    <input
-                                        v-model="form.date_effet"
-                                        type="date"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                                        required
-                                    />
-                                </div>
-
-                                <!-- Date expiration -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Date d'expiration (optionnel)</label>
-                                    <input
-                                        v-model="form.date_expiration"
-                                        type="date"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                                        :min="form.date_effet"
-                                    />
-                                </div>
+                                        {{ gare.nom }}
+                                    </option>
+                                </select>
+                                <span
+                                    v-if="errors.gare_depart_id"
+                                    class="text-danger"
+                                    >{{ errors.gare_depart_id }}</span>
                             </div>
 
-                            <div class="mt-6 flex justify-end">
+                            <!-- Gare d’arrivée -->
+                            <div class="form-group">
+                                <label>Gare d’arrivée</label>
+                                <select
+                                    v-model="form.gare_arrivee_id"
+                                    class="form-control"
+                                    required
+                                >
+                                    <option value="" disabled>
+                                        Sélectionnez une gare
+                                    </option>
+                                    <option
+                                        v-for="gare in gares"
+                                        :key="gare.id"
+                                        :value="gare.id"
+                                    >
+                                        {{ gare.nom }}
+                                    </option>
+                                </select>
+                                <span
+                                    v-if="errors.gare_arrivee_id"
+                                    class="text-danger"
+                                    >{{ errors.gare_arrivee_id }}</span>
+                            </div>
+
+                            <!-- Classe -->
+                            <div class="form-group">
+                                <label>Classe</label>
+                                <select
+                                    v-model="form.classe_wagon_id"
+                                    class="form-control"
+                                    required
+                                >
+                                    <option value="" disabled>
+                                        Sélectionnez une classe
+                                    </option>
+                                    <option
+                                        v-for="classe in classes"
+                                        :key="classe.id"
+                                        :value="classe.id"
+                                    >
+                                        {{ classe.classe }}
+                                    </option>
+                                </select>
+                                <span
+                                    v-if="errors.classe_wagon_id"
+                                    class="text-danger"
+                                    >{{ errors.classe_wagon_id }}</span
+                                >
+                            </div>
+
+                            <!-- Date effet -->
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Date d'effet</label
+                                >
+                                <input
+                                    v-model="form.date_effet"
+                                    type="date"
+                                    class="form-control"
+                                    required
+                                />
+                                <span
+                                    v-if="errors.date_effet"
+                                    class="text-danger"
+                                    >{{ errors.date_effet }}</span
+                                >
+                            </div>
+
+                            <!-- Date expiration -->
+                            <div>
+                                <label>Date d'expiration (optionnel)</label>
+                                <input
+                                    v-model="form.date_expiration"
+                                    type="date"
+                                    class="form-control"
+                                    :min="form.date_effet"
+                                />
+                                <span
+                                    v-if="errors.date_expiration"
+                                    class="text-danger"
+                                    >{{ errors.date_expiration }}</span
+                                >
+                            </div>
+
+                            <!-- Prix -->
+                            <div class="form-group">
+                                <label>Prix de base (FCFA)</label>
+                                <input
+                                    v-model="form.prix"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    class="form-control"
+                                    required
+                                />
+                                <span
+                                    v-if="errors.prix"
+                                    class="text-danger"
+                                    >{{ errors.prix }}</span
+                                >
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button
+                                    type="reset"
+                                    class="btn btn-light mr-2"
+                                    @click="form.reset()"
+                                >
+                                    Annuler
+                                </button>
                                 <button
                                     type="submit"
                                     class="btn btn-primary"
                                     :disabled="form.processing"
                                 >
-                                    Enregistrer
+                                    <span
+                                        v-if="form.processing"
+                                        class="spinner-border spinner-border-sm"
+                                        role="status"
+                                        aria-hidden="true"
+                                    ></span>
+                                    {{
+                                        form.processing
+                                            ? "En cours..."
+                                            : "Valider"
+                                    }}
                                 </button>
                             </div>
                         </form>
@@ -123,5 +213,6 @@ const submit = () => {
                 </div>
             </div>
         </div>
+        <!-- Fin Formulaire -->
     </AppLayout>
 </template>

@@ -150,7 +150,7 @@ const deleteGare = (id) => {
                                         <td>{{ index + 1 }}</td>
                                         <td>{{ gare.nom }}</td>
                                         <td>{{ gare.adresse }}</td>
-                                        <td>{{ gare.type_gare }}</td>
+                                        <td>{{ gare.type }}</td>
                                         <td>{{ gare.internet }}</td>
                                         <td>{{ gare.electricite }}</td>
                                         <td>{{ gare.nombre_guichets }}</td>

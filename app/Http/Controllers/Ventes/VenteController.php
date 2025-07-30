@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers\Ventes;
 
+use App\Models\Vente;
+use App\Models\Voyage;
 use App\Models\ModesPaiement;
 use App\Models\Place;
 use App\Models\PointsVente;
-use App\Models\Train;
+use App\Models\TarifVoyage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use App\Models\Vente;
-use App\Models\VoyageRecurrent;
-use App\Models\Voyage;
 
 class VenteController
 {
@@ -41,45 +40,32 @@ class VenteController
 
     public function create()
     {
-        $voyages = Voyage::with([
-            'ligne.gareDepart',
-            'ligne.gareArrivee',
-            'tarif' => fn($q) => $q->active(),
-            'train',
-        ])->get();
-
-        $voyagesRecurrents = Voyage::with([
-            'ligne.gareDepart',
-            'ligne.gareArrivee',
-            'tarif' => fn($q) => $q->active(),
-            'train',
-            ])->get();
-
-            return Inertia::render('Ventes/Create', [
-                'voyages' => $voyages,
-                'voyages_rec' => $voyagesRecurrents,
-                'trains' => Train::all(),
-                'modesPaiement' => ModesPaiement::all(),
-                'pointsVente' => PointsVente::with('gare')->get(),
+        return Inertia::render('Ventes/Create', [
+            'voyages' => Voyage::with(['tarifs.classeWagon', 'ligne.arrets.gare', 'train', 'ligne.gareDepart', 'ligne.gareArrivee'])->get(),
+            'modesPaiement' => ModesPaiement::all(),
+            'pointsVente' => PointsVente::with('gare')->get(),
         ]);
     }
-
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'client_nom' => 'string|max:255',
+            'client_nom' => 'required|string|max:255',
             'voyage_id' => 'required|exists:voyages,id',
             'mode_paiement_id' => 'required|exists:modes_paiement,id',
-            'prix' => 'required|numeric|min:0',
+            'classe_wagon_id' => 'required|exists:classes_wagon,id',
             'point_vente_id' => 'required|exists:points_ventes,id',
-            'quantite' => 'required|numeric|min:1',
-            'bagage' => 'boolean',
-            'poids_bagage' => 'nullable|numeric|min:0|required_if:bagage,true',
+            'demi_tarif' => 'boolean',
+            'prix' => 'required|numeric|min:0',
+            'quantite' => 'required|integer|min:1|max:10', // Limite de 10 billets par transaction
+            'bagage' => 'required|boolean',
+            'poids_bagage' => 'nullable|numeric|min:0|max:30|required_if:bagage,true', // Max 30kg
+            'statut' => 'required|in:payé,réservé',
         ]);
 
-        // dd($validated);
+        // DB::beginTransaction();
 
+        try {
         $voyage = Voyage::with('train.wagons.places')->findOrFail($validated['voyage_id']);
         $train = $voyage->train;
 
@@ -96,29 +82,44 @@ class VenteController
         if (!$placeLibre) {
             return back()->withErrors(['place' => 'Aucune place disponible dans ce train.']);
         }
+            // Création de la vente
+            $vente = Vente::create([
+                'client_nom' => $validated['client_nom'],
+                'voyage_id' => $validated['voyage_id'],
+                'mode_paiement_id' => $validated['mode_paiement_id'],
+                'point_vente_id' => $validated['point_vente_id'],
+                'place_id' => $placeLibre->id,
+                'prix' => $validated['prix'],
+                'quantite' => $validated['quantite'],
+                'bagage' => $validated['bagage'],
+                'poids_bagage' => $validated['bagage'] ? ($validated['poids_bagage'] ?? 0) : 0,
+                'classe_wagon_id' => $validated['classe_wagon_id'],
+                'demi_tarif' => $validated['demi_tarif'] ?? false,
+                'statut' => $validated['statut'],
+                'date_vente' => now(),
+            ]);
 
-        Vente::create([
-            'client_nom' => $validated['client_nom'],
-            'voyage_id' => $validated['voyage_id'],
-            'mode_paiement_id' => $validated['mode_paiement_id'],
-            'point_vente_id' => $validated['point_vente_id'],
-            'place_id' => $placeLibre->id,
-            'prix' => $validated['prix'],
-            'quantite' => $validated['quantite'],
-            'bagage' => $validated['bagage'],
-            'poids_bagage' => $validated['bagage'] ? ($validated['poids_bagage'] ?? 0) : 0,
-        ]);
+            DB::commit();
 
-
-        return Redirect::route('vente.index')->with('success', 'Billet vendu avec succès !');
+            return redirect()
+                ->route('vente.index')
+                ->with('success', 'Billet vendu avec succès !')
+                ->with('vente_id', $vente->id);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withInput()
+                ->withErrors(['error' => $e->getMessage()]);
+        }
     }
 
-    public function show($id)
+
+
+ public function show($id)
     {
         $voyages = Voyage::with([
             'ligne.gareDepart',
             'ligne.gareArrivee',
-            'tarif' => fn($q) => $q->active(),
             'train',
         ])->get();
 
@@ -127,95 +128,50 @@ class VenteController
         ]);
     }
 
-    // public function edit($id)
+    // public function edit(Vente $vente)
     // {
-    //     $vente = Vente::with([
-    //         'voyage.gare_depart',
-    //         'voyage.gare_arrivee', Liflet ou GCP (Google cloud Platform) pour une carte interactive chez les Lignes
-    //         'voyage.train',
-    //         'place.wagon.train'
-    //     ])->findOrFail($id);
-
-    //     // Récupérer tous les voyages disponibles (réguliers et récurrents)
-    //     $voyages = Voyage::whereIn('statut', ['programmé', 'en_cours'])
-    //         ->with(['gare_depart', 'gare_arrivee', 'train'])
-    //         ->get();
-
-    //     $voyagesRecurrents = VoyageRecurrent::whereIn('statut', ['programmé', 'en_cours'])
-    //         ->with(['gare_depart', 'gare_arrivee', 'train'])
-    //         ->get();
+    //     $vente->load($this->getVenteRelations());
 
     //     return Inertia::render('Ventes/Edit', [
-    //         'ventes' => $vente,
-    //         'voyages' => $voyages,
-    //         'voyages_rec' => $voyagesRecurrents,
-    //         'trainInfo' => $vente->voyage->train ?? null,
+    //         'vente' => $vente,
+    //         'voyages' => Voyage::with(['ligne.arrets.gare', 'train'])->get(),
+    //         'modesPaiement' => ModesPaiement::all(),
+    //         'pointsVente' => PointsVente::with('gare')->get(),
+    //         'tarifs' => TarifVoyage::with(['tarifGare.classeWagon', 'tarifGare.gareDepart', 'tarifGare.gareArrivee'])->get()
     //     ]);
     // }
 
-    // public function update(Request $request, $id)
+    // public function update(Request $request, Vente $vente)
     // {
-    //     $vente = Vente::with(['voyage.train'])->findOrFail($id);
+    //     $validated = $this->validateVenteRequest($request, true);
 
-    //     $validated = $request->validate([
-    //         'client_nom' => 'required|string|max:255',
-    //         'voyage_id' => 'required|exists:voyages,id',
-    //         'prix' => 'required|numeric|min:0',
-    //         'quantite' => 'required|integer|min:1',
-    //         'bagage' => 'boolean',
-    //         'poids_bagage' => 'nullable|numeric|min:0|required_if:bagage,true',
-    //         'place_id' => 'nullable|exists:places,id',
-    //     ]);
-
-    //     // Vérifier si le voyage a changé
-    //     if ($vente->voyage_id != $validated['voyage_id']) {
-    //         $newVoyage = Voyage::with('train.wagons.places')->findOrFail($validated['voyage_id']);
-
-    //         // Trouver une nouvelle place disponible si nécessaire
-    //         if (!$request->place_id) {
-    //             $placeLibre = Place::whereIn('id', function ($query) use ($newVoyage) {
-    //                 $query->select('places.id')
-    //                     ->from('places')
-    //                     ->join('wagons', 'places.wagon_id', '=', 'wagons.id')
-    //                     ->whereIn('wagons.id', $newVoyage->train->wagons->pluck('id'))
-    //                     ->whereNotIn('places.id', function ($sub) {
-    //                         $sub->select('place_id')->from('ventes')->whereNotNull('place_id');
-    //                     });
-    //             })->first();
-
-    //             if (!$placeLibre) {
-    //                 return back()->withErrors([
-    //                     'train_id' => 'Aucune place disponible dans le train associé à ce nouveau voyage'
-    //                 ]);
-    //             }
-
-    //             $validated['place_id'] = $placeLibre->id;
-    //         }
-    //     }
+    //     DB::beginTransaction();
 
     //     try {
-    //         $vente->update([
-    //             'client_nom' => $validated['client_nom'],
-    //             'voyage_id' => $validated['voyage_id'],
-    //             'prix' => $validated['prix'],
-    //             'quantite' => $validated['quantite'],
-    //             'bagage' => $validated['bagage'],
-    //             'poids_bagage' => $validated['bagage'] ? $validated['poids_bagage'] : 0,
-    //             'place_id' => $validated['place_id'] ?? $vente->place_id,
-    //         ]);
+    //         $this->updateVente($vente, $validated);
+    //         $this->syncVenteItems($vente, $validated['items']);
 
-    //         return redirect()->route('vente.index')
+    //         DB::commit();
+
+    //         return redirect()
+    //             ->route('vente.show', $vente->id)
     //             ->with('success', 'Vente mise à jour avec succès');
     //     } catch (\Exception $e) {
-    //         return back()->withErrors([
-    //             'error' => 'Une erreur est survenue lors de la mise à jour: ' . $e->getMessage()
-    //         ]);
+    //         DB::rollBack();
+    //         return back()
+    //             ->with('error', 'Erreur lors de la mise à jour: ' . $e->getMessage());
     //     }
     // }
 
     public function destroy(Vente $vente)
     {
-        $vente->delete();
-        return back()->with('success', 'Vente supprimée avec succès.');
+        DB::transaction(function () use ($vente) {
+            $vente->items()->delete();
+            $vente->delete();
+        });
+
+        return redirect()
+            ->route('vente.index')
+            ->with('success', 'Vente supprimée avec succès');
     }
 }

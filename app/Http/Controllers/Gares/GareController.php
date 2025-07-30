@@ -17,8 +17,7 @@ class GareController
 
         return Inertia::render('Gares/Index', [
             'filters' => $filters,
-            'typeGare' => TypesGare::all()->map->only('id', 'type'),
-            'gares' => Gare::with('typeGare')
+            'gares' => Gare::query()
                 ->orderBy('nom')
                 ->filter($filters)
                 ->paginate(10)
@@ -27,7 +26,7 @@ class GareController
                     'id' => $gare->id,
                     'nom' => $gare->nom,
                     'adresse' => $gare->adresse,
-                    'type_gare' => $gare->typeGare->type,
+                    'type' => $gare->type,
                     'distance_km' => $gare->distance_km,
                     'internet' => $gare->internet ? 'Oui' : 'Non',
                     'electricite' => $gare->electricite ? 'Oui' : 'Non',
@@ -39,9 +38,7 @@ class GareController
 
     public function create(): Response
     {
-        return Inertia::render('Gares/Create', [
-            'typesGare' => TypesGare::all()->map->only('id', 'type', 'description'),
-        ]);
+        return Inertia::render('Gares/Create');
     }
 
     public function store(Request $request)
@@ -49,7 +46,7 @@ class GareController
         $validated = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'adresse' => ['required', 'string', 'max:255'],
-            'type_gare_id' => ['required', 'exists:types_gare,id'],
+            'type' => ['required', 'in:principale,passage,halte,fermee'],
             'distance_km' => ['required', 'numeric', 'min:0'],
             'internet' => ['boolean'],
             'electricite' => ['boolean'],
@@ -70,14 +67,13 @@ class GareController
                 'id' => $gare->id,
                 'nom' => $gare->nom,
                 'adresse' => $gare->adresse,
-                'type_gare_id' => $gare->type_gare_id,
+                'type' => $gare->type,
                 'distance_km' => $gare->distance_km,
                 'internet' => $gare->internet,
                 'electricite' => $gare->electricite,
                 'nombre_guichets' => $gare->nombre_guichets,
                 'controle_bagage' => $gare->controle_bagage,
             ],
-            'typesGare' => TypesGare::all()->map->only('id', 'type', 'description'),
         ]);
     }
 
@@ -86,7 +82,7 @@ class GareController
         $validated = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'adresse' => ['required', 'string', 'max:255'],
-            'type_gare_id' => ['required', 'exists:types_gare,id'],
+            'type' => ['required', 'in:principale,passage,halte,fermee'],
             'distance_km' => ['required', 'numeric', 'min:0'],
             'internet' => ['boolean'],
             'electricite' => ['boolean'],

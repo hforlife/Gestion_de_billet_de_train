@@ -112,7 +112,7 @@ const deleteTarif = (id) => {
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Ligne</th>
+                                        <th>Voyages</th>
                                         <th>Classe</th>
                                         <th>Prix</th>
                                         <th>Période</th>
@@ -121,9 +121,9 @@ const deleteTarif = (id) => {
                                 </thead>
                                 <tbody>
                                     <tr v-for="(tarif, index) in tarifs.data" :key="tarif.id">
-                                        <td>{{ tarif.ligne.nom }}</td>
+                                        <td>{{ tarif.voyage.nom }}</td>
                                         <td>{{ tarif.classe_wagon.classe }}</td>
-                                        <td>{{ tarif.prix_base }} FCFA</td>
+                                        <td>{{ tarif.prix }} FCFA</td>
                                         <td>
                                             {{ new Date(tarif.date_effet).toLocaleDateString() }} -
                                             {{

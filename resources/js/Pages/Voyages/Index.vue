@@ -55,21 +55,21 @@ const deleteVoyage = (id) => {
 };
 
 const formatDate = (date) => {
-    return new Date(date).toLocaleString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+    return new Date(date).toLocaleString("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
     });
 };
 
 const getStatusClass = (statut) => {
-    return statut.replace('é', 'e').replace(' ', '_');
+    return statut.replace("é", "e").replace(" ", "_");
 };
 
 const formatStatus = (statut) => {
-    return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
+    return statut.charAt(0).toUpperCase() + statut.slice(1).replace("_", " ");
 };
 </script>
 
@@ -79,9 +79,15 @@ const formatStatus = (statut) => {
             <div class="col-12">
                 <div class="page-header">
                     <h4 class="page-title">Gestion des Voyages</h4>
-                    <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
+                    <div
+                        class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
+                    >
                         <ul class="quick-links ml-auto">
-                            <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
+                            <li>
+                                <Link :href="route('dashboard')"
+                                    >Tableau de bord</Link
+                                >
+                            </li>
                             <li><a href="#">Voyages</a></li>
                         </ul>
                     </div>
@@ -109,7 +115,9 @@ const formatStatus = (statut) => {
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-4"
+                        >
                             <h4 class="card-title mb-0">Liste des voyages</h4>
                             <Link
                                 :href="route('voyage.create')"
@@ -128,7 +136,6 @@ const formatStatus = (statut) => {
                                         <th>Nom</th>
                                         <th>Train</th>
                                         <th>Ligne</th>
-                                        <th>Classe/Tarif</th>
                                         <th>Départ</th>
                                         <th>Arrivée</th>
                                         <th>Statut</th>
@@ -136,35 +143,48 @@ const formatStatus = (statut) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(voyage, index) in voyages.data" :key="voyage.id">
+                                    <tr
+                                        v-for="(voyage, index) in voyages.data"
+                                        :key="voyage.id"
+                                    >
                                         <td>{{ index + 1 }}</td>
                                         <td>{{ voyage.nom }}</td>
                                         <td>{{ voyage.train.numero }}</td>
                                         <td>{{ voyage.ligne.nom }}</td>
                                         <td>
-                                            <span class="badge bg-info">
-                                                {{ voyage.tarif.classe_wagon.nom }}:
-                                                {{ voyage.tarif.prix_base }} €
-                                            </span>
+                                            {{ formatDate(voyage.date_depart) }}
                                         </td>
-                                        <td>{{ formatDate(voyage.date_depart) }}</td>
-                                        <td>{{ formatDate(voyage.date_arrivee) }}</td>
                                         <td>
-                                            <span :class="`badge badge-${getStatusClass(voyage.statut)}`">
-                                                {{ formatStatus(voyage.statut) }}
+                                            {{
+                                                formatDate(voyage.date_arrivee)
+                                            }}
+                                        </td>
+                                        <td>
+                                            <span
+                                                :class="`badge badge-${getStatusClass(
+                                                    voyage.statut
+                                                )}`"
+                                            >
+                                                {{
+                                                    formatStatus(voyage.statut)
+                                                }}
                                             </span>
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
                                                 <button
-                                                    @click="editVoyage(voyage.id)"
+                                                    @click="
+                                                        editVoyage(voyage.id)
+                                                    "
                                                     class="btn btn-warning btn-sm"
                                                     title="Modifier"
                                                 >
                                                     <Pencil size="16" />
                                                 </button>
                                                 <button
-                                                    @click="deleteVoyage(voyage.id)"
+                                                    @click="
+                                                        deleteVoyage(voyage.id)
+                                                    "
                                                     class="btn btn-danger btn-sm"
                                                     title="Supprimer"
                                                 >
@@ -174,7 +194,10 @@ const formatStatus = (statut) => {
                                         </td>
                                     </tr>
                                     <tr v-if="voyages.data.length === 0">
-                                        <td colspan="9" class="text-center py-4 text-muted">
+                                        <td
+                                            colspan="9"
+                                            class="text-center py-4 text-muted"
+                                        >
                                             Aucun voyage trouvé
                                         </td>
                                     </tr>
@@ -226,8 +249,16 @@ const formatStatus = (statut) => {
 </template>
 
 <style>
-.badge-programmé { background-color: #17a2b8; }
-.badge-en_cours { background-color: #28a745; }
-.badge-terminé { background-color: #6c757d; }
-.badge-annulé { background-color: #dc3545; }
+.badge-programmé {
+    background-color: #17a2b8;
+}
+.badge-en_cours {
+    background-color: #28a745;
+}
+.badge-terminé {
+    background-color: #6c757d;
+}
+.badge-annulé {
+    background-color: #dc3545;
+}
 </style>
