@@ -60,6 +60,7 @@ class VenteController
             'quantite' => 'required|integer|min:1|max:10', // Limite de 10 billets par transaction
             'bagage' => 'required|boolean',
             'poids_bagage' => 'nullable|numeric|min:0|max:30|required_if:bagage,true', // Max 30kg
+            'reférence' => 'nullable|string|max:255|unique:ventes,reference',
             'statut' => 'required|in:payé,réservé',
         ]);
 
