@@ -16,36 +16,6 @@ class GareSeeder extends Seeder
      */
     public function run(): void
     {
-        // Classes de Wagon
-        ClassesWagon::create([
-            'classe' => 'premiere',
-            'prix_multiplier' => 1.5, // Multiplier pour le prix de la première classe
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-        ClassesWagon::create([
-            'classe' => 'deuxieme',
-            'prix_multiplier' => 1.0, // Multiplier pour le prix de la deuxième classe
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-
-        // Mode de Paiement
-        ModesPaiement::create([
-            'type' => 'especes',
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-        ModesPaiement::create([
-            'type' => 'banque',
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-        ModesPaiement::create([
-            'type' => 'electronique',
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
 
         // Jour de la semaine
         // JoursSemaine::create([
@@ -157,16 +127,5 @@ class GareSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now()
         ]);
-
-        // Points de Ventes
-        // PointVente::create([
-        //     'nom' => 'Point de Vente Bamako',
-        //     'adresse' => 'Bamako',
-        //     'telephone' => '123456789',
-        //     'email' => 'iEw0N@example.com',
-        //     'gare_id' => 1,
-        //     'created_at' => now(),
-        //     'updated_at' => now()
-        // ]);
     }
 }

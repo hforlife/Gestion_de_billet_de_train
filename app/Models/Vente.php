@@ -22,6 +22,7 @@ class Vente extends Model
         'bagage',
         'poids_bagage',
         'place_id',
+        'penalite',
         'statut',
     ];
 

@@ -56,7 +56,7 @@ class WagonController
             'nombre_sieges' => 'required|integer|min:1',
         ]);
 
-        $validated['sieges_disponibles'] = $validated['nombre_sieges'];
+        $validated['sieges_disponibles'] = $validated['nombre_sieges'] - 2;
 
         $wagon = Wagon::create($validated);
 

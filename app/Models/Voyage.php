@@ -9,6 +9,7 @@ class Voyage extends Model
 {
     protected $fillable = [
         'nom',
+        'numero_voyage',
         'train_id',
         'ligne_id',
         'date_depart',

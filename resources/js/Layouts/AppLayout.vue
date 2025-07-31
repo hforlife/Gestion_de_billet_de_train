@@ -325,7 +325,6 @@ onMounted(() => {
                                     <ul class="nav flex-column sub-menu">
                                         <!-- Gares -->
                                         <li class="nav-item">
-                                            <!-- <a class="nav-link" href="pages/ui-features/buttons.html">Gares</a> -->
                                             <Link
                                                 class="nav-link"
                                                 :href="route('gare.index')"
@@ -340,6 +339,26 @@ onMounted(() => {
                                                 ></i>
                                                 <span class="menu-title"
                                                     >Gares</span
+                                                >
+                                            </Link>
+                                        </li>
+
+                                        <!-- Distances Gares -->
+                                        <li class="nav-item">
+                                            <Link
+                                                class="nav-link"
+                                                :href="route('distance.index')"
+                                                :class="{
+                                                    active: $page.url.startsWith(
+                                                        '/distance'
+                                                    ),
+                                                }"
+                                            >
+                                                <i
+                                                    class="menu-icon typcn typcn-user-outline"
+                                                ></i>
+                                                <span class="menu-title"
+                                                    >Distance Gares</span
                                                 >
                                             </Link>
                                         </li>
@@ -741,7 +760,8 @@ onMounted(() => {
                                     </ul>
                                 </div>
                             </li>
-                            <!-- Administration -->
+
+                            <!-- Paramètres -->
                             <li class="nav-item">
                                 <a
                                     class="nav-link"
@@ -764,10 +784,10 @@ onMounted(() => {
                                                 class="nav-link"
                                                 :class="{
                                                     active: $page.url.startsWith(
-                                                        '/user'
+                                                        '/role'
                                                     ),
                                                 }"
-                                                :href="route('user.index')"
+                                                :href="route('role.index')"
                                             >
                                                 <i
                                                     class="menu-icon typcn typcn-user-outline"

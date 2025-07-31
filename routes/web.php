@@ -8,7 +8,9 @@ use App\Http\Controllers\{
     ParametreController,
     FeedController,
     BilletController,
+    DistanceController,
     PaiementController,
+    RoleController,
     SystemSettingController
 };
 
@@ -66,22 +68,22 @@ Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/paiement', PaiementController::class)->except(['show']);                  //Pour les Paiements
     Route::resource('/tarif', TarifController::class)->except(['show']);
     Route::resource('/maintenance', MaintenanceController::class)->except(['show']);
+    Route::resource('/distance', DistanceController::class)->except(['show']);
 
     Route::get(
-        'maintenances/dashboard',
+        '/maintenance/dashboard',
         [MaintenanceController::class, 'dashboard']
-    )
-        ->name('maintenances.dashboard');
+    )->name('maintenance.dashboard');
     Route::post(
-        'maintenances/{maintenance}/terminer',
+        '/maintenance/{maintenance}/terminer',
         [MaintenanceController::class, 'terminer']
-    )
-        ->name('maintenances.terminer');
+    )->name('maintenance.terminer');
 });
 
 // Routes réservées à l'admin
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('/user', UserController::class)->except(['show']);
+    Route::resource('/role', RoleController::class)->except(['show']);
 });
 
 require __DIR__ . '/auth.php';

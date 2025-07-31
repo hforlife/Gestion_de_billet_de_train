@@ -99,7 +99,12 @@ return new class extends Migration {
             $table->unique(['ligne_id', 'gare_id']);
         });
 
-
+        Schema::create('distances_gares', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('gare_depart_id')->constrained('gares');
+            $table->foreignId('gare_arrivee_id')->constrained('gares');
+            $table->integer('distance_km'); // km entre les 2 gares
+        });
 
         // Schema::create('maintenances', function (Blueprint $table) {
         //     $table->id();
@@ -115,6 +120,7 @@ return new class extends Migration {
         Schema::create('voyages', function (Blueprint $table) {
             $table->id();
             $table->string('nom');
+            $table->string('numero_voyage')->unique();
             $table->foreignId('train_id')->constrained('trains');
             $table->foreignId('ligne_id')->constrained('lignes');
             $table->dateTime('date_depart');
@@ -158,8 +164,10 @@ return new class extends Migration {
             $table->dateTime('date_vente')->default(now());
             $table->boolean('bagage')->default(false);
             $table->decimal('poids_bagage', 8, 2)->nullable();
+            $table->boolean('penalite')->default(false);
             $table->foreignId('place_id')->nullable()->constrained('places')->nullOnDelete();
             $table->enum('statut', ['payé', 'réservé'])->default('payé');
+            $table->string('reference')->unique()->nullable(); // N°12-2025-03-18-001
             $table->timestamps();
 
             $table->index(['place_id', 'voyage_id']);
@@ -251,6 +259,7 @@ return new class extends Migration {
     public function down()
     {
         // Ordre inverse avec les nouvelles tables
+        Schema::dropIfExists('system_settings');
         Schema::dropIfExists('parametres');
         Schema::dropIfExists('rapports');
         Schema::dropIfExists('colis');
