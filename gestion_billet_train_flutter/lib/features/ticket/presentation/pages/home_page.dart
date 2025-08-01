@@ -1,59 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gestion_billet_train_flutter/core/constants/app_colors.dart';
-import 'package:gestion_billet_train_flutter/core/widgets/custom_button.dart';
-import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_event.dart';
-import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_state.dart';
+import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/report_page.dart';
+import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/scan_page.dart';
+import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/sell_ticket_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user =
-        (BlocProvider.of<AuthBloc>(context).state as AuthAuthenticated).user;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('SOPAFER'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthBloc>().add(LogoutEvent());
-            },
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(title: const Text('Accueil')),
+      body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Bienvenue, ${user.username} (contrôleur)',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const Text(
-              'Scannez ou vendez des billets',
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 40),
-            CustomButton(
-              text: 'Scanner un billet',
-              color: AppColors.primary,
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HomePage()),
-              ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ScanPage()),
+                );
+              },
+              child: const Text('Scanner un Billet'),
             ),
             const SizedBox(height: 20),
-            CustomButton(
-              text: 'Vendre un billet',
-              color: AppColors.secondary,
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HomePage()),
-              ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SellTicketPage(),
+                  ), // Page de vente directe
+                );
+              },
+              child: const Text('Vente de Ticket'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReportPage()),
+                );
+              },
+              child: const Text('Rapport'),
             ),
           ],
         ),

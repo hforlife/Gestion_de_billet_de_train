@@ -6,7 +6,8 @@ import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/aut
 import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_state.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/pages/login_page.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/home_page.dart';
-import 'package:gestion_billet_train_flutter/injection_container.dart' as di;
+import 'package:gestion_billet_train_flutter/di/injection_container.dart' as di;
+import 'package:get/get.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -19,8 +20,9 @@ class App extends StatelessWidget {
           create: (_) => di.sl<AuthBloc>()..add(const LoginEvent('', '')),
         ),
       ],
-      child: MaterialApp(
+      child: GetMaterialApp(
         title: 'SOPAFER',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
           scaffoldBackgroundColor: AppColors.background,

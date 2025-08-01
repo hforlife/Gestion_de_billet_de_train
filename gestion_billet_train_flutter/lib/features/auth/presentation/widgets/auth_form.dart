@@ -31,29 +31,26 @@ class _AuthFormState extends State<AuthForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CustomTextField(
-            label: 'Nom d\'utilisateur',
-            icon: Icons.person,
-            controller: _usernameController,
-          ),
-          CustomTextField(
-            label: 'Mot de passe',
-            icon: Icons.lock,
-            controller: _passwordController,
-            obscureText: true,
-          ),
-          const SizedBox(height: 20),
-          CustomButton(
-            text: 'Se connecter',
-            onPressed: _handleLogin, // Utilisation d'une méthode séparée
-          ),
-        ],
-      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        CustomTextField(
+          label: 'Nom d\'utilisateur',
+          icon: Icons.person,
+          controller: _usernameController,
+        ),
+        CustomTextField(
+          label: 'Mot de passe',
+          icon: Icons.lock,
+          controller: _passwordController,
+          obscureText: true,
+        ),
+        const SizedBox(height: 20),
+        CustomButton(
+          text: 'Se connecter',
+          onPressed: _handleLogin, // Utilisation d'une méthode séparée
+        ),
+      ],
     );
   }
 }
