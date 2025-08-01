@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     public function up()
@@ -154,27 +155,43 @@ return new class extends Migration {
         Schema::create('ventes', function (Blueprint $table) {
             $table->id();
             $table->string('client_nom')->nullable();
+
             $table->foreignId('voyage_id')->constrained('voyages')->onDelete('cascade');
+            $table->foreignId('train_id')->constrained('trains')->onDelete('cascade');
+            $table->foreignId('gare_depart_id')->constrained('gares')->onDelete('cascade');
+            $table->foreignId('gare_arrivee_id')->constrained('gares')->onDelete('cascade');
             $table->foreignId('mode_paiement_id')->constrained('modes_paiement');
             $table->foreignId('point_vente_id')->constrained('points_ventes');
             $table->foreignId('classe_wagon_id')->constrained('classes_wagon');
+
             $table->decimal('prix', 8, 2);
             $table->integer('quantite')->default(1);
-            $table->check('prix >= 0');
-            $table->check('quantite >= 1');
             $table->boolean('demi_tarif')->default(false);
             $table->dateTime('date_vente')->useCurrent();
             $table->boolean('bagage')->default(false);
             $table->decimal('poids_bagage', 8, 2)->nullable();
             $table->boolean('penalite')->default(false);
+
             $table->foreignId('place_id')->nullable()->constrained('places')->nullOnDelete();
-            $table->enum('statut', ['paye', 'réserve'])->default('paye');
-            $table->string('reference')->unique()->nullable(); // N°12-2025-03-18-001
-            $table->string('qrcode')->unique()->nullable(); // N°12-2025-03-18-001
+
+            $table->enum('statut', ['payé', 'réservé'])->default('payé');
+            $table->string('reference')->unique()->nullable();
+            $table->string('qrcode')->unique()->nullable();
+
+            // Audit
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['place_id', 'voyage_id']);
         });
+
+        // Contraintes supplémentaires (PostgreSQL)
+        DB::statement('ALTER TABLE ventes ADD CONSTRAINT prix_non_negatif CHECK (prix >= 0)');
+        DB::statement('ALTER TABLE ventes ADD CONSTRAINT quantite_positive CHECK (quantite >= 1)');
+        DB::statement('ALTER TABLE ventes ADD CONSTRAINT poids_bagage_non_negatif CHECK (poids_bagage IS NULL OR poids_bagage >= 0)');
 
 
         // 5. Nouvelle structure pour les jours de circulation

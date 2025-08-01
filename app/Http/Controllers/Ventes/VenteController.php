@@ -58,17 +58,18 @@ class VenteController
         $validated = $request->validate([
             'client_nom' => 'required|string|max:255',
             'voyage_id' => 'required|exists:voyages,id',
+            'train_id' => 'required|exists:trains,id',
+            'gare_depart_id' => 'required|exists:gares,id',
+            'gare_arrivee_id' => 'required|exists:gares,id',
             'mode_paiement_id' => 'required|exists:modes_paiement,id',
-            'classe_wagon_id' => 'required|exists:classes_wagon,id',
             'point_vente_id' => 'required|exists:points_ventes,id',
+            'classe_wagon_id' => 'required|exists:classes_wagon,id',
             'demi_tarif' => 'boolean',
             'quantite' => 'required|integer|min:1|max:10',
             'bagage' => 'required|boolean',
             'poids_bagage' => 'nullable|numeric|min:0|max:30|required_if:bagage,true',
-            'reference' => 'nullable|string|max:255|unique:ventes,reference',
             'statut' => 'required|in:payé,réservé',
         ]);
-
         DB::beginTransaction();
 
         try {
@@ -126,7 +127,7 @@ class VenteController
                     ->where('date_effet', '<=', now())
                     ->where(function ($q) {
                         $q->where('date_expiration', '>=', now())
-                          ->orWhereNull('date_expiration');
+                            ->orWhereNull('date_expiration');
                     })->first();
 
                 $prixFinal = $tarif ? $tarif->prix : 0;

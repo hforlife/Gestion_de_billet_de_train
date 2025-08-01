@@ -6,15 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\Auditable;
 
 class Vente extends Model
 {
+    use SoftDeletes, Auditable;
+
     protected $fillable = [
         'client_nom',
         'voyage_id',
         'mode_paiement_id',
         'point_vente_id',
         'classe_wagon_id',
+        'gare_depart_id',
+        'gare_arrivee_id',
         'prix',
         'demi_tarif',
         'date_vente',
@@ -59,16 +65,19 @@ class Vente extends Model
         return $this->belongsTo(Place::class)->with('wagon');
     }
 
-    public function train(): HasOneThrough
+    public function train(): BelongsTo
     {
-        return $this->hasOneThrough(
-            Train::class,
-            Voyage::class,
-            'id',
-            'id',
-            'voyage_id',
-            'train_id'
-        );
+        return $this->belongsTo(Train::class);
+    }
+
+    public function gareDepart(): BelongsTo
+    {
+        return $this->belongsTo(Gare::class, 'gare_depart_id');
+    }
+
+    public function gareArrivee(): BelongsTo
+    {
+        return $this->belongsTo(Gare::class, 'gare_arrivee_id');
     }
 
     public function modePaiement(): BelongsTo

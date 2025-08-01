@@ -75,172 +75,139 @@ const formatStatus = (statut) => {
 
 <template>
     <AppLayout>
-        <div class="row page-title-header">
-            <div class="col-12">
-                <div class="page-header">
-                    <h4 class="page-title">Gestion des Voyages</h4>
-                    <div
-                        class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
-                    >
-                        <ul class="quick-links ml-auto">
-                            <li>
-                                <Link :href="route('dashboard')"
-                                    >Tableau de bord</Link
-                                >
-                            </li>
-                            <li><a href="#">Voyages</a></li>
-                        </ul>
-                    </div>
+        <!-- En-tête modernisé -->
+        <div class="voyage-header">
+            <div class="header-content">
+                <div class="header-title-wrapper">
+                    <h1 class="page-title">Gestion des Voyages</h1>
+                    <Link :href="route('voyage.create')" class="btn-create">
+                        <Plus size="16" class="me-1" />
+                        Nouveau Voyage
+                    </Link>
+                </div>
+                <div class="breadcrumb-wrapper">
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <Link :href="route('dashboard')">Tableau de bord</Link>
+                            <span class="breadcrumb-divider">/</span>
+                        </li>
+                        <li class="breadcrumb-item active">Voyages</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="input-group">
+        <!-- Contenu principal -->
+        <div class="voyage-container">
+            <!-- Barre de recherche améliorée -->
+            <div class="search-container">
+                <div class="search-box">
                     <input
                         type="text"
                         v-model="filters.search"
-                        placeholder="Rechercher un voyage..."
-                        class="form-control"
+                        placeholder="Rechercher par nom, train ou ligne..."
+                        class="search-input"
+                        @keyup.enter="getResults"
                     />
-                    <button class="btn btn-outline-secondary" type="button">
+                    <button class="search-btn" @click="getResults">
                         <i class="mdi mdi-magnify"></i>
                     </button>
                 </div>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div
-                            class="d-flex justify-content-between align-items-center mb-4"
-                        >
-                            <h4 class="card-title mb-0">Liste des voyages</h4>
-                            <Link
-                                :href="route('voyage.create')"
-                                class="btn btn-primary btn-icon-text"
-                            >
-                                <Plus size="16" class="me-1" />
-                                Nouveau Voyage
-                            </Link>
-                        </div>
+            <!-- Carte du tableau -->
+            <div class="voyage-card">
+                <div class="table-header">
+                    <h3 class="table-title">Liste des voyages</h3>
+                    <Link
+                        :href="route('voyage.create')"
+                        class="btn-create-sm"
+                    >
+                        <Plus size="16" class="me-1" />
+                        Nouveau Voyage
+                    </Link>
+                </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Nom</th>
-                                        <th>Train</th>
-                                        <th>Ligne</th>
-                                        <th>Départ</th>
-                                        <th>Arrivée</th>
-                                        <th>Statut</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr
-                                        v-for="(voyage, index) in voyages.data"
-                                        :key="voyage.id"
-                                    >
-                                        <td>{{ index + 1 }}</td>
-                                        <td>{{ voyage.nom }}</td>
-                                        <td>{{ voyage.train.numero }}</td>
-                                        <td>{{ voyage.ligne.nom }}</td>
-                                        <td>
-                                            {{ formatDate(voyage.date_depart) }}
-                                        </td>
-                                        <td>
-                                            {{
-                                                formatDate(voyage.date_arrivee)
-                                            }}
-                                        </td>
-                                        <td>
-                                            <span
-                                                :class="`badge badge-${getStatusClass(
-                                                    voyage.statut
-                                                )}`"
-                                            >
-                                                {{
-                                                    formatStatus(voyage.statut)
-                                                }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <button
-                                                    @click="
-                                                        editVoyage(voyage.id)
-                                                    "
-                                                    class="btn btn-warning btn-sm"
-                                                    title="Modifier"
-                                                >
-                                                    <Pencil size="16" />
-                                                </button>
-                                                <button
-                                                    @click="
-                                                        deleteVoyage(voyage.id)
-                                                    "
-                                                    class="btn btn-danger btn-sm"
-                                                    title="Supprimer"
-                                                >
-                                                    <Trash size="16" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="voyages.data.length === 0">
-                                        <td
-                                            colspan="9"
-                                            class="text-center py-4 text-muted"
+                <!-- Tableau amélioré -->
+                <div class="table-responsive">
+                    <table class="voyage-table">
+                        <thead>
+                            <tr>
+                                <th class="column-id">#</th>
+                                <th>Nom</th>
+                                <th>Train</th>
+                                <th>Ligne</th>
+                                <th>Départ</th>
+                                <th>Arrivée</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(voyage, index) in voyages.data" :key="voyage.id">
+                                <td class="column-id">{{ index + 1 }}</td>
+                                <td class="voyage-name">{{ voyage.nom }}</td>
+                                <td class="train-number">{{ voyage.train.numero }}</td>
+                                <td class="line-name">{{ voyage.ligne.nom }}</td>
+                                <td class="departure-time">
+                                    <div class="date">{{ formatDate(voyage.date_depart) }}</div>
+                                    <div class="time">{{ formatTime(voyage.date_depart) }}</div>
+                                </td>
+                                <td class="arrival-time">
+                                    <div class="date">{{ formatDate(voyage.date_arrivee) }}</div>
+                                    <div class="time">{{ formatTime(voyage.date_arrivee) }}</div>
+                                </td>
+                                <td>
+                                    <span :class="`status-badge ${getStatusClass(voyage.statut)}`">
+                                        {{ formatStatus(voyage.statut) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="action-buttons">
+                                        <button
+                                            @click="editVoyage(voyage.id)"
+                                            class="btn-action btn-edit"
+                                            title="Modifier"
                                         >
-                                            Aucun voyage trouvé
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <p class="text-muted">
-                                    Affichage de {{ voyages.from }} à
-                                    {{ voyages.to }} sur
-                                    {{ voyages.total }} voyages
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <nav class="float-end">
-                                    <ul class="pagination">
-                                        <li
-                                            v-for="link in voyages.links"
-                                            :key="link.label"
-                                            class="page-item"
-                                            :class="{
-                                                active: link.active,
-                                                disabled: !link.url,
-                                            }"
+                                            <Pencil size="16" />
+                                        </button>
+                                        <button
+                                            @click="deleteVoyage(voyage.id)"
+                                            class="btn-action btn-delete"
+                                            title="Supprimer"
                                         >
-                                            <Link
-                                                v-if="link.url"
-                                                :href="link.url"
-                                                class="page-link"
-                                                v-html="link.label"
-                                            />
-                                            <span
-                                                v-else
-                                                class="page-link"
-                                                v-html="link.label"
-                                            ></span>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
+                                            <Trash size="16" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="voyages.data.length === 0">
+                                <td colspan="8" class="no-results">
+                                    <i class="mdi mdi-train-variant-off"></i>
+                                    Aucun voyage trouvé
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination améliorée -->
+                <div class="table-footer">
+                    <div class="pagination-info">
+                        Affichage de {{ voyages.from }} à {{ voyages.to }} sur {{ voyages.total }} voyages
+                    </div>
+                    <div class="pagination-controls">
+                        <Link
+                            v-for="link in voyages.links"
+                            :key="link.label"
+                            class="pagination-link"
+                            :class="{
+                                'active': link.active,
+                                'disabled': !link.url,
+                                'prev-next': link.label.includes('Previous') || link.label.includes('Next')
+                            }"
+                            v-html="link.label"
+                        />
                     </div>
                 </div>
             </div>
@@ -250,7 +217,7 @@ const formatStatus = (statut) => {
 
 <style scoped>
 /* Style général */
-.users-header {
+.voyage-header {
     background-color: #f8f9fa;
     padding: 1.5rem 2rem;
     border-bottom: 1px solid #e1e5eb;
@@ -315,47 +282,30 @@ const formatStatus = (statut) => {
     margin: 0 0.5rem;
 }
 
-.users-container {
+.voyage-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 1.5rem;
 }
 
-/* Carte principale */
-.users-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e1e5eb;
-    overflow: hidden;
-    margin-bottom: 2rem;
-}
-
-/* En-tête du tableau */
-.table-header {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
-    background-color: #f9fafb;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
 /* Barre de recherche */
+.search-container {
+    margin-bottom: 1.5rem;
+}
+
 .search-box {
     position: relative;
-    min-width: 250px;
+    max-width: 600px;
 }
 
 .search-input {
     width: 100%;
-    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    padding: 0.75rem 1rem 0.75rem 3rem;
     border: 1px solid #e1e5eb;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    font-size: 1rem;
     transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .search-input:focus {
@@ -369,7 +319,7 @@ const formatStatus = (statut) => {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 2.5rem;
+    width: 3rem;
     background: transparent;
     border: none;
     color: #6c757d;
@@ -379,17 +329,70 @@ const formatStatus = (statut) => {
     justify-content: center;
 }
 
+/* Carte du tableau */
+.voyage-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e1e5eb;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.table-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Boutons */
+.btn-create, .btn-create-sm {
+    background-color: #4a6cf7;
+    border: none;
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-create-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-create:hover, .btn-create-sm:hover {
+    background-color: #3a5ce4;
+    transform: translateY(-1px);
+}
+
 /* Tableau */
-.users-table {
+.voyage-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.users-table thead {
+.voyage-table thead {
     background-color: #f8f9fa;
 }
 
-.users-table th {
+.voyage-table th {
     padding: 1rem 1.25rem;
     text-align: left;
     font-weight: 600;
@@ -400,17 +403,25 @@ const formatStatus = (statut) => {
     border-bottom: 1px solid #e1e5eb;
 }
 
-.users-table td {
+.voyage-table th.text-center {
+    text-align: center;
+}
+
+.voyage-table td {
     padding: 1rem 1.25rem;
     border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
 }
 
-.users-table tr:last-child td {
+.voyage-table td.text-center {
+    text-align: center;
+}
+
+.voyage-table tr:last-child td {
     border-bottom: none;
 }
 
-.users-table tr:hover td {
+.voyage-table tr:hover td {
     background-color: #f9fafb;
 }
 
@@ -419,41 +430,76 @@ const formatStatus = (statut) => {
     width: 60px;
     color: #6c757d;
     font-weight: 500;
+    text-align: center;
 }
 
-.column-name {
+.voyage-name {
     font-weight: 500;
+    color: #2c3e50;
+}
+
+.train-number {
+    font-family: monospace;
+    font-size: 1.1rem;
+}
+
+.line-name {
+    color: #6c757d;
+}
+
+.departure-time, .arrival-time {
+    min-width: 120px;
+}
+
+.departure-time .date, .arrival-time .date {
+    font-weight: 500;
+}
+
+.departure-time .time, .arrival-time .time {
+    font-size: 0.85rem;
+    color: #6c757d;
 }
 
 /* Badges de statut */
 .status-badge {
-    padding: 0.25rem 0.75rem;
+    padding: 0.35rem 0.75rem;
     border-radius: 50px;
     font-size: 0.8rem;
     font-weight: 500;
     display: inline-block;
 }
 
-.status-badge.active {
+.status-badge.programme {
     background-color: #e6f7ff;
     color: #1890ff;
 }
 
-.status-badge.inactive {
+.status-badge.en-cours {
+    background-color: #f6ffed;
+    color: #52c41a;
+}
+
+.status-badge.termine {
     background-color: #fff2f0;
     color: #ff4d4f;
+}
+
+.status-badge.annule {
+    background-color: #fffbe6;
+    color: #faad14;
 }
 
 /* Boutons d'action */
 .action-buttons {
     display: flex;
+    justify-content: center;
     gap: 0.5rem;
 }
 
 .btn-action {
     width: 32px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: none;
     background-color: transparent;
     cursor: pointer;
@@ -523,7 +569,7 @@ const formatStatus = (statut) => {
 
 .pagination-link {
     padding: 0.5rem 0.75rem;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 1px solid #e1e5eb;
     color: #495057;
     text-decoration: none;
@@ -554,51 +600,37 @@ const formatStatus = (statut) => {
     font-weight: bold;
 }
 
-/* Boutons */
-.btn-create-user {
-    background-color: #4a6cf7;
-    border: none;
-    color: white;
-    padding: 0.5rem 1.25rem;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-create-user:hover {
-    background-color: #3a5ce4;
-    transform: translateY(-1px);
-}
-
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
+    .voyage-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
     .header-title-wrapper {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
 
-    .table-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .search-box {
-        width: 100%;
-    }
-
     .table-footer {
         flex-direction: column;
     }
+}
 
-    .users-table {
-        display: block;
-        overflow-x: auto;
+@media (max-width: 768px) {
+    .search-box {
+        max-width: 100%;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        width: 100%;
     }
 }
 </style>
-
