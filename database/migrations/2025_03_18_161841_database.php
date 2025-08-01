@@ -168,6 +168,7 @@ return new class extends Migration {
             $table->foreignId('place_id')->nullable()->constrained('places')->nullOnDelete();
             $table->enum('statut', ['payé', 'réservé'])->default('payé');
             $table->string('reference')->unique()->nullable(); // N°12-2025-03-18-001
+            $table->string('qrcode')->unique()->nullable(); // N°12-2025-03-18-001
             $table->timestamps();
 
             $table->index(['place_id', 'voyage_id']);

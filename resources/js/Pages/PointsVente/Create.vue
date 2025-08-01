@@ -28,138 +28,464 @@ const submit = () => {
 
 <template>
     <AppLayout>
-        <!-- 🧭 Titre -->
-        <div class="row page-title-header">
-            <div class="col-12">
-                <div class="page-header">
-                    <h4 class="page-title">Points de Vente</h4>
-                    <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
-                        <ul class="quick-links ml-auto">
-                            <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
-                            <li><Link :href="route('points-vente.index')">Points de vente</Link></li>
-                            <li>Nouveau point</li>
-                        </ul>
-                    </div>
+        <!-- En-tête amélioré -->
+        <div class="form-header">
+            <div class="header-content">
+                <div class="header-title-wrapper">
+                    <h1 class="page-title">Nouveau Point de Vente</h1>
+                    <Link
+                        :href="route('points-vente.index')"
+                        class="btn-back"
+                    >
+                        <ArrowLeft size="16" class="me-1" />
+                        Retour à la liste
+                    </Link>
+                </div>
+                <div class="breadcrumb-wrapper">
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <Link :href="route('dashboard')">Tableau de bord</Link>
+                            <span class="breadcrumb-divider">/</span>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <Link :href="route('points-vente.index')">Points de vente</Link>
+                            <span class="breadcrumb-divider">/</span>
+                        </li>
+                        <li class="breadcrumb-item active">Nouveau</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Formulaire -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 class="card-title mb-0">Nouveau Point de Vente</h4>
-                            <Link
-                                :href="route('points-vente.index')"
-                                class="btn btn-light btn-icon-text"
+        <!-- Contenu principal -->
+        <div class="form-container">
+            <div class="form-card">
+                <form class="creation-form" @submit.prevent="submit">
+                    <!-- Section Gare -->
+                    <div class="form-section">
+                        <h3 class="section-title">Informations de base</h3>
+                        <div class="form-group">
+                            <label class="form-label required">Gare</label>
+                            <select
+                                v-model="form.gare_id"
+                                class="form-select"
+                                :class="{ 'is-invalid': form.errors.gare_id }"
+                                required
                             >
-                                <ArrowLeft size="16" class="me-1" />
-                                Retour
-                            </Link>
+                                <option value="" disabled selected>Sélectionnez une gare</option>
+                                <option
+                                    v-for="gare in gares"
+                                    :key="gare.id"
+                                    :value="gare.id"
+                                >
+                                    {{ gare.nom }} ({{ gare.type }})
+                                </option>
+                            </select>
+                            <div v-if="form.errors.gare_id" class="form-error">
+                                {{ form.errors.gare_id }}
+                            </div>
                         </div>
 
-                        <form class="forms-sample" @submit.prevent="submit">
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Gare *</label>
-                                <div class="col-sm-9">
-                                    <select
-                                        v-model="form.gare_id"
-                                        class="form-control"
-                                        :class="{ 'is-invalid': form.errors.gare_id }"
-                                        required
-                                    >
-                                        <option value="" disabled>Sélectionnez une gare</option>
-                                        <option
-                                            v-for="gare in gares"
-                                            :key="gare.id"
-                                            :value="gare.id"
-                                        >
-                                            {{ gare.nom }} ({{ gare.type }})
-                                        </option>
-                                    </select>
-                                    <div v-if="form.errors.gare_id" class="invalid-feedback">
-                                        {{ form.errors.gare_id }}
-                                    </div>
-                                </div>
+                        <div class="form-group">
+                            <label class="form-label required">Type de point</label>
+                            <select
+                                v-model="form.type"
+                                class="form-select"
+                                :class="{ 'is-invalid': form.errors.type }"
+                                required
+                            >
+                                <option value="" disabled selected>-- Sélectionnez un type --</option>
+                                <option value="gare">Interne</option>
+                                <option value="externe">Externe</option>
+                            </select>
+                            <div v-if="form.errors.type" class="form-error">
+                                {{ form.errors.type }}
                             </div>
+                        </div>
 
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Type de point *</label>
-                                <div class="col-sm-9">
-                                    <select
-                                        v-model="form.type"
-                                        class="form-control"
-                                        :class="{ 'is-invalid': form.errors.type }"
-                                        required
-                                    >
-                                        <option value="" disabled>-- Type de Point De Vente --</option>
-                                        <option value="gare">Interne</option>
-                                        <option value="externe">Externe</option>
-                                    </select>
-                                    <div v-if="form.errors.type" class="invalid-feedback">
-                                        {{ form.errors.type }}
-                                    </div>
-                                </div>
+                        <div class="form-group switch-group">
+                            <label class="form-label">Statut</label>
+                            <div class="switch-container">
+                                <label class="switch">
+                                    <input
+                                        type="checkbox"
+                                        v-model="form.actif"
+                                        id="actifSwitch"
+                                    />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span class="switch-label">{{ form.actif ? 'Actif' : 'Inactif' }}</span>
                             </div>
-
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Statut</label>
-                                <div class="col-sm-9 d-flex align-items-center">
-                                    <div class="form-check form-switch">
-                                        <input
-                                            type="checkbox"
-                                            class="form-check-input"
-                                            v-model="form.actif"
-                                            id="actifSwitch"
-                                        />
-                                        <label class="form-check-label" for="actifSwitch">
-                                            {{ form.actif ? 'Actif' : 'Inactif' }}
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group row mt-4">
-                                <div class="col-sm-12 d-flex justify-content-end">
-                                    <button
-                                        type="button"
-                                        @click="router.visit(route('points-vente.index'))"
-                                        class="btn btn-light mr-2"
-                                    >
-                                        Annuler
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        class="btn btn-primary"
-                                        :disabled="form.processing"
-                                    >
-                                        <span
-                                            v-if="form.processing"
-                                            class="spinner-border spinner-border-sm me-1"
-                                        ></span>
-                                        {{ form.processing ? 'Création en cours...' : 'Créer' }}
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
+
+                    <!-- Boutons d'action -->
+                    <div class="form-actions">
+                        <button
+                            type="button"
+                            @click="router.visit(route('points-vente.index'))"
+                            class="btn-cancel"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            class="btn-submit"
+                            :disabled="form.processing"
+                        >
+                            <span
+                                v-if="form.processing"
+                                class="spinner"
+                            ></span>
+                            {{ form.processing ? 'Création en cours...' : 'Créer le point de vente' }}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </AppLayout>
 </template>
 
 <style scoped>
-.form-check-input:checked {
-    background-color: #4e73df;
-    border-color: #4e73df;
+/* Style général */
+.form-header {
+    background-color: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e1e5eb;
+    margin-bottom: 1.5rem;
 }
 
-.invalid-feedback {
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header-title-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.breadcrumb-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item {
+    color: #6c757d;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.breadcrumb-item:hover {
+    color: #4a6cf7;
+}
+
+.breadcrumb-item.active {
+    color: #4a6cf7;
+    font-weight: 500;
+}
+
+.breadcrumb-divider {
+    color: #adb5bd;
+    margin: 0 0.5rem;
+}
+
+.form-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Carte du formulaire */
+.form-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e1e5eb;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.creation-form {
+    padding: 2rem;
+}
+
+/* Sections du formulaire */
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.section-title::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 1.2rem;
+    background-color: #4a6cf7;
+    margin-right: 0.75rem;
+    border-radius: 2px;
+}
+
+/* Groupes de champs */
+.form-group {
+    margin-bottom: 1.5rem;
+    max-width: 600px;
+}
+
+.form-label {
     display: block;
-    color: #dc3545;
-    font-size: 0.875em;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+.form-label.required::after {
+    content: " *";
+    color: #ff4d4f;
+}
+
+/* Champs de formulaire */
+.form-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e1e5eb;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background-color: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.form-select:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.25);
+    outline: none;
+}
+
+.form-select.is-invalid {
+    border-color: #ff4d4f;
+}
+
+.form-select.is-invalid:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 77, 79, 0.25);
+}
+
+/* Switch personnalisé */
+.switch-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.switch-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #4a6cf7;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #4a6cf7;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.switch-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+/* Messages d'erreur */
+.form-error {
+    color: #ff4d4f;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+/* Boutons */
+.btn-back {
+    background-color: white;
+    border: 1px solid #e1e5eb;
+    color: #495057;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    background-color: #f8f9fa;
+    border-color: #dae0e5;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.btn-cancel {
+    background-color: white;
+    border: 1px solid #e1e5eb;
+    color: #495057;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #f8f9fa;
+    border-color: #dae0e5;
+}
+
+.btn-submit {
+    background-color: #4a6cf7;
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-submit:hover:not(:disabled) {
+    background-color: #3a5ce4;
+    transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-title-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-cancel, .btn-submit {
+        width: 100%;
+    }
+
+    .creation-form {
+        padding: 1.5rem;
+    }
 }
 </style>

@@ -115,7 +115,7 @@ const deleteDistances = (id) => {
                             <h4 class="card-title mb-0">Liste des distances</h4>
                             <!-- ➕ Bouton de création -->
                             <Link
-                                :href="route('gare.create')"
+                                :href="route('distance.create')"
                                 class="btn btn-primary btn-icon-text"
                             >
                                 <Plus size="16" class="me-1" />
@@ -143,9 +143,9 @@ const deleteDistances = (id) => {
                                         :key="distance.id"
                                     >
                                         <td>{{ index + 1 }}</td>
-                                        <td>{{ distance.gareDepart }}</td>
-                                        <td>{{ distance.gareArrivee }}</td>
-                                        <td>{{ distance.distance_km }}</td>
+                                        <td>{{ distance.gare_depart.nom }}</td>
+                                        <td>{{ distance.gare_arrivee.nom }}</td>
+                                        <td>{{ distance.distance_km }} km</td>
                                         <td>
                                             <div class="btn-group" role="group">
                                             <button

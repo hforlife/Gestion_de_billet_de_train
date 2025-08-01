@@ -24,6 +24,7 @@ class Vente extends Model
         'place_id',
         'penalite',
         'reference',
+        'qrcode',
         'statut',
     ];
 

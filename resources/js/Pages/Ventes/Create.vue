@@ -2,6 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     voyages: Array,
