@@ -82,12 +82,12 @@ const formatDate = (dateString) => {
 
 <template>
     <AppLayout>
-        <!-- En-tête de page amélioré -->
-        <div class="users-header">
+        <!-- En-tête modernisé -->
+        <div class="sales-header">
             <div class="header-content">
                 <div class="header-title-wrapper">
-                    <h1 class="page-title">Gestions des Ventes</h1>
-                    <Link :href="route('vente.create')" class="btn-create-user">
+                    <h1 class="page-title">Gestion des Ventes</h1>
+                    <Link :href="route('vente.create')" class="btn-create">
                         <Plus size="16" class="me-1" />
                         Nouvelle vente
                     </Link>
@@ -95,9 +95,7 @@ const formatDate = (dateString) => {
                 <div class="breadcrumb-wrapper">
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <Link :href="route('dashboard')"
-                                >Tableau de bord</Link
-                            >
+                            <Link :href="route('dashboard')">Tableau de bord</Link>
                             <span class="breadcrumb-divider">/</span>
                         </li>
                         <li class="breadcrumb-item active">Ventes</li>
@@ -106,13 +104,15 @@ const formatDate = (dateString) => {
             </div>
         </div>
 
-        <!-- Filtres -->
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="input-group">
+        <!-- Contenu principal -->
+        <div class="sales-container">
+            <!-- Filtres améliorés -->
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label class="filter-label">Filtrer par voyage</label>
                     <select
                         v-model="filters.voyage_id"
-                        class="form-control"
+                        class="filter-select"
                         aria-label="Filtrer par voyage"
                     >
                         <option value="">Tous les voyages</option>
@@ -121,310 +121,109 @@ const formatDate = (dateString) => {
                             :key="voyage.id"
                             :value="voyage.id"
                         >
-                            {{ voyage.nom }} ({{
-                                formatDate(voyage.date_depart)
-                            }})
+                            {{ voyage.nom }} ({{ formatDate(voyage.date_depart) }})
                         </option>
                     </select>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input
-                        type="text"
-                        v-model="filters.search"
-                        placeholder="Rechercher par client..."
-                        class="form-control"
-                        aria-label="Rechercher des ventes"
-                    />
-                    <button
-                        class="btn btn-outline-secondary"
-                        type="button"
-                        @click="router.get(route('vente.index'), filters)"
-                        aria-label="Lancer la recherche"
-                    >
-                        <i class="mdi mdi-magnify"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
 
-        <!-- Tableau des ventes -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div
-                            class="d-flex justify-content-between align-items-center mb-4"
-                        >
-                            <h4 class="card-title mb-0">Liste des ventes</h4>
-                            <Link
-                                :href="route('vente.create')"
-                                class="btn btn-primary btn-icon-text"
-                                aria-label="Créer une nouvelle vente"
-                            >
-                                <Plus size="16" class="me-1" />
-                                Nouvelle Vente
-                            </Link>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table
-                                class="table table-hover"
-                                aria-label="Liste des ventes"
-                            >
-                                <thead class="table-light">
-                                    <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">Client</th>
-                                        <th scope="col">Voyage</th>
-                                        <th scope="col">Train</th>
-                                        <th scope="col" class="text-end">
-                                            Prix Unitaire(PU)
-                                        </th>
-                                        <th scope="col">Bagage</th>
-                                        <th scope="col" class="text-end">
-                                            Quantité
-                                        </th>
-                                        <th scope="col" class="text-end">
-                                            Poids
-                                        </th>
-                                        <th scope="col" class="text-center">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr
-                                        v-for="(vente, index) in ventes.data"
-                                        :key="vente.id"
-                                    >
-                                        <td>{{ ventes.from + index }}</td>
-                                        <td>{{ vente.client_nom || "---" }}</td>
-                                        <td>
-                                            <template v-if="vente.voyage">
-                                                {{ vente.voyage.nom }}
-                                                <small
-                                                    class="text-muted d-block"
-                                                >
-                                                    {{
-                                                        formatDate(
-                                                            vente.voyage
-                                                                .date_depart
-                                                        )
-                                                    }}
-                                                </small>
-                                            </template>
-                                            <span v-else>---</span>
-                                        </td>
-                                        <td>
-                                            {{ vente.train?.numero || "---" }}
-                                        </td>
-                                        <td class="text-end">
-                                            {{ formatPrice(vente.prix) }}
-                                        </td>
-                                        <td>
-                                            <span
-                                                :class="`badge bg-${
-                                                    vente.bagage
-                                                        ? 'success'
-                                                        : 'secondary'
-                                                }`"
-                                            >
-                                                {{
-                                                    vente.bagage ? "Oui" : "Non"
-                                                }}
-                                            </span>
-                                        </td>
-                                        <td class="text-end">
-                                            {{
-                                                vente.quantite
-                                                    ? `${vente.quantite} Billets`
-                                                    : "---"
-                                            }}
-                                        </td>
-                                        <td class="text-end">
-                                            {{
-                                                vente.poids_bagage
-                                                    ? `${vente.poids_bagage} kg`
-                                                    : "---"
-                                            }}
-                                        </td>
-                                        <td class="text-center">
-                                            <div
-                                                class="btn-group"
-                                                role="group"
-                                                aria-label="Actions"
-                                            >
-                                                <button
-                                                    @click="showVente(vente.id)"
-                                                    class="btn btn-info btn-sm"
-                                                    aria-label="Voir détails"
-                                                >
-                                                    <Eye size="16" />
-                                                </button>
-                                                <Link
-                                                    :href="
-                                                        route(
-                                                            'vente.edit',
-                                                            vente.id
-                                                        )
-                                                    "
-                                                    class="btn btn-warning btn-sm"
-                                                    aria-label="Modifier"
-                                                >
-                                                    <Pencil size="16" />
-                                                </Link>
-                                                <button
-                                                    @click="
-                                                        deleteVente(vente.id)
-                                                    "
-                                                    class="btn btn-danger btn-sm"
-                                                    aria-label="Supprimer"
-                                                >
-                                                    <Trash size="16" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="ventes.data.length === 0">
-                                        <td
-                                            colspan="9"
-                                            class="text-center py-4 text-muted"
-                                        >
-                                            Aucune vente trouvée
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <p class="text-muted">
-                                    Affichage de {{ ventes.from }} à
-                                    {{ ventes.to }} sur
-                                    {{ ventes.total }} ventes
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <nav aria-label="Pagination des ventes">
-                                    <ul class="pagination float-end">
-                                        <li
-                                            v-for="link in ventes.links"
-                                            :key="link.label"
-                                            class="page-item"
-                                            :class="{
-                                                active: link.active,
-                                                disabled: !link.url,
-                                            }"
-                                        >
-                                            <Link
-                                                v-if="link.url"
-                                                :href="link.url"
-                                                class="page-link"
-                                                v-html="link.label"
-                                                :aria-label="`Page ${link.label}`"
-                                                :aria-current="
-                                                    link.active ? 'page' : null
-                                                "
-                                            />
-                                            <span
-                                                v-else
-                                                class="page-link"
-                                                v-html="link.label"
-                                            ></span>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="users-container">
-            <div class="users-card">
-                <!-- Barre d'outils avec recherche -->
-                <div class="table-header">
+                <div class="filter-group search-group">
+                    <label class="filter-label">Rechercher</label>
                     <div class="search-box">
                         <input
                             type="text"
                             v-model="filters.search"
-                            placeholder="Recherche par client..."
+                            placeholder="Rechercher par client..."
                             class="search-input"
+                            aria-label="Rechercher des ventes"
+                            @keyup.enter="router.get(route('vente.index'), filters)"
                         />
                         <button
                             class="search-btn"
-                            type="button"
                             @click="router.get(route('vente.index'), filters)"
                             aria-label="Lancer la recherche"
                         >
-                            <Search size="16" />
+                            <i class="mdi mdi-magnify"></i>
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Tableau -->
+            <!-- Carte du tableau -->
+            <div class="sales-card">
+                <div class="table-header">
+                    <h3 class="table-title">Liste des ventes</h3>
+                    <Link
+                        :href="route('vente.create')"
+                        class="btn-create-sm"
+                        aria-label="Créer une nouvelle vente"
+                    >
+                        <Plus size="16" class="me-1" />
+                        Nouvelle Vente
+                    </Link>
+                </div>
+
+                <!-- Tableau amélioré -->
                 <div class="table-responsive">
-                    <table class="users-table">
+                    <table class="sales-table" aria-label="Liste des ventes">
                         <thead>
                             <tr>
                                 <th class="column-id">#</th>
                                 <th>Client</th>
-                                <th>Voyages</th>
-                                <th>Type de point</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
+                                <th>Voyage</th>
+                                <th>Train</th>
+                                <th class="text-end">Prix Unitaire</th>
+                                <th class="text-center">Bagage</th>
+                                <th class="text-end">Quantité</th>
+                                <th class="text-end">Poids</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr
-                                v-for="(point, index) in pointsVente.data"
-                                :key="point.id"
-                            >
-                                <td class="column-id">{{ index + 1 }}</td>
-                                <td class="column-name">
-                                    {{ point.client_nom }}
+                            <tr v-for="(vente, index) in ventes.data" :key="vente.id">
+                                <td class="column-id">{{ ventes.from + index }}</td>
+                                <td class="client-name">{{ vente.client_nom || "---" }}</td>
+                                <td class="voyage-info">
+                                    <template v-if="vente.voyage">
+                                        <div class="voyage-name">{{ vente.voyage.nom }}</div>
+                                        <div class="voyage-date">
+                                            {{ formatDate(vente.voyage.date_depart) }}
+                                        </div>
+                                    </template>
+                                    <span v-else>---</span>
                                 </td>
-                                <td>{{ point.voyage }}</td>
-                                <td class="text-capitalize">
-                                    {{ point.type }}
-                                </td>
-                                <td>
-                                    <span
-                                        :class="{
-                                            'status-badge active':
-                                                point.actif === 'Actif',
-                                            'status-badge inactive':
-                                                point.actif === 'Inactif',
-                                        }"
-                                    >
-                                        {{ vente.actif }}
+                                <td class="train-number">{{ vente.train?.numero || "---" }}</td>
+                                <td class="text-end price">{{ formatPrice(vente.prix) }}</td>
+                                <td class="text-center">
+                                    <span :class="`status-badge ${vente.bagage ? 'yes' : 'no'}`">
+                                        {{ vente.bagage ? "Oui" : "Non" }}
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="action-buttons">
+                                <td class="text-end quantity">
+                                    {{ vente.quantite ? `${vente.quantite} Billets` : "---" }}
+                                </td>
+                                <td class="text-end weight">
+                                    {{ vente.poids_bagage ? `${vente.poids_bagage} kg` : "---" }}
+                                </td>
+                                <td class="text-center">
+                                    <div class="action-buttons" aria-label="Actions">
+                                        <button
+                                            @click="showVente(vente.id)"
+                                            class="btn-action btn-view"
+                                            aria-label="Voir détails"
+                                        >
+                                            <Eye size="16" />
+                                        </button>
                                         <Link
-                                            :href="
-                                                route(
-                                                    'vente.edit',
-                                                    point.id
-                                                )
-                                            "
+                                            :href="route('vente.edit', vente.id)"
                                             class="btn-action btn-edit"
-                                            title="Modifier"
+                                            aria-label="Modifier"
                                         >
                                             <Pencil size="16" />
                                         </Link>
                                         <button
                                             @click="deleteVente(vente.id)"
                                             class="btn-action btn-delete"
-                                            title="Supprimer"
+                                            aria-label="Supprimer"
                                         >
                                             <Trash size="16" />
                                         </button>
@@ -432,33 +231,37 @@ const formatDate = (dateString) => {
                                 </td>
                             </tr>
                             <tr v-if="ventes.data.length === 0">
-                                <td colspan="6" class="no-results">
-                                    <i>Aucune vente trouvée</i>
+                                <td colspan="9" class="no-results">
+                                    <i class="mdi mdi-cart-remove"></i>
+                                    Aucune vente trouvée
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-        <!-- Pagination -->
-        <div class="table-footer">
-            <div class="pagination-info">
-                Affichage de {{ ventes.from }} à {{ ventes.to }} sur
-                {{ ventes.total }} points
-            </div>
-            <div class="pagination-controls">
-                <!-- <Link
-                            v-for="link in pointsVente.links"
+                <!-- Pagination améliorée -->
+                <div class="table-footer">
+                    <div class="pagination-info">
+                        Affichage de {{ ventes.from }} à {{ ventes.to }} sur {{ ventes.total }} ventes
+                    </div>
+                    <div class="pagination-controls">
+                        <Link
+                            v-for="link in ventes.links"
                             :key="link.label"
-                            :href="link.url"
+                            
                             class="pagination-link"
                             :class="{
                                 'active': link.active,
                                 'disabled': !link.url,
                                 'prev-next': link.label.includes('Previous') || link.label.includes('Next')
                             }"
+                            :aria-label="`Page ${link.label}`"
+                            :aria-current="link.active ? 'page' : null"
                             v-html="link.label"
-                        /> -->
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>
@@ -466,7 +269,7 @@ const formatDate = (dateString) => {
 
 <style scoped>
 /* Style général */
-.users-header {
+.sales-header {
     background-color: #f8f9fa;
     padding: 1.5rem 2rem;
     border-bottom: 1px solid #e1e5eb;
@@ -531,52 +334,74 @@ const formatDate = (dateString) => {
     margin: 0 0.5rem;
 }
 
-.users-container {
+.sales-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 1.5rem;
 }
 
-/* Carte principale */
-.users-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e1e5eb;
-    overflow: hidden;
-    margin-bottom: 2rem;
-}
-
-/* En-tête du tableau */
-.table-header {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
-    background-color: #f9fafb;
+/* Filtres */
+.filters-container {
     display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
-    gap: 1rem;
 }
 
-/* Barre de recherche */
+.filter-group {
+    flex: 1;
+    min-width: 250px;
+}
+
+.filter-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e1e5eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background-color: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.filter-select:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.15);
+    outline: none;
+}
+
+.search-group {
+    flex: 2;
+}
+
 .search-box {
     position: relative;
-    min-width: 250px;
 }
 
 .search-input {
     width: 100%;
-    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    padding: 0.75rem 1rem 0.75rem 3rem;
     border: 1px solid #e1e5eb;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    font-size: 1rem;
     transition: all 0.2s;
 }
 
 .search-input:focus {
     border-color: #4a6cf7;
-    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.15);
     outline: none;
 }
 
@@ -585,7 +410,7 @@ const formatDate = (dateString) => {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 2.5rem;
+    width: 3rem;
     background: transparent;
     border: none;
     color: #6c757d;
@@ -595,17 +420,70 @@ const formatDate = (dateString) => {
     justify-content: center;
 }
 
+/* Carte du tableau */
+.sales-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e1e5eb;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.table-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Boutons */
+.btn-create, .btn-create-sm {
+    background-color: #4a6cf7;
+    border: none;
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-create-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-create:hover, .btn-create-sm:hover {
+    background-color: #3a5ce4;
+    transform: translateY(-1px);
+}
+
 /* Tableau */
-.users-table {
+.sales-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.users-table thead {
+.sales-table thead {
     background-color: #f8f9fa;
 }
 
-.users-table th {
+.sales-table th {
     padding: 1rem 1.25rem;
     text-align: left;
     font-weight: 600;
@@ -616,17 +494,33 @@ const formatDate = (dateString) => {
     border-bottom: 1px solid #e1e5eb;
 }
 
-.users-table td {
+.sales-table th.text-center {
+    text-align: center;
+}
+
+.sales-table th.text-end {
+    text-align: right;
+}
+
+.sales-table td {
     padding: 1rem 1.25rem;
     border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
 }
 
-.users-table tr:last-child td {
+.sales-table td.text-center {
+    text-align: center;
+}
+
+.sales-table td.text-end {
+    text-align: right;
+}
+
+.sales-table tr:last-child td {
     border-bottom: none;
 }
 
-.users-table tr:hover td {
+.sales-table tr:hover td {
     background-color: #f9fafb;
 }
 
@@ -635,27 +529,52 @@ const formatDate = (dateString) => {
     width: 60px;
     color: #6c757d;
     font-weight: 500;
+    text-align: center;
 }
 
-.column-name {
+.client-name {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.voyage-info {
+    min-width: 200px;
+}
+
+.voyage-name {
+    font-weight: 500;
+}
+
+.voyage-date {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.train-number {
+    font-family: monospace;
+    font-size: 1.1rem;
+}
+
+.price, .quantity, .weight {
+    font-family: monospace;
     font-weight: 500;
 }
 
 /* Badges de statut */
 .status-badge {
-    padding: 0.25rem 0.75rem;
+    padding: 0.35rem 0.75rem;
     border-radius: 50px;
     font-size: 0.8rem;
     font-weight: 500;
     display: inline-block;
 }
 
-.status-badge.active {
+.status-badge.yes {
     background-color: #e6f7ff;
     color: #1890ff;
 }
 
-.status-badge.inactive {
+.status-badge.no {
     background-color: #fff2f0;
     color: #ff4d4f;
 }
@@ -663,13 +582,14 @@ const formatDate = (dateString) => {
 /* Boutons d'action */
 .action-buttons {
     display: flex;
+    justify-content: center;
     gap: 0.5rem;
 }
 
 .btn-action {
     width: 32px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: none;
     background-color: transparent;
     cursor: pointer;
@@ -681,6 +601,15 @@ const formatDate = (dateString) => {
 
 .btn-action:hover {
     transform: scale(1.1);
+}
+
+.btn-view {
+    color: #4a6cf7;
+    background-color: rgba(74, 108, 247, 0.1);
+}
+
+.btn-view:hover {
+    background-color: rgba(74, 108, 247, 0.2);
 }
 
 .btn-edit {
@@ -739,7 +668,7 @@ const formatDate = (dateString) => {
 
 .pagination-link {
     padding: 0.5rem 0.75rem;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 1px solid #e1e5eb;
     color: #495057;
     text-decoration: none;
@@ -770,50 +699,42 @@ const formatDate = (dateString) => {
     font-weight: bold;
 }
 
-/* Boutons */
-.btn-create-user {
-    background-color: #4a6cf7;
-    border: none;
-    color: white;
-    padding: 0.5rem 1.25rem;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-create-user:hover {
-    background-color: #3a5ce4;
-    transform: translateY(-1px);
-}
-
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
+    .filters-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .filter-group, .search-group {
+        min-width: 100%;
+    }
+
+    .sales-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
     .header-title-wrapper {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
 
-    .table-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .search-box {
-        width: 100%;
-    }
-
     .table-footer {
         flex-direction: column;
     }
+}
 
-    .users-table {
-        display: block;
-        overflow-x: auto;
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        width: 100%;
     }
 }
 </style>

@@ -160,13 +160,15 @@ return new class extends Migration {
             $table->foreignId('classe_wagon_id')->constrained('classes_wagon');
             $table->decimal('prix', 8, 2);
             $table->integer('quantite')->default(1);
+            $table->check('prix >= 0');
+            $table->check('quantite >= 1');
             $table->boolean('demi_tarif')->default(false);
-            $table->dateTime('date_vente')->default(now());
+            $table->dateTime('date_vente')->useCurrent();
             $table->boolean('bagage')->default(false);
             $table->decimal('poids_bagage', 8, 2)->nullable();
             $table->boolean('penalite')->default(false);
             $table->foreignId('place_id')->nullable()->constrained('places')->nullOnDelete();
-            $table->enum('statut', ['payé', 'réservé'])->default('payé');
+            $table->enum('statut', ['paye', 'réserve'])->default('paye');
             $table->string('reference')->unique()->nullable(); // N°12-2025-03-18-001
             $table->string('qrcode')->unique()->nullable(); // N°12-2025-03-18-001
             $table->timestamps();
