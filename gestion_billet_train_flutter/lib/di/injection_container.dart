@@ -12,8 +12,7 @@ import 'package:gestion_billet_train_flutter/features/ticket/data/datasources/ti
 import 'package:gestion_billet_train_flutter/features/ticket/data/datasources/ticket_local_datasource_impl.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/data/datasources/ticket_remote_datasource.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/data/models/ticket_model.dart';
-import 'package:gestion_billet_train_flutter/features/ticket/data/repositories/ticket_repository_impl.dart'
-    hide TicketLocalDataSource, TicketLocalDataSourceImpl;
+import 'package:gestion_billet_train_flutter/features/ticket/data/repositories/ticket_repository_impl.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/domain/repositories/ticket_repository.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/domain/usecases/scan_ticket.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/domain/usecases/sell_ticket.dart';
@@ -26,19 +25,13 @@ final sl = GetIt.instance;
 Future<void> init() async {
   // Blocs
   sl.registerFactory(() => AuthBloc(login: sl(), logout: sl()));
-  sl.registerFactory(
-    () => TicketBloc(
-      scanTicket: sl(),
-      sellTicket: sl(),
-    ), // Supprimé validateTicket
-  );
+  sl.registerFactory(() => TicketBloc(scanTicket: sl(), sellTicket: sl()));
 
   // Use cases
   sl.registerLazySingleton(() => Login(sl()));
   sl.registerLazySingleton(() => Logout(sl()));
   sl.registerLazySingleton(() => ScanTicket(sl()));
   sl.registerLazySingleton(() => SellTicket(sl()));
-  // Supprimé ValidateTicket
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
@@ -64,7 +57,7 @@ Future<void> init() async {
     () => AuthRemoteDataSourceImpl(),
   );
   sl.registerLazySingleton<TicketLocalDataSource>(
-    () => TicketLocalDataSourceImpl(hive: sl()),
+    () => TicketLocalDataSourceImpl(),
   );
   sl.registerLazySingleton<TicketRemoteDataSource>(
     () => TicketRemoteDataSourceImpl(),

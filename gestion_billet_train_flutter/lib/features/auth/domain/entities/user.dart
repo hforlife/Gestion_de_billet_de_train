@@ -1,11 +1,18 @@
-import 'package:equatable/equatable.dart';
+// features/auth/domain/entities/user.dart
+class User {
+  final int id;
+  final String name;
+  final String email;
 
-class User extends Equatable {
-  final String username;
-  final String token;
+  User({required this.id, required this.name, required this.email});
 
-  const User({required this.username, required this.token});
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'email': email,
+    'role': 'controller', // Ajoutez un rôle par défaut si nécessaire
+  };
 
   @override
-  List<Object> get props => [username, token];
+  String toString() => 'User(id: $id, name: $name, email: $email)';
 }

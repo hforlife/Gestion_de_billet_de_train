@@ -1,4 +1,6 @@
+// lib/features/ticket/data/repositories/ticket_repository_impl.dart
 import 'package:dartz/dartz.dart';
+import 'package:gestion_billet_train_flutter/core/errors/exceptions.dart';
 import 'package:gestion_billet_train_flutter/core/errors/failures.dart';
 import 'package:gestion_billet_train_flutter/core/network/network_info.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/data/datasources/ticket_local_datasource.dart';
@@ -22,7 +24,9 @@ class TicketRepositoryImpl implements TicketRepository {
   Future<Either<Failure, Ticket>> getTicket(String ticketId) async {
     try {
       final localTicket = await localDataSource.getTicket(ticketId);
-      return Right(localTicket);
+      return Right(localTicket!.toEntity());
+    } on CacheException {
+      return Left(CacheFailure());
     } catch (e) {
       return Left(ServerFailure());
     }
@@ -34,10 +38,40 @@ class TicketRepositoryImpl implements TicketRepository {
       final ticketModel = TicketModel.fromEntity(ticket);
       await localDataSource.saveTicket(ticketModel);
       if (await networkInfo.isConnected) {
-        await remoteDataSource.saveTicket(ticketModel);
-        await localDataSource.markAsSynced(ticket.id);
+        try {
+          await remoteDataSource.saveTicket(ticketModel);
+          await localDataSource.markAsSynced(ticket.id);
+        } on ServerException {
+          return const Right(null); // Local réussi, réseau échoué
+        }
       }
       return const Right(null);
+    } on CacheException {
+      return Left(CacheFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Ticket>> scanTicket(String qrCode) async {
+    try {
+      final localTicket = await localDataSource.scanTicket(qrCode);
+      if (localTicket != null) return Right(localTicket.toEntity());
+      if (await networkInfo.isConnected) {
+        try {
+          final remoteTicket = await remoteDataSource.scanTicket(qrCode);
+          if (remoteTicket != null) {
+            await localDataSource.saveTicket(remoteTicket);
+            return Right(remoteTicket.toEntity());
+          }
+        } on ServerException {
+          return Left(ServerFailure());
+        }
+      }
+      return Left(NotFoundFailure()); // Si rien n'est trouvé
+    } on CacheException {
+      return Left(CacheFailure());
     } catch (e) {
       return Left(ServerFailure());
     }
@@ -48,9 +82,15 @@ class TicketRepositoryImpl implements TicketRepository {
     try {
       await localDataSource.markAsSynced(ticketId);
       if (await networkInfo.isConnected) {
-        await remoteDataSource.markAsSynced(ticketId);
+        try {
+          await remoteDataSource.markAsSynced(ticketId);
+        } on ServerException {
+          return const Right(null); // Local réussi, réseau échoué
+        }
       }
       return const Right(null);
+    } on CacheException {
+      return Left(CacheFailure());
     } catch (e) {
       return Left(ServerFailure());
     }
@@ -60,32 +100,8 @@ class TicketRepositoryImpl implements TicketRepository {
   Future<Either<Failure, List<Ticket>>> getUnsyncedTickets() async {
     try {
       final unsyncedTickets = await localDataSource.getUnsyncedTickets();
-      if (await networkInfo.isConnected) {
-        final remoteUnsynced = await remoteDataSource.getUnsyncedTickets();
-        if (remoteUnsynced.isNotEmpty) {
-          for (var ticket in remoteUnsynced) {
-            await localDataSource.saveTicket(ticket);
-          }
-        }
-      }
-      return Right(unsyncedTickets);
-    } catch (e) {
-      return Left(ServerFailure());
-    }
-  }
-
-  @override
-  Future<Either<Failure, Ticket>> scanTicket(String qrCode) async {
-    try {
-      final localTicket = await localDataSource.scanTicket(qrCode);
-      if (localTicket != null) return Right(localTicket);
-      if (await networkInfo.isConnected) {
-        final remoteTicket = await remoteDataSource.scanTicket(qrCode);
-        if (remoteTicket != null) {
-          await localDataSource.saveTicket(remoteTicket);
-          return Right(remoteTicket);
-        }
-      }
+      return Right(unsyncedTickets.map((t) => t.toEntity()).toList());
+    } on CacheException {
       return Left(CacheFailure());
     } catch (e) {
       return Left(ServerFailure());
@@ -96,24 +112,21 @@ class TicketRepositoryImpl implements TicketRepository {
   Future<Either<Failure, void>> sellTicket(Ticket ticket) async {
     try {
       final ticketModel = TicketModel.fromEntity(ticket);
+      ticketModel.isValidated = true; // Marque comme vendu
       await localDataSource.saveTicket(ticketModel);
       if (await networkInfo.isConnected) {
-        await remoteDataSource.saveTicket(ticketModel);
-        await localDataSource.markAsSynced(ticket.id);
+        try {
+          await remoteDataSource.saveTicket(ticketModel);
+          await localDataSource.markAsSynced(ticket.id);
+        } on ServerException {
+          return const Right(null); // Local réussi, réseau échoué
+        }
       }
       return const Right(null);
+    } on CacheException {
+      return Left(CacheFailure());
     } catch (e) {
       return Left(ServerFailure());
-    }
-  }
-
-  Future<void> syncTickets() async {
-    if (await networkInfo.isConnected) {
-      final unsyncedTickets = await localDataSource.getUnsyncedTickets();
-      for (var ticket in unsyncedTickets) {
-        await remoteDataSource.saveTicket(ticket);
-        await localDataSource.markAsSynced(ticket.id);
-      }
     }
   }
 }

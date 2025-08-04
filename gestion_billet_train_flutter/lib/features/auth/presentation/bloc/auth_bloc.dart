@@ -15,19 +15,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-    final result = await login(event.username, event.password);
+    print(
+      'Tentative de connexion avec username: ${event.username}, password: ${event.password}',
+    ); // Débogage
+    final result = await login(
+      LoginParams(username: event.username, password: event.password),
+    );
     result.fold(
-      (failure) => emit(AuthError('Échec de la connexion')),
-      (user) => emit(AuthAuthenticated(user)),
+      (failure) => emit(AuthError('Échec de la connexion: ${failure.message}')),
+      (user) {
+        print('Connexion réussie, utilisateur: $user'); // Débogage
+        emit(AuthAuthenticated(user));
+      },
     );
   }
 
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-    final result = await logout();
+    print('Tentative de déconnexion'); // Débogage
+    final result = await logout(NoParams());
     result.fold(
-      (failure) => emit(AuthError('Échec de la déconnexion')),
-      (_) => emit(AuthUnauthenticated()),
+      (failure) =>
+          emit(AuthError('Échec de la déconnexion: ${failure.message}')),
+      (_) {
+        print('Déconnexion réussie'); // Débogage
+        emit(AuthUnauthenticated());
+      },
     );
   }
 }

@@ -1,7 +1,12 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:gestion_billet_train_flutter/core/constants/app_colors.dart'; // Ajustez selon votre projet
+import 'package:gestion_billet_train_flutter/core/constants/app_colors.dart';
+import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
+import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
+import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart'; // Ajustez selon votre projet
 
 class SellTicketPage extends StatefulWidget {
   const SellTicketPage({super.key});
@@ -43,8 +48,9 @@ class _SellTicketPageState extends State<SellTicketPage> {
   }
 
   void handleSellTicket() {
-    if (departureId == null || arrivalId == null || departureId == arrivalId)
+    if (departureId == null || arrivalId == null || departureId == arrivalId) {
       return;
+    }
 
     setState(() => isCalculating = true);
     final departure = locations.firstWhere((loc) => loc['id'] == departureId);
@@ -102,51 +108,306 @@ class _SellTicketPageState extends State<SellTicketPage> {
   Widget build(BuildContext context) {
     if (showReceipt && soldTicket != null) {
       return Scaffold(
+        backgroundColor: TColors.grey,
         appBar: AppBar(title: const Text('Reçu de Vente')),
         body: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(THelperFunctions.screenWidth() * 0.04),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Reçu de Vente',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Numéro de Train: ${soldTicket!['trainNumber']}'),
-                      Text('Classe: ${soldTicket!['wagonClass']}'),
-                      Text('Wagon: ${soldTicket!['wagon']}'),
-                      Text('Place: ${soldTicket!['seat']}'),
-                      Text('Gare de Départ: ${soldTicket!['departure']}'),
-                      Text('Gare d\'Arrivée: ${soldTicket!['arrival']}'),
-                      Text(
-                        'Distance: ${soldTicket!['distance'].toStringAsFixed(2)} km',
-                      ),
-                      Text(
-                        'Date de Vente/Voyage: ${formatDate(soldTicket!['saleDate'])}',
-                      ),
-                      if (soldTicket!['hasPenalty'])
-                        Text('Pénalité: Appliquée (+20%)'),
-                      Text('QR Code: ${soldTicket!['qrCode']}'),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Prix Total: ${soldTicket!['price'].toStringAsFixed(2)} €',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+              SizedBox(
+                height: THelperFunctions.screenHeight() * 0.72,
+                width: THelperFunctions.screenWidth() * 2,
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(
+                      THelperFunctions.screenWidth() * 0.05,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "BILLET TRANSPORT",
+                              style: TextStyle(
+                                fontSize: TSizes.md * 1.2,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Container(
+                              height: THelperFunctions.screenWidth() * 0.08,
+                              decoration: BoxDecoration(
+                                color: TColors.secondary.withAlpha(200),
+                                borderRadius: BorderRadius.circular(
+                                  THelperFunctions.screenWidth() * 0.5,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(
+                                  THelperFunctions.screenWidth() * 0.015,
+                                ),
+                                child: Text(
+                                  "Vendu",
+                                  style: TextStyle(
+                                    fontSize: TSizes.md,
+                                    color: TColors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.015,
+                        ),
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.24,
+                          width: THelperFunctions.screenWidth() * 0.9,
+                          child: Card(
+                            child: Padding(
+                              padding: EdgeInsets.all(
+                                THelperFunctions.screenWidth() * 0.05,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Iconsax.cd),
+                                      SizedBox(
+                                        width:
+                                            THelperFunctions.screenHeight() *
+                                            0.015,
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Départ",
+                                            style: TextStyle(
+                                              fontSize: TSizes.md,
+                                            ),
+                                          ),
+                                          Text(
+                                            "Gare de Bamako",
+                                            style: TextStyle(
+                                              fontSize: TSizes.md * 1.2,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height:
+                                        THelperFunctions.screenHeight() * 0.015,
+                                  ),
+                                  Divider(
+                                    color: Colors.grey,
+                                    thickness: 0.5,
+                                    height:
+                                        THelperFunctions.screenHeight() * 0.02,
+                                  ),
+                                  SizedBox(
+                                    height:
+                                        THelperFunctions.screenHeight() * 0.015,
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Iconsax.location,
+                                        color: TColors.secondary,
+                                      ),
+                                      SizedBox(
+                                        width:
+                                            THelperFunctions.screenHeight() *
+                                            0.015,
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Arrivée",
+                                            style: TextStyle(
+                                              fontSize: TSizes.md,
+                                            ),
+                                          ),
+                                          Text(
+                                            "Gare de Koulikoro",
+                                            style: TextStyle(
+                                              fontSize: TSizes.md * 1.2,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.08,
+                          width: THelperFunctions.screenWidth() * 0.9,
+                          child: Card(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Text(
+                                  'Prix Total',
+                                  style: TextStyle(
+                                    fontSize: TSizes.md,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '1000 FCFA',
+                                  style: TextStyle(
+                                    fontSize: TSizes.md * 1.3,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.025,
+                        ),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Numéro du voyage',
+                              style: TextStyle(fontSize: TSizes.md),
+                            ),
+                            Text(
+                              "TR-2024-001234",
+                              style: Theme.of(context).textTheme.labelMedium!
+                                  .copyWith(
+                                    color: TColors.black,
+                                    fontSize: TSizes.md,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.02,
+                        ),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Distance',
+                              style: TextStyle(fontSize: TSizes.md),
+                            ),
+                            Text(
+                              "462.2 km",
+                              style: Theme.of(context).textTheme.labelMedium!
+                                  .copyWith(
+                                    color: TColors.black,
+                                    fontSize: TSizes.md,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.02,
+                        ),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Date vente/voyage',
+                              style: TextStyle(fontSize: TSizes.md),
+                            ),
+                            Text(
+                              "30/07/2025, 18:18",
+                              style: Theme.of(context).textTheme.labelMedium!
+                                  .copyWith(
+                                    color: TColors.black,
+                                    fontSize: TSizes.md,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.02,
+                        ),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Pénalité',
+                              style: TextStyle(fontSize: TSizes.md),
+                            ),
+                            Text(
+                              "Appliquer",
+                              style: Theme.of(context).textTheme.labelMedium!
+                                  .copyWith(
+                                    color: TColors.error,
+                                    fontSize: TSizes.md,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.095,
+                          width: THelperFunctions.screenWidth() * 0.9,
+                          child: Card(
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: THelperFunctions.screenWidth() * 0.045,
+                                ),
+                                Icon(Iconsax.scan_barcode),
+                                SizedBox(
+                                  width: THelperFunctions.screenWidth() * 0.035,
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Code QR",
+                                      style: TextStyle(fontSize: TSizes.md),
+                                    ),
+                                    Text(
+                                      "QT123456ABCDEF",
+                                      style: TextStyle(
+                                        fontSize: TSizes.md,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -156,11 +417,45 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         const SnackBar(content: Text('Impression en cours...')),
                       );
                     },
-                    child: const Text('Imprimer'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: TColors.buttonPrimary,
+                      minimumSize: Size(
+                        THelperFunctions.screenWidth() * 0.4,
+                        THelperFunctions.screenHeight() * 0.08,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Iconsax.printer, size: TSizes.iconMd),
+                        SizedBox(width: THelperFunctions.screenWidth() * 0.015),
+                        Text(
+                          'Imprimer',
+                          style: TextStyle(fontSize: TSizes.md * 1.2),
+                        ),
+                      ],
+                    ),
                   ),
                   ElevatedButton(
                     onPressed: handleBackToSell,
-                    child: const Text('Nouvelle Vente'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: TColors.buttonSecondary,
+                      minimumSize: Size(
+                        THelperFunctions.screenWidth() * 0.4,
+                        THelperFunctions.screenHeight() * 0.08,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Nouvelle Vente',
+                      style: TextStyle(fontSize: TSizes.md * 1.2),
+                    ),
                   ),
                 ],
               ),
@@ -173,18 +468,40 @@ class _SellTicketPageState extends State<SellTicketPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Vente de Ticket')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(THelperFunctions.screenWidth() * 0.08),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Vendre un billet',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                color: TColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: THelperFunctions.screenHeight() * 0.04),
+            Text(
+              'Gare départ',
+              style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                color: TColors.primary,
+                fontSize: TSizes.md,
+              ),
+            ),
+            SizedBox(height: THelperFunctions.screenHeight() * 0.01),
             DropdownButtonFormField<String>(
-              hint: const Text('Gare de Départ'),
+              hint: const Text('Sélectionnez une gare'),
               value: departureId,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: TColors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: TColors.grey, width: 2.0),
+                ),
+              ),
+              icon: const Icon(Iconsax.arrow_down_1),
               items: locations.map((loc) {
                 return DropdownMenuItem<String>(
                   value: loc['id'],
@@ -193,10 +510,30 @@ class _SellTicketPageState extends State<SellTicketPage> {
               }).toList(),
               onChanged: (value) => setState(() => departureId = value),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: THelperFunctions.screenHeight() * 0.03),
+            Text(
+              "Gare d'arrivée",
+              style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                color: TColors.primary,
+                fontSize: TSizes.md,
+              ),
+            ),
+            SizedBox(height: THelperFunctions.screenHeight() * 0.01),
             DropdownButtonFormField<String>(
-              hint: const Text('Gare d\'Arrivée'),
+              hint: const Text('Sélectionnez une gare'),
               value: arrivalId,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: TColors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: TColors.grey, width: 2.0),
+                ),
+              ),
+              icon: const Icon(Iconsax.arrow_down_1),
+
               items: locations.map((loc) {
                 return DropdownMenuItem<String>(
                   value: loc['id'],
@@ -212,61 +549,151 @@ class _SellTicketPageState extends State<SellTicketPage> {
                 'Les gares ne peuvent pas être identiques',
                 style: TextStyle(color: Colors.red),
               ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Pénalité (+20%)'),
-                Switch(
-                  value: hasPenalty,
-                  onChanged: (value) => setState(() => hasPenalty = value),
-                  activeColor: AppColors.primary,
+            SizedBox(height: THelperFunctions.screenHeight() * 0.03),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: THelperFunctions.screenWidth() * 0.02,
+                vertical: THelperFunctions.screenHeight() * 0.005,
+              ), // optionnel
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: TColors.grey, // 💙 Couleur de la bordure
+                  width: 2, // 🌟 Épaisseur de la bordure
                 ),
-              ],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Appliquer une pénalité (+20%)",
+                    style: GoogleFonts.roboto(fontSize: TSizes.fontSizeMd),
+                  ),
+                  Switch(
+                    value: hasPenalty,
+                    onChanged: (value) => setState(() => hasPenalty = value),
+                    activeColor: AppColors.primary,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: THelperFunctions.screenHeight() * 0.02),
             if (isFormValid) ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Résumé',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      if (isCalculating) const CircularProgressIndicator(),
-                      if (!isCalculating) ...[
-                        Text('Distance: $distance km'),
-                        if (hasPenalty) Text('Pénalité: +20%'),
+              SizedBox(
+                height: THelperFunctions.screenHeight() * 0.25,
+                width: THelperFunctions.screenWidth() * 0.9,
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          'Prix Total: $price €',
+                          'Résumé',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: TSizes.lg,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.03,
+                        ),
+                        if (isCalculating) const CircularProgressIndicator(),
+                        if (!isCalculating) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Distance',
+                                style: TextStyle(fontSize: TSizes.md),
+                              ),
+                              Text(
+                                "$distance km",
+                                style: Theme.of(context).textTheme.labelMedium!
+                                    .copyWith(
+                                      color: TColors.black,
+                                      fontSize: TSizes.md,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                            height: THelperFunctions.screenHeight() * 0.01,
+                          ),
+                          if (hasPenalty)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Pénalité',
+                                  style: TextStyle(fontSize: TSizes.md),
+                                ),
+                                Text(
+                                  "20%",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelMedium!
+                                      .copyWith(
+                                        color: TColors.error,
+                                        fontSize: TSizes.md,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          SizedBox(
+                            height: THelperFunctions.screenHeight() * 0.01,
+                          ),
+                          Divider(
+                            color: Colors.grey,
+                            thickness: 0.5,
+                            height: THelperFunctions.screenHeight() * 0.02,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Prix Total',
+                                style: TextStyle(
+                                  fontSize: TSizes.md,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '$price FCFA',
+                                style: TextStyle(
+                                  fontSize: TSizes.md * 1.2,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
             ],
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: isFormValid ? handleSellTicket : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isFormValid ? AppColors.primary : Colors.grey,
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: const Text(
-                'Valider la Vente',
-                style: TextStyle(fontSize: 18),
+            SizedBox(height: THelperFunctions.screenHeight() * 0.05),
+            SizedBox(
+              height: THelperFunctions.screenHeight() * 0.07,
+              width: THelperFunctions.screenWidth() * 0.9,
+              child: ElevatedButton(
+                onPressed: isFormValid ? handleSellTicket : null,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: isFormValid
+                      ? TColors.buttonSecondary
+                      : TColors.buttonPrimary.withAlpha(200),
+                  minimumSize: Size(THelperFunctions.screenWidth() * 0.4, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  'Valider la Vente',
+                  style: TextStyle(fontSize: TSizes.md),
+                ),
               ),
             ),
           ],

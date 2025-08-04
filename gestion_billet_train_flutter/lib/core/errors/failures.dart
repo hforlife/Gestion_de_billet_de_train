@@ -13,6 +13,10 @@ class ServerFailure extends Failure {
   const ServerFailure({super.message = "Erreur serveur"});
 }
 
+class NotFoundFailure extends Failure {
+  const NotFoundFailure({super.message = "Pas trouver"});
+}
+
 class CacheFailure extends Failure {
   const CacheFailure({super.message = "Erreur de cache"});
 }

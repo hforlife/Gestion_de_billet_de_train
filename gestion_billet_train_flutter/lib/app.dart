@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_billet_train_flutter/core/constants/app_colors.dart';
+import 'package:gestion_billet_train_flutter/di/injection_container.dart' as di;
 import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_event.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_state.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/pages/login_page.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/home_page.dart';
-import 'package:gestion_billet_train_flutter/di/injection_container.dart' as di;
 import 'package:get/get.dart';
 
 class App extends StatelessWidget {
@@ -15,11 +14,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => di.sl<AuthBloc>()..add(const LoginEvent('', '')),
-        ),
-      ],
+      providers: [BlocProvider(create: (_) => di.sl<AuthBloc>())],
       child: GetMaterialApp(
         title: 'SOPAFER',
         debugShowCheckedModeBanner: false,

@@ -8,6 +8,12 @@ class Ticket extends Equatable {
   final bool isValidated;
   final bool hasPenalty;
   final DateTime createdAt;
+  final String? trainNumber;
+  final String? classType;
+  final String? wagon;
+  final String? seatNumber;
+  final DateTime? travelDate;
+  final bool isSynced;
 
   const Ticket({
     required this.id,
@@ -17,10 +23,16 @@ class Ticket extends Equatable {
     required this.isValidated,
     required this.hasPenalty,
     required this.createdAt,
+    this.trainNumber,
+    this.classType,
+    this.wagon,
+    this.seatNumber,
+    this.travelDate,
+    this.isSynced = false,
   });
 
   @override
-  List<Object> get props => [
+  List<Object?> get props => [
     id,
     departure,
     destination,
@@ -28,5 +40,11 @@ class Ticket extends Equatable {
     isValidated,
     hasPenalty,
     createdAt,
+    trainNumber,
+    classType,
+    wagon,
+    seatNumber,
+    travelDate,
+    isSynced,
   ];
 }

@@ -45,4 +45,30 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(CacheFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getUser() async {
+    try {
+      if (await networkInfo.isConnected) {
+        // Optionnel : Récupérer depuis remote si nécessaire
+        final userData = await localDataSource.getCachedUser();
+        if (userData != null) {
+          return Right(
+            userData.toJson(),
+          ); // Assurez-vous que User a une méthode toJson
+        }
+        return Left(
+          CacheFailure(message: 'Aucune donnée utilisateur en cache'),
+        );
+      } else {
+        final userData = await localDataSource.getCachedUser();
+        if (userData != null) {
+          return Right(userData.toJson());
+        }
+        return Left(NetworkFailure(message: 'Connexion requise'));
+      }
+    } catch (e) {
+      return Left(ServerFailure(message: 'Erreur: ${e.toString()}'));
+    }
+  }
 }

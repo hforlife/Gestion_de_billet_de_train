@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:gestion_billet_train_flutter/core/widgets/custom_button.dart';
-import 'package:gestion_billet_train_flutter/core/widgets/custom_text_field.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
+import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
+import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
+import 'package:gestion_billet_train_flutter/core/constants/text_strings.dart';
+import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_event.dart';
+import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_state.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 
 class AuthForm extends StatefulWidget {
   final bool isLoading;
-  final Function(String, String) onLogin;
 
-  const AuthForm({super.key, required this.isLoading, required this.onLogin});
+  const AuthForm({super.key, required this.isLoading});
 
   @override
   _AuthFormState createState() => _AuthFormState();
 }
 
 class _AuthFormState extends State<AuthForm> {
+  final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _hidePassword = true.obs;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -24,33 +35,119 @@ class _AuthFormState extends State<AuthForm> {
   }
 
   void _handleLogin() {
-    if (!widget.isLoading) {
-      widget.onLogin(_usernameController.text, _passwordController.text);
+    if (_formKey.currentState!.validate()) {
+      final authBloc = context.read<AuthBloc>();
+      authBloc.add(
+        LoginEvent(_usernameController.text, _passwordController.text),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        CustomTextField(
-          label: 'Nom d\'utilisateur',
-          icon: Icons.person,
-          controller: _usernameController,
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          setState(() {
+            _errorMessage = state.message;
+          });
+        }
+      },
+      child: Form(
+        key: _formKey,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: TSizes.spaceBtwSections),
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _usernameController,
+                validator: (value) =>
+                    value!.isEmpty ? "Veuillez entrer votre email" : null,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Iconsax.user),
+                  labelText: TTexts.emailUserName,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFF6B8DC8)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: TColors.primary,
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: TSizes.spaceBtwInputFields),
+              Obx(
+                () => TextFormField(
+                  controller: _passwordController,
+                  obscureText: _hidePassword.value,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Iconsax.lock),
+                    labelText: TTexts.password,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF6B8DC8)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: TColors.primary,
+                        width: 2.0,
+                      ),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _hidePassword.value ? Iconsax.eye_slash : Iconsax.eye,
+                      ),
+                      onPressed: () {
+                        _hidePassword.toggle();
+                      },
+                    ),
+                  ),
+                  validator: (value) => value!.isEmpty
+                      ? "Veuillez entrer votre mot de passe"
+                      : null,
+                ),
+              ),
+              SizedBox(height: TSizes.spaceBtwInputFields / 2),
+              SizedBox(
+                height: THelperFunctions.screenHeight() * 0.07,
+                width: THelperFunctions.screenWidth() * 0.7,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: TColors.buttonSecondary,
+                    minimumSize: Size(THelperFunctions.screenWidth() * 0.4, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: widget.isLoading ? null : _handleLogin,
+                  child: widget.isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          'Se connecter',
+                          style: GoogleFonts.roboto(
+                            fontSize: TSizes.fontSizeMd,
+                          ),
+                        ),
+                ),
+              ),
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+            ],
+          ),
         ),
-        CustomTextField(
-          label: 'Mot de passe',
-          icon: Icons.lock,
-          controller: _passwordController,
-          obscureText: true,
-        ),
-        const SizedBox(height: 20),
-        CustomButton(
-          text: 'Se connecter',
-          onPressed: _handleLogin, // Utilisation d'une méthode séparée
-        ),
-      ],
+      ),
     );
   }
 }

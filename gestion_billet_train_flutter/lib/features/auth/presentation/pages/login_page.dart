@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gestion_billet_train_flutter/core/constants/app_colors.dart';
+import 'package:gestion_billet_train_flutter/core/constants/custom_shape/container/primary_header_container.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
 import 'package:gestion_billet_train_flutter/core/constants/text_strings.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_event.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_state.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/widgets/auth_form.dart';
-import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/home_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
-  Future<void> _requestPermissions(BuildContext context) async {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  Future<void> _requestPermissions() async {
     var status = await Permission.camera.request();
     if (status.isGranted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
+      // Pas de navigation ici, laissée au Bloc
     } else if (status.isDenied) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -35,80 +35,78 @@ class LoginPage extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _requestPermissions(); // Demander les permissions au démarrage
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: AppColors.primary,
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: THelperFunctions.screenHeight() * 0.05),
-                Container(
-                  width: THelperFunctions.screenWidth() * 0.2,
-                  height: THelperFunctions.screenWidth() * 0.2,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(79, 255, 255, 255),
-                    borderRadius: BorderRadius.circular(
-                      THelperFunctions.screenWidth() * 1,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.login,
-                    size: TSizes.xl,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: TSizes.spaceBtwInputFields),
-                Text(
-                  TTexts.connexion,
-                  style: TextStyle(fontSize: TSizes.xl, color: Colors.white),
-                ),
-                Text(
-                  'Accédez à votre espace de gestion',
-                  style: TextStyle(
-                    fontSize: TSizes.fontSizeLg,
-                    color: Colors.white70,
-                  ),
-                ),
-                SizedBox(height: THelperFunctions.screenHeight() * 0.1),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(TSizes.sm),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(
-                          THelperFunctions.screenWidth() * 0.12,
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
+              TPrimaryHeaderContainer(
+                child: SizedBox(
+                  width: THelperFunctions.screenWidth(),
+                  child: Column(
+                    children: [
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.1),
+                      Container(
+                        width: THelperFunctions.screenWidth() * 0.2,
+                        height: THelperFunctions.screenWidth() * 0.2,
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(79, 255, 255, 255),
+                          borderRadius: BorderRadius.circular(
+                            THelperFunctions.screenWidth() * 1,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.login,
+                          size: TSizes.xl,
+                          color: Colors.white,
                         ),
                       ),
-                    ),
-                    child: BlocConsumer<AuthBloc, AuthState>(
-                      listener: (context, state) async {
-                        if (state is AuthAuthenticated) {
-                          await _requestPermissions(context);
-                        } else if (state is AuthError) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(state.message)),
-                          );
-                        }
-                      },
-                      builder: (context, state) {
-                        return AuthForm(
-                          isLoading: state is AuthLoading,
-                          onLogin: (username, password) {
-                            context.read<AuthBloc>().add(
-                              LoginEvent(username, password),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                      SizedBox(height: TSizes.spaceBtwInputFields),
+                      Text(
+                        TTexts.connexion,
+                        style: TextStyle(
+                          fontSize: TSizes.xl,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: TSizes.spaceBtwInputFields),
+                      Text(
+                        TTexts.loginWord,
+                        style: TextStyle(
+                          fontSize: TSizes.md,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.13),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(TSizes.defaultSpace),
+                child: BlocConsumer<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    if (state is AuthAuthenticated) {
+                      Navigator.pushReplacementNamed(context, '/home');
+                    } else if (state is AuthError) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(state.message)));
+                    }
+                  },
+                  builder: (context, state) {
+                    return AuthForm(isLoading: state is AuthLoading);
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
