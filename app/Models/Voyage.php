@@ -17,6 +17,10 @@ class Voyage extends Model
         'statut',
     ];
 
+    public function systemSetting()
+    {
+        return $this->belongsTo(SystemSetting::class);
+    }
 
     public function tarifs()
     {

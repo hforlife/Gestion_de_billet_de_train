@@ -65,158 +65,125 @@ const deleteLigne = (id) => {
 
 <template>
     <AppLayout>
-        <!-- 🧭 Titre -->
-        <div class="row page-title-header">
-            <div class="col-12">
-                <div class="page-header">
-                    <h4 class="page-title">Gestion des Lignes</h4>
-                    <div
-                        class="quick-link-wrapper w-100 d-md-flex flex-md-wrap"
-                    >
-                        <ul class="quick-links ml-auto">
-                           <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
-                            <li><a href="#">Lignes</a></li>
-                        </ul>
-                    </div>
+        <!-- En-tête modernisé -->
+        <div class="lines-header">
+            <div class="header-content">
+                <div class="header-title-wrapper">
+                    <h1 class="page-title">Gestion des Lignes Ferroviaires</h1>
+                    <Link :href="route('ligne.create')" class="btn-create">
+                        <Plus size="16" class="me-1" />
+                        Nouvelle Ligne
+                    </Link>
                 </div>
-            </div>
-        </div
-
-        <!-- 🔍 Barre de recherche -->
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input
-                        type="text"
-                        v-model="filters.search"
-                        placeholder="Rechercher par nom..."
-                        class="form-control"
-                    />
-                    <button
-                        class="btn btn-outline-secondary"
-                        type="button"
-                        @click="getResults"
-                    >
-                        <i class="mdi mdi-magnify"></i>
-                    </button>
+                <div class="breadcrumb-wrapper">
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <Link :href="route('dashboard')">Tableau de bord</Link>
+                            <span class="breadcrumb-divider">/</span>
+                        </li>
+                        <li class="breadcrumb-item active">Lignes</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- 📋 Tableau des lignes -->
-       <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <!-- Titre -->
-                        <div
-                            class="d-flex justify-content-between align-items-center mb-4"
-                        >
-                            <h4 class="card-title mb-0">Liste des lignes</h4>
-                            <!-- ➕ Bouton de création -->
-                            <Link
-                                :href="route('ligne.create')"
-                                class="btn btn-primary btn-icon-text"
-                            >
-                                <Plus size="16" class="me-1" />
-                                Nouvelle ligne
-                            </Link>
-                        </div>
+        <!-- Contenu principal -->
+        <div class="lines-container">
+            <!-- Barre de recherche améliorée -->
+            <div class="search-container">
+                <div class="search-box">
+                    <input
+                        type="text"
+                        v-model="filters.search"
+                        placeholder="Rechercher par nom, gare de départ ou arrivée..."
+                        class="search-input"
+                        @keyup.enter="getResults"
+                    />
+                    <button class="search-btn" @click="getResults">
+                        <i class="mdi mdi-magnify"></i>
+                    </button>
+                </div>
+            </div>
 
+            <!-- Carte du tableau -->
+            <div class="lines-card">
+                <div class="table-header">
+                    <h3 class="table-title">Liste des Lignes Ferroviaires</h3>
+                    <Link
+                        :href="route('ligne.create')"
+                        class="btn-create-sm"
+                    >
+                        <Plus size="16" class="me-1" />
+                        Nouvelle Ligne
+                    </Link>
+                </div>
 
-
-                        <!-- Formulaire -->
-                       <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Nom</th>
-                                        <th>Gare de Depart</th>
-                                        <th>Gare d'Arrivée</th>
-                                        <th>Distance Totale</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr
-                                        v-for="(ligne, index) in lignes.data"
-                                        :key="ligne.id"
-                                    >
-                                        <td>{{ index + 1 }}</td>
-                                        <td>{{ ligne.nom }}</td>
-                                        <td>{{ ligne.gare_depart }}</td>
-                                        <td>{{ ligne.gare_arrivee }}</td>
-                                        <td>{{ ligne.distance_totale }}</td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                            <button
-                                                @click="editLigne(ligne.id)"
-                                                class="btn btn-warning btn-sm"
-                                                title="Modifier"
-                                            >
-                                                <Pencil size="16" />
-                                            </button>
-                                            <button
-                                                @click="deleteLigne(ligne.id)"
-                                                class="btn btn-danger btn-sm"
-                                                title="Supprimer"
-                                            >
-                                                <Trash size="16" />
-                                            </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="lignes.data.length === 0">
-                                        <td
-                                            colspan="8"
-                                            class="text-center py-4 text-muted"
+                <!-- Tableau amélioré -->
+                <div class="table-responsive">
+                    <table class="lines-table">
+                        <thead>
+                            <tr>
+                                <th class="column-id">#</th>
+                                <th>Nom</th>
+                                <th>Gare de Départ</th>
+                                <th>Gare d'Arrivée</th>
+                                <th class="text-end">Distance</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(ligne, index) in lignes.data" :key="ligne.id">
+                                <td class="column-id">{{ index + 1 }}</td>
+                                <td class="line-name">{{ ligne.nom }}</td>
+                                <td class="departure-station">{{ ligne.gare_depart }}</td>
+                                <td class="arrival-station">{{ ligne.gare_arrivee }}</td>
+                                <td class="text-end distance">{{ ligne.distance_totale }} km</td>
+                                <td class="text-center">
+                                    <div class="action-buttons">
+                                        <button
+                                            @click="editLigne(ligne.id)"
+                                            class="btn-action btn-edit"
+                                            title="Modifier"
                                         >
-                                            Aucune ligne trouvée
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- 📄 Pagination -->
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <p class="text-muted">
-                                    Affichage de {{ lignes.from }} à
-                                    {{ lignes.to }} sur
-                                    {{ lignes.total }} ventes
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <nav class="float-end">
-                                    <ul class="pagination">
-                                        <li
-                                            v-for="link in lignes.links"
-                                            :key="link.label"
-                                            class="page-item"
-                                            :class="{
-                                                active: link.active,
-                                                disabled: !link.url,
-                                            }"
+                                            <Pencil size="16" />
+                                        </button>
+                                        <button
+                                            @click="deleteLigne(ligne.id)"
+                                            class="btn-action btn-delete"
+                                            title="Supprimer"
                                         >
-                                            <Link
-                                                v-if="link.url"
-                                                :href="link.url"
-                                                class="page-link"
-                                                v-html="link.label"
-                                            />
-                                            <span
-                                                v-else
-                                                class="page-link"
-                                                v-html="link.label"
-                                            ></span>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
+                                            <Trash size="16" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="lignes.data.length === 0">
+                                <td colspan="6" class="no-results">
+                                    <i class="mdi mdi-railroad-light"></i>
+                                    Aucune ligne ferroviaire trouvée
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
+                <!-- Pagination améliorée -->
+                <div class="table-footer">
+                    <div class="pagination-info">
+                        Affichage de {{ lignes.from }} à {{ lignes.to }} sur {{ lignes.total }} lignes
+                    </div>
+                    <div class="pagination-controls">
+                        <Link
+                            v-for="link in lignes.links"
+                            :key="link.label"
+                            class="pagination-link"
+                            :class="{
+                                'active': link.active,
+                                'disabled': !link.url,
+                                'prev-next': link.label.includes('Previous') || link.label.includes('Next')
+                            }"
+                            v-html="link.label"
+                        />
                     </div>
                 </div>
             </div>
@@ -226,7 +193,7 @@ const deleteLigne = (id) => {
 
 <style scoped>
 /* Style général */
-.users-header {
+.lines-header {
     background-color: #f8f9fa;
     padding: 1.5rem 2rem;
     border-bottom: 1px solid #e1e5eb;
@@ -291,47 +258,30 @@ const deleteLigne = (id) => {
     margin: 0 0.5rem;
 }
 
-.users-container {
+.lines-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 1.5rem;
 }
 
-/* Carte principale */
-.users-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e1e5eb;
-    overflow: hidden;
-    margin-bottom: 2rem;
-}
-
-/* En-tête du tableau */
-.table-header {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
-    background-color: #f9fafb;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
 /* Barre de recherche */
+.search-container {
+    margin-bottom: 1.5rem;
+}
+
 .search-box {
     position: relative;
-    min-width: 250px;
+    max-width: 600px;
 }
 
 .search-input {
     width: 100%;
-    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    padding: 0.75rem 1rem 0.75rem 3rem;
     border: 1px solid #e1e5eb;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    font-size: 1rem;
     transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .search-input:focus {
@@ -345,7 +295,7 @@ const deleteLigne = (id) => {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 2.5rem;
+    width: 3rem;
     background: transparent;
     border: none;
     color: #6c757d;
@@ -355,17 +305,44 @@ const deleteLigne = (id) => {
     justify-content: center;
 }
 
+/* Carte du tableau */
+.lines-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e1e5eb;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.table-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
 /* Tableau */
-.users-table {
+.lines-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.users-table thead {
+.lines-table thead {
     background-color: #f8f9fa;
 }
 
-.users-table th {
+.lines-table th {
     padding: 1rem 1.25rem;
     text-align: left;
     font-weight: 600;
@@ -376,17 +353,33 @@ const deleteLigne = (id) => {
     border-bottom: 1px solid #e1e5eb;
 }
 
-.users-table td {
+.lines-table th.text-center {
+    text-align: center;
+}
+
+.lines-table th.text-end {
+    text-align: right;
+}
+
+.lines-table td {
     padding: 1rem 1.25rem;
     border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
 }
 
-.users-table tr:last-child td {
+.lines-table td.text-center {
+    text-align: center;
+}
+
+.lines-table td.text-end {
+    text-align: right;
+}
+
+.lines-table tr:last-child td {
     border-bottom: none;
 }
 
-.users-table tr:hover td {
+.lines-table tr:hover td {
     background-color: #f9fafb;
 }
 
@@ -395,41 +388,43 @@ const deleteLigne = (id) => {
     width: 60px;
     color: #6c757d;
     font-weight: 500;
+    text-align: center;
 }
 
-.column-name {
+.line-name {
     font-weight: 500;
+    color: #2c3e50;
 }
 
-/* Badges de statut */
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 50px;
-    font-size: 0.8rem;
+.departure-station, .arrival-station {
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.departure-station::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: #4a6cf7;
+}
+
+.distance {
+    font-family: monospace;
     font-weight: 500;
-    display: inline-block;
-}
-
-.status-badge.active {
-    background-color: #e6f7ff;
-    color: #1890ff;
-}
-
-.status-badge.inactive {
-    background-color: #fff2f0;
-    color: #ff4d4f;
+    color: #6c757d;
 }
 
 /* Boutons d'action */
 .action-buttons {
     display: flex;
+    justify-content: center;
     gap: 0.5rem;
 }
 
 .btn-action {
     width: 32px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: none;
     background-color: transparent;
     cursor: pointer;
@@ -499,7 +494,7 @@ const deleteLigne = (id) => {
 
 .pagination-link {
     padding: 0.5rem 0.75rem;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 1px solid #e1e5eb;
     color: #495057;
     text-decoration: none;
@@ -531,50 +526,70 @@ const deleteLigne = (id) => {
 }
 
 /* Boutons */
-.btn-create-user {
+.btn-create, .btn-create-sm {
     background-color: #4a6cf7;
     border: none;
     color: white;
     padding: 0.5rem 1.25rem;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 0.95rem;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    text-decoration: none;
 }
 
-.btn-create-user:hover {
+.btn-create-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-create:hover, .btn-create-sm:hover {
     background-color: #3a5ce4;
     transform: translateY(-1px);
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
+    .lines-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
     .header-title-wrapper {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
 
-    .table-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .search-box {
-        width: 100%;
-    }
-
     .table-footer {
         flex-direction: column;
     }
+}
 
-    .users-table {
-        display: block;
-        overflow-x: auto;
+@media (max-width: 768px) {
+    .search-box {
+        max-width: 100%;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        width: 100%;
+    }
+
+    .departure-station, .arrival-station {
+        padding-left: 0;
+    }
+
+    .departure-station::before {
+        display: none;
     }
 }
 </style>
-

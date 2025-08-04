@@ -624,13 +624,13 @@ onMounted(() => {
                                                     class="menu-icon typcn typcn-th-large-outline"
                                                 ></i>
                                                 <span class="menu-title"
-                                                    >Voyages Classique</span
+                                                    >Voyages</span
                                                 >
                                             </Link>
                                         </li>
 
                                         <!-- Voyages Recurrent  -->
-                                        <li class="nav-item">
+                                        <!-- <li class="nav-item">
                                             <Link
                                                 class="nav-link"
                                                 :href="
@@ -651,7 +651,7 @@ onMounted(() => {
                                                     >Voyages Récurrents</span
                                                 >
                                             </Link>
-                                        </li>
+                                        </li> -->
 
                                         <!-- Tarifs -->
                                         <li class="nav-item">

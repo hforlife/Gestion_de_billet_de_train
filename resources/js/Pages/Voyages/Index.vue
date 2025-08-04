@@ -151,11 +151,11 @@ const formatStatus = (statut) => {
                                 <td class="line-name">{{ voyage.ligne.nom }}</td>
                                 <td class="departure-time">
                                     <div class="date">{{ formatDate(voyage.date_depart) }}</div>
-                                    <div class="time">{{ formatTime(voyage.date_depart) }}</div>
+                                    <!-- <div class="time">{{ formatTime(voyage.date_depart) }}</div> -->
                                 </td>
                                 <td class="arrival-time">
                                     <div class="date">{{ formatDate(voyage.date_arrivee) }}</div>
-                                    <div class="time">{{ formatTime(voyage.date_arrivee) }}</div>
+                                    <!-- <div class="time">{{ formatTime(voyage.date_arrivee) }}</div> -->
                                 </td>
                                 <td>
                                     <span :class="`status-badge ${getStatusClass(voyage.statut)}`">

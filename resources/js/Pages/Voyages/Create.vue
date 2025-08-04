@@ -2,6 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm, router } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
+import {ArrowLeft} from 'lucide-vue-next';
 import Swal from "sweetalert2";
 
 const props = defineProps({
@@ -14,11 +15,21 @@ const form = useForm({
     nom: "",
     train_id: "",
     ligne_id: "",
-    // tarif_ids: [],
+    numero_voyage: "",
     date_depart: "",
     date_arrivee: "",
     statut: "programme",
 });
+
+const generateNum = async () => {
+  try {
+    const res = await fetch(route('voyage.next-number')); // tu as besoin d'un helper route ou URL complète
+    const data = await res.json();
+    form.numero_voyage = data.numero;
+  } catch (e) {
+    Swal.fire('Erreur', 'Impossible de générer le numéro', 'error');
+  }
+};
 
 // const tarifsDisponibles = computed(() => {
 //     if (!form.ligne_id) return [];
@@ -28,6 +39,7 @@ const form = useForm({
 // watch(() => form.ligne_id, () => {
 //     form.tarif_ids = [];
 // });
+
 
 const submit = () => {
     form.post(route("voyage.store"), {
@@ -95,6 +107,23 @@ const submit = () => {
                                 />
                                 <div v-if="form.errors.nom" class="form-error">
                                     {{ form.errors.nom }}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Numero du voyage</label>
+                                <input
+                                    v-model="form.numero_voyage"
+                                    type="text"
+                                    class="form-input"
+                                    :class="{ 'is-invalid': form.errors.numero_voyage }"
+                                    placeholder="Ex: VOY????"
+                                    disabled
+                                    required
+                                />
+                                <button class="btn btn-primary mt-2" @click="generateNum">Générer Numero</button>
+                                <div v-if="form.errors.numero_voyage" class="form-error">
+                                    {{ form.errors.numero_voyage }}
                                 </div>
                             </div>
 
@@ -403,6 +432,21 @@ const submit = () => {
     box-shadow: 0 0 0 0.2rem rgba(255, 77, 79, 0.15);
 }
 
+.input-with-unit {
+    position: relative;
+}
+
+.input-with-unit .input-unit {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    padding: 0 0.25rem;
+    border-radius: 3px;
+}
 /* Champ datetime personnalisé */
 .datetime-input {
     position: relative;

@@ -59,7 +59,8 @@ Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/ligne', LigneController::class)->except(['show']);                        // Pour les lignes de train
     Route::resource('/type', TypeController::class)->except(['show']);                          // Pour les Type de train
     Route::resource('/arret', ArretController::class)->except(['show']);                        // Pour les arrêts
-    Route::resource('/voyage', VoyageController::class)->except(['show']);                      // Pour les voyages
+    Route::resource('/voyage', VoyageController::class)->except(['show']);
+    Route::get('/voyages/next-number', [VoyageController::class, 'nextNumber'])->name('voyage.next-number');// Pour les voyages
     Route::resource('/voyage-reccurent', ReccuringVoyageController::class)->except(['show']);   // Pour les voyages récurrents
     Route::resource('/categories-colis', CategorieColisController::class)->except(['show']);    // Pour les catégories de colis
     Route::resource('/setting', ParametreController::class)->except(['show']);                  // Pour les paramètres

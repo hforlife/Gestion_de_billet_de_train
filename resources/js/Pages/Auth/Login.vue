@@ -3,7 +3,7 @@ import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 const form = useForm({
-    email: "",
+    login: "",
     password: "",
     remember: false,
 });
@@ -36,18 +36,18 @@ const submit = () => {
                         <div class="auto-form-wrapper">
                             <form @submit.prevent="submit">
                                 <div class="form-group">
-                                    <label class="label">Email</label>
+                                    <label class="label">Nom d'utilisateur / Email</label>
                                     <div class="input-group">
                                         <input
-                                            id="email"
-                                            v-model="form.email"
-                                            type="email"
-                                            name="email"
-                                            :message='form.errors.email'
+                                            id="login"
+                                            v-model="form.login"
+                                            type="text"
+                                            name="login"
+                                            :message='form.errors.login'
                                             required
                                             autofocus
-                                            autocomplete="email"
-                                            placeholder="email@example.com"
+                                            autocomplete="username"
+                                            placeholder="Nom d'utilisateur ou Email"
                                             class="form-control"
                                         />
                                         <div class="input-group-append">
@@ -58,7 +58,7 @@ const submit = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <span v-if="form.errors.email" class="text-red-500">{{ form.errors.email }}</span>
+                                    <span v-if="form.errors.login" class="text-red-500">{{ form.errors.login }}</span>
                                 </div>
 
                                 <div class="form-group">
@@ -72,7 +72,7 @@ const submit = () => {
                                             :message='form.errors.password'
                                             required
                                             autocomplete="current-password"
-                                            placeholder="Password"
+                                            placeholder="Mot de passe"
                                             class="form-control"
                                         />
                                         <div class="input-group-append">

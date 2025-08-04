@@ -21,12 +21,12 @@ class UserController extends Controller
             'filters' => ClientRequest::only('search'),
             'users' => User::query()
                 ->with('roles')
-                ->orderBy('name')
+                ->orderBy('username')
                 ->filter(ClientRequest::only('search'))
                 ->paginate(10)
                 ->through(fn($user) => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'username' => $user->username,
                     'email' => $user->email,
                     'roles' => $user->getRoleNames(),
                     'created_at' => $user->created_at->format('d/m/Y'),
@@ -37,14 +37,14 @@ class UserController extends Controller
     public function create(): Response
     {
         return Inertia::render('Setting/User/Create', [
-            'roles' => Role::all()->pluck('name')->toArray(), // Retourne un tableau de noms
+            'roles' => Role::all()->pluck('username')->toArray(), // Retourne un tableau de noms
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'roles' => ['required', 'array', 'min:1'],
@@ -52,7 +52,7 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
@@ -66,11 +66,11 @@ class UserController extends Controller
         return Inertia::render('Setting/User/Edit', [
             'users' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
                 'role' => $user->getRoleNames()->first(), // ✅ un seul rôle pour le champ select
             ],
-            'roles' => Role::all()->pluck('name')->toArray(), // Si besoin d’ID + nom, sinon .toArray() simple
+            'roles' => Role::all()->pluck('username')->toArray(), // Si besoin d’ID + nom, sinon .toArray() simple
         ]);
     }
 
@@ -85,7 +85,7 @@ class UserController extends Controller
         ]);
 
         $user->update([
-            'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => $request->password ? Hash::make($request->password) : $user->password,
         ]);
@@ -113,7 +113,7 @@ class UserController extends Controller
         return Inertia::render('Setting/Profile/Index', [
             'user' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
                 'roles' => $user->getRoleNames(),
             ]

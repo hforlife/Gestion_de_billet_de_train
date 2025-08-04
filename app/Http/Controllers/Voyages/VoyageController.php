@@ -20,11 +20,8 @@ class VoyageController
         $voyages = Voyage::with([
             'train',
             'ligne',
-            'depart.gare',
-            'arrivee.gare',
-            'tarifs.gareDepart',
-            'tarifs.gareArrivee',
-            'tarifs.classeWagon',
+            'gareDepart.nom',
+            'gareArrivee.nom',
         ])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -55,54 +52,50 @@ class VoyageController
         ]);
     }
 
-    // public function tarifs($voyageId): JsonResponse
-    // {
-    //     $voyage = Voyage::with([
-    //         'tarifsVoyage.tarifGare.gareDepart',
-    //         'tarifsVoyage.tarifGare.gareArrivee',
-    //         'tarifsVoyage.tarifGare.classeWagon'
-    //     ])->findOrFail($voyageId);
+    public function nextNumber()
+    {
+        // Exemple : on conserve le format VOY-950-<sequence 6 chiffres>
+        $prefix = 'VOY';
+        $code = '950';
 
-    //     $tarifs = $voyage->tarifsVoyage->map(function ($tv) {
-    //         $tarif = $tv->tarifGare;
+        // Récupérer le dernier numéro existant pour ce pattern
+        $last = Voyage::where('numero_voyage', 'like', "{$prefix}-{$code}-%")
+            ->orderByDesc('id')
+            ->first();
 
-    //         return [
-    //             'id' => $tarif->id,
-    //             'gare_depart' => $tarif->gareDepart->nom,
-    //             'gare_arrivee' => $tarif->gareArrivee->nom,
-    //             'classe' => $tarif->classeWagon->nom,
-    //             'classe_id' => $tarif->classeWagon->id,
-    //             'prix' => $tarif->prix,
-    //         ];
-    //     });
+        $nextSeq = 1;
+        if ($last && preg_match('/' . preg_quote("{$prefix}-{$code}-", '/') . '(\d+)$/', $last->numero_voyage, $m)) {
+            $nextSeq = intval($m[1]) + 1;
+        }
 
-    //     return response()->json([
-    //         'tarifs' => $tarifs,
-    //     ]);
-    // }
+        // Pad à 6 chiffres par exemple
+        $seqFormatted = str_pad($nextSeq, 6, '0', STR_PAD_LEFT);
+        $numero = "{$prefix}-{$code}-{$seqFormatted}";
+
+        return response()->json(['numero' => $numero]);
+    }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'nom' => 'required|string|max:255',
+            'numero_voyage' => 'required|string|unique:voyages,numero_voyage',
             'train_id' => 'required|exists:trains,id',
             'ligne_id' => 'required|exists:lignes,id',
             'date_depart' => 'required|date',
             'date_arrivee' => 'required|date|after:date_depart',
             'statut' => 'required|in:programme,en_cours,terminé,annulé',
-            // 'tarif_ids' => 'required|array|min:1',
-            // 'tarif_ids.*' => 'exists:tarifs_gares,id',
         ]);
 
         $voyage = Voyage::create([
             'nom' => $data['nom'],
+            'numero_voyage' => $data['numero_voyage'],
             'train_id' => $data['train_id'],
             'ligne_id' => $data['ligne_id'],
             'date_depart' => $data['date_depart'],
             'date_arrivee' => $data['date_arrivee'],
             'statut' => $data['statut'],
         ]);
-        // $voyage->tarifs()->attach($data['tarif_ids']);
 
         return redirect()->route('voyage.index')->with('success', 'Voyage créé avec succès');
     }
@@ -113,12 +106,7 @@ class VoyageController
         return Inertia::render('Voyages/Edit', [
             'voyage' => $voyage->load([
                 'ligne.arrets.gare',
-                'depart.gare',
-                'arrivee.gare',
                 'train',
-                'tarif.classeWagon',
-                'tarif.gareDepart',
-                'tarif.gareArrivee',
             ]),
             'trains' => Train::select('id', 'numero')->get(),
             'lignes' => Ligne::with(['arrets.gare'])->get(),
@@ -129,16 +117,13 @@ class VoyageController
     public function update(Request $request, Voyage $voyage)
     {
         $validated = $request->validate([
-            'nom' => ['required', 'string', 'max:255'],
-            'train_id' => ['required', 'exists:trains,id'],
-            'ligne_id' => ['required', 'exists:lignes,id'],
-            'depart_id' => ['required', 'exists:arrets_ligne,id'],
-            'arrivee_id' => ['required', 'exists:arrets_ligne,id'],
-            'tarif_ids' => 'required|array|min:1',
-            'tarif_ids.*' => 'exists:tarifs_gares,id',
-            'date_depart' => ['required', 'date'],
-            'date_arrivee' => ['required', 'date', 'after:date_depart'],
-            'statut' => ['required', 'in:programmé,en_cours,terminé,annulé'],
+            'nom' => 'required|string|max:255',
+            'numero_voyage' => 'required|string|unique:voyages,numero_voyage',
+            'train_id' => 'required|exists:trains,id',
+            'ligne_id' => 'required|exists:lignes,id',
+            'date_depart' => 'required|date',
+            'date_arrivee' => 'required|date|after:date_depart',
+            'statut' => 'required|in:programme,en_cours,terminé,annulé',
         ]);
 
         $voyage->update($validated);
