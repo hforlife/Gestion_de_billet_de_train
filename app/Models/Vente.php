@@ -48,6 +48,12 @@ class Vente extends Model
         'has_bagage',
     ];
 
+
+    public function getQrCodeUrlAttribute()
+    {
+        return $this->qrcode ? asset('storage/'.$this->qrcode) : null;
+    }
+
     public function scopeFiltrer($query, $search = null, $voyageId = null)
     {
         return $query
