@@ -3,20 +3,31 @@ import 'package:hive/hive.dart';
 
 @HiveType(typeId: 1)
 class UserModel extends User {
+  @override
   @HiveField(0)
-  final String username;
+  final int id;
+  @override
   @HiveField(1)
+  final String name;
+  @override
+  @HiveField(2)
+  final String email;
+  @HiveField(3)
+  final String username;
+  @HiveField(4)
   final String token;
+  @HiveField(5)
+  final String? role; // Champ optionnel pour le rôle
 
   UserModel({
-    required super.id,
-    required super.name,
-    required super.email,
+    required this.id,
+    required this.name,
+    required this.email,
     required this.username,
     required this.token,
-  });
+    this.role,
+  }) : super(id: id, name: name, email: email);
 
-  // Méthode pour convertir en Map (utile pour Hive ou JSON)
   @override
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -24,8 +35,13 @@ class UserModel extends User {
     'email': email,
     'username': username,
     'token': token,
-    'role': 'controller', // Ajoutez si nécessaire
+    'role': role ?? 'controller', // Valeur par défaut si non spécifiée
   };
+
+  // Méthode pour Hive
+  @override
+  String toString() =>
+      'UserModel(id: $id, name: $name, email: $email, username: $username, token: $token, role: $role)';
 }
 
 class UserModelAdapter extends TypeAdapter<UserModel> {

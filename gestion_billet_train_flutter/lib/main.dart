@@ -8,5 +8,5 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter(); // Initialisation de Hive ici
   await di.init(); // Appel à l'initialisation des dépendances
-  runApp(const App());
+  runApp(App());
 }

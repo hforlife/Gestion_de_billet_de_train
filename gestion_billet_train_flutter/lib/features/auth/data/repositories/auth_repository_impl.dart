@@ -19,12 +19,22 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, User>> login(String username, String password) async {
+    print('Début de login dans AuthRepositoryImpl');
     try {
       if (await networkInfo.isConnected) {
-        final user = await remoteDataSource.login(username, password);
-        await localDataSource.cacheUser(user);
+        print('Connexion réseau disponible');
+        final userModel = await remoteDataSource.login(username, password);
+        print('Utilisateur récupéré: $userModel');
+        final user = User(
+          id: userModel.id,
+          name: userModel.name,
+          email: userModel.email,
+        );
+        await localDataSource.cacheUser(userModel); // Mise en cache
+        print('Utilisateur mis en cache: ${userModel.toJson()}');
         return Right(user);
       } else {
+        print('Pas de connexion réseau');
         final cachedUser = await localDataSource.getCachedUser();
         if (cachedUser != null) {
           return Right(cachedUser);
@@ -32,6 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return Left(NetworkFailure());
       }
     } catch (e) {
+      print('Exception dans login: $e');
       return Left(ServerFailure());
     }
   }
@@ -48,26 +59,27 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> getUser() async {
+    print('Appel à getUser dans AuthRepositoryImpl');
     try {
       if (await networkInfo.isConnected) {
-        // Optionnel : Récupérer depuis remote si nécessaire
-        final userData = await localDataSource.getCachedUser();
-        if (userData != null) {
-          return Right(
-            userData.toJson(),
-          ); // Assurez-vous que User a une méthode toJson
+        final userModel = await localDataSource.getCachedUser();
+        if (userModel != null) {
+          print('Données en cache: ${userModel.toJson()}');
+          return Right(userModel.toJson());
         }
         return Left(
           CacheFailure(message: 'Aucune donnée utilisateur en cache'),
         );
       } else {
-        final userData = await localDataSource.getCachedUser();
-        if (userData != null) {
-          return Right(userData.toJson());
+        final userModel = await localDataSource.getCachedUser();
+        if (userModel != null) {
+          print('Données en cache (hors ligne): ${userModel.toJson()}');
+          return Right(userModel.toJson());
         }
         return Left(NetworkFailure(message: 'Connexion requise'));
       }
     } catch (e) {
+      print('Exception dans getUser: $e');
       return Left(ServerFailure(message: 'Erreur: ${e.toString()}'));
     }
   }

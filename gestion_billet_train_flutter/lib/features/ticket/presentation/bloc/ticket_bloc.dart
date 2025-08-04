@@ -45,20 +45,33 @@ class TicketBloc extends Bloc<TicketEvent, TicketState> {
   }
 
   void _onScanTicket(ScanTicketEvent event, Emitter<TicketState> emit) async {
+    print('Starting scan for QR code: ${event.qrCode}');
     emit(TicketLoading());
     final result = await scanTicket(event.qrCode);
     result.fold(
-      (failure) => emit(TicketError(message: failure.message)),
-      (ticket) => emit(TicketScanned(ticket: ticket)),
+      (failure) {
+        print('Scan failed: ${failure}');
+      },
+      (ticket) {
+        print('Scan successful, ticket: $ticket');
+        emit(TicketScanned(ticket: ticket));
+      },
     );
   }
 
   void _onSellTicket(SellTicketEvent event, Emitter<TicketState> emit) async {
+    print('Starting sell for ticket: ${event.ticket}');
     emit(TicketLoading());
     final result = await sellTicket(event.ticket);
     result.fold(
-      (failure) => emit(TicketError(message: failure.message)),
-      (_) => emit(TicketSold()),
+      (failure) {
+        print('Sell failed: ${failure.message}');
+        emit(TicketError(message: failure.message));
+      },
+      (_) {
+        print('Sell successful');
+        emit(TicketSold());
+      },
     );
   }
 }

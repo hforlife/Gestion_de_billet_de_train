@@ -37,9 +37,14 @@ class _AuthFormState extends State<AuthForm> {
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
       final authBloc = context.read<AuthBloc>();
+      print(
+        'Envoi de LoginEvent avec username: ${_usernameController.text}, password: ${_passwordController.text}',
+      );
       authBloc.add(
         LoginEvent(_usernameController.text, _passwordController.text),
       );
+    } else {
+      print('Validation du formulaire échouée');
     }
   }
 
@@ -47,9 +52,21 @@ class _AuthFormState extends State<AuthForm> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
+        print('Nouvel état reçu: $state'); // Log pour débogage
         if (state is AuthError) {
           setState(() {
             _errorMessage = state.message;
+          });
+        } else if (state is AuthAuthenticated) {
+          // Optionnel : Réinitialiser les champs ou naviguer
+          _usernameController.clear();
+          _passwordController.clear();
+          setState(() {
+            _errorMessage = null;
+          });
+        } else if (state is AuthUnauthenticated) {
+          setState(() {
+            _errorMessage = 'Authentification requise ou échouée';
           });
         }
       },
@@ -61,8 +78,9 @@ class _AuthFormState extends State<AuthForm> {
             children: [
               TextFormField(
                 controller: _usernameController,
-                validator: (value) =>
-                    value!.isEmpty ? "Veuillez entrer votre email" : null,
+                validator: (value) => value!.isEmpty
+                    ? "Veuillez entrer votre nom d'utilisateur ou email"
+                    : null,
                 decoration: InputDecoration(
                   prefixIcon: Icon(Iconsax.user),
                   labelText: TTexts.emailUserName,

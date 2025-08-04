@@ -2,6 +2,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:gestion_billet_train_flutter/core/network/network_info.dart';
 import 'package:gestion_billet_train_flutter/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:gestion_billet_train_flutter/features/auth/data/datasources/auth_remote_datasource.dart';
+// Ajoutez ceci en haut
 import 'package:gestion_billet_train_flutter/features/auth/data/models/user_model.dart';
 import 'package:gestion_billet_train_flutter/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:gestion_billet_train_flutter/features/auth/domain/repositories/auth_repository.dart';
@@ -23,8 +24,23 @@ import 'package:hive/hive.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  // Enregistrez l'adaptateur Hive
+  Hive.registerAdapter(UserModelAdapter());
+
+  // Ouvrez les boxes Hive
+  final userBox = await Hive.openBox<UserModel>('users');
+  final ticketBox = await Hive.openBox<TicketModel>('tickets');
+  sl.registerLazySingleton<Box<UserModel>>(() => userBox);
+  sl.registerLazySingleton<Box<TicketModel>>(() => ticketBox);
+
   // Blocs
-  sl.registerFactory(() => AuthBloc(login: sl(), logout: sl()));
+  sl.registerFactory(
+    () => AuthBloc(
+      login: sl(),
+      logout: sl(),
+      localDataSource: sl<AuthLocalDataSource>(), // Ajout du paramètre
+    ),
+  );
   sl.registerFactory(() => TicketBloc(scanTicket: sl(), sellTicket: sl()));
 
   // Use cases
@@ -51,7 +67,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(sl()),
+    () => AuthLocalDataSourceImpl(sl<Box<UserModel>>()),
   );
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(),
@@ -66,10 +82,4 @@ Future<void> init() async {
   // Core
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
   sl.registerLazySingleton(() => Connectivity());
-
-  // Hive
-  final userBox = await Hive.openBox<UserModel>('users');
-  final ticketBox = await Hive.openBox<TicketModel>('tickets');
-  sl.registerLazySingleton<Box<UserModel>>(() => userBox);
-  sl.registerLazySingleton<Box<TicketModel>>(() => ticketBox);
 }
