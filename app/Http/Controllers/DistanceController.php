@@ -6,6 +6,7 @@ use App\Models\Distance;
 use App\Models\Gare;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Validator;
 
 class DistanceController extends Controller
 {
@@ -41,5 +42,54 @@ class DistanceController extends Controller
         $distance->save();
 
         return redirect()->route('distance.index')->with('success', 'Distance enregistrée avec succès.');
+    }
+
+      public function get(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'depart_id' => 'required|exists:gares,id',
+            'arrivee_id' => 'required|exists:gares,id|different:depart_id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
+
+        $depart = Gare::find($request->input('depart_id'));
+        $arrivee = Gare::find($request->input('arrivee_id'));
+
+        if (!$depart || !$arrivee) {
+            return response()->json(['distance' => 0]);
+        }
+
+        // Si tu as latitude/longitude sur gares
+        $distance = $this->haversineDistance(
+            $depart->latitude,
+            $depart->longitude,
+            $arrivee->latitude,
+            $arrivee->longitude
+        );
+
+        // Optionnel : arrondir à 1 décimale
+        $distance = round($distance, 1);
+
+        return response()->json(['distance' => $distance]);
+    }
+
+    // Distance en kilomètres
+    private function haversineDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // km
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 }

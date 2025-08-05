@@ -87,7 +87,7 @@ const formatDate = (dateString) => {
             <div class="header-content">
                 <div class="header-title-wrapper">
                     <h1 class="page-title">Gestion des Ventes</h1>
-                    <Link :href="route('vente.create')" class="btn-create">
+                    <Link :href="route('create')" class="btn-create">
                         <Plus size="16" class="me-1" />
                         Nouvelle vente
                     </Link>
@@ -153,7 +153,7 @@ const formatDate = (dateString) => {
                 <div class="table-header">
                     <h3 class="table-title">Liste des ventes</h3>
                     <Link
-                        :href="route('vente.create')"
+                        :href="route('create')"
                         class="btn-create-sm"
                         aria-label="Créer une nouvelle vente"
                     >
@@ -249,7 +249,7 @@ const formatDate = (dateString) => {
                         <Link
                             v-for="link in ventes.links"
                             :key="link.label"
-                            
+
                             class="pagination-link"
                             :class="{
                                 'active': link.active,

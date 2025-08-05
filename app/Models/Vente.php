@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Concerns\Auditable;
+use App\Services\SalePriceCalculator as ServicesSalePriceCalculator;
 
 class Vente extends Model
 {
@@ -24,6 +25,7 @@ class Vente extends Model
         'prix',
         'demi_tarif',
         'date_vente',
+        'train_id',
         'quantite',
         'bagage',
         'poids_bagage',
@@ -53,6 +55,18 @@ class Vente extends Model
             ->when($search, fn($q) => $q->where('client_nom', 'like', "%{$search}%"))
             ->when($voyageId, fn($q) => $q->where('voyage_id', $voyageId))
             ->with(['voyage', 'place', 'modePaiement', 'pointVente', 'classeWagon']);
+    }
+
+    public function systemSettings(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            SystemSetting::class,
+            Voyage::class,
+            'id', // Foreign key on the voyages table
+            'id', // Foreign key on the system_settings table
+            'voyage_id', // Local key on the ventes table
+            'system_settings_id' // Local key on the voyages table
+        );
     }
 
     public function voyage(): BelongsTo
@@ -100,6 +114,11 @@ class Vente extends Model
         return $this->belongsTo(ClassesWagon::class, 'classe_wagon_id');
     }
 
+    public function arrets (): HasMany
+    {
+        return $this->hasMany(ArretsLigne::class);
+    }
+
     public function getTotalAttribute(): float
     {
         return $this->prix * $this->quantite;
@@ -113,5 +132,59 @@ class Vente extends Model
     public function getHasBagageAttribute(): bool
     {
         return $this->bagage && $this->poids_bagage > 0;
+    }
+
+//     public function calculatePrice(SystemSetting $setting): float
+// {
+//     $basePrice = 0;
+
+//     if ($setting->mode_vente === 'par_kilometrage') {
+//         $basePrice = ServicesSalePriceCalculator::computePriceByKilometrage(
+//             $this->gare_depart_id,
+//             $this->gare_arrivee_id,
+//             $this->classe_wagon_id,
+//             $setting
+//         );
+//     } else {
+//         $tarif = $this->voyage->tarifs()
+//             ->where('classe_wagon_id', $this->classe_wagon_id)
+//             ->first();
+
+//         $basePrice = $tarif ? $tarif->prix : 0;
+//     }
+
+//     // Appliquer demi-tarif
+//     if ($this->demi_tarif) {
+//         $basePrice = $basePrice / 2;
+//     }
+
+//     // Ajouter le prix des bagages
+//     if ($this->bagage && $this->poids_bagage > 0) {
+//         $basePrice += $this->calculateBaggagePrice();
+//     }
+
+//     return $basePrice * $this->quantite;
+// }
+
+public function calculateBaggagePrice(): float
+{
+    // Même logique que dans le contrôleur
+    $poidsGratuit = 10;
+    if ($this->poids_bagage <= $poidsGratuit) {
+        return 0;
+    }
+
+    return ($this->poids_bagage - $poidsGratuit) * 500;
+}
+public function getPrixForClasse($classeWagonId)
+    {
+        return $this->tarif->where('classe_wagon_id', $classeWagonId)
+            ->where('date_effet', '<=', now())
+            ->where(function ($query) {
+                $query->where('date_expiration', '>=', now())
+                    ->orWhereNull('date_expiration');
+            })
+            ->first()
+            ?->prix ?? 0;
     }
 }

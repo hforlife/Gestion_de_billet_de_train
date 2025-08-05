@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Ventes;
 
+use App\Models\ClassesWagon;
+use App\Models\Distance;
+use App\Models\Gare;
 use App\Models\Vente;
 use App\Models\Voyage;
 use App\Models\ModesPaiement;
@@ -41,96 +44,123 @@ class VenteController
 
     public function create()
     {
-        return Inertia::render('Ventes/Create', [
-            'voyages' => Voyage::with([
-                'ligne.arrets.gare',
-                'train.wagons.classeWagon',
-                'ligne.gareDepart',
-                'ligne.gareArrivee',
-            ])->get(),
-            'modesPaiement' => ModesPaiement::all(),
-            'pointsVente' => PointsVente::with('gare')->get(),
+        $systemSettings = SystemSetting::first(); // ou via singleton
+        if ($systemSettings?->mode_vente === 'par_kilometrage') {
+            return redirect()->route('vente.create.kilometrage');
+        }
+        return redirect()->route('vente.create.predefined');
+    }
+
+    public function createPredefined()
+    {
+        $voyages = Voyage::with([
+            'ligne.arrets.gare',
+            'train.wagons.classeWagon',
+            'ligne.gareDepart',
+            'ligne.gareArrivee',
+        ])
+            ->get();
+        $modesPaiement = ModesPaiement::all();
+        $pointsVente = PointsVente::with('gare')->get();
+
+        return Inertia::render('Ventes/SaleByPredefined', [
+            'voyages' => $voyages,
+            'modesPaiement' => $modesPaiement,
+            'pointsVente' => $pointsVente,
+            // autres props si besoin
+        ]);
+    }
+
+    public function createKilometrage()
+    {
+        $voyages = Voyage::with([
+            'ligne.arrets.gare',
+            'train.wagons.classeWagon',
+            'ligne.gareDepart',
+            'ligne.gareArrivee',
+        ])
+            ->get();
+        $classeWagons = ClassesWagon::all();
+        $gares = Gare::all();
+        $modesPaiement = ModesPaiement::all();
+        $pointsVente = PointsVente::with('gare')->get();
+        $systemSettings = SystemSetting::first();
+        $distance = Distance::all();
+
+        return Inertia::render('Ventes/SaleByKilometrage', [
+            'voyages' => $voyages,
+            // 'arrets' => $voyages->flatMap(fn($v) => $v->ligne->arrets),
+            'gares' => $gares,
+            'classeWagons' => $classeWagons,
+            'modesPaiement' => $modesPaiement,
+            'pointsVente' => $pointsVente,
+            'systemSettings' => $systemSettings,
+            'distance' => $distance,
         ]);
     }
 
     public function store(Request $request)
     {
+
+        dd($request);
         $validated = $request->validate([
             'client_nom' => 'required|string|max:255',
             'voyage_id' => 'required|exists:voyages,id',
-            'train_id' => 'required|exists:trains,id',
-            'gare_depart_id' => 'required|exists:gares,id',
-            'gare_arrivee_id' => 'required|exists:gares,id',
             'mode_paiement_id' => 'required|exists:modes_paiement,id',
             'point_vente_id' => 'required|exists:points_ventes,id',
             'classe_wagon_id' => 'required|exists:classes_wagon,id',
             'demi_tarif' => 'boolean',
+            'distance' => 'required|numeric|min:0',
             'quantite' => 'required|integer|min:1|max:10',
             'bagage' => 'required|boolean',
             'poids_bagage' => 'nullable|numeric|min:0|max:30|required_if:bagage,true',
             'statut' => 'required|in:payé,réservé',
         ]);
+
+
         DB::beginTransaction();
 
         try {
             $voyage = Voyage::with(['train.wagons.places', 'ligne'])->findOrFail($validated['voyage_id']);
-            $train = $voyage->train;
 
-            // Trouver une place libre dans un wagon (sans distinction de classe pour l'instant)
-            $placeLibre = Place::whereIn('id', function ($query) use ($train) {
-                $query->select('places.id')
-                    ->from('places')
-                    ->join('wagons', 'places.wagon_id', '=', 'wagons.id')
-                    ->whereIn('wagons.id', $train->wagons->pluck('id'))
-                    ->whereNotIn('places.id', function ($sub) {
-                        $sub->select('place_id')->from('ventes')->whereNotNull('place_id');
-                    });
-            })->first();
+            // Trouver une place libre dans un wagon de la classe sélectionnée
+            $placeLibre = Place::whereIn('wagon_id', function ($query) use ($validated) {
+                $query->select('id')
+                    ->from('wagons')
+                    ->where('classe_wagon_id', $validated['classe_wagon_id']);
+            })
+                ->whereNotIn('id', function ($query) {
+                    $query->select('place_id')->from('ventes')->whereNotNull('place_id');
+                })
+                ->first();
 
             if (!$placeLibre) {
-                return back()->withErrors(['place' => 'Aucune place disponible dans ce train.'])->withInput();
-            }
-
-            // Récupérer le paramètre système actif
-            $setting = SystemSetting::first();
-            if (!$setting) {
-                return back()->withErrors(['system' => 'Configuration système introuvable.'])->withInput();
+                return back()->withErrors(['place' => 'Aucune place disponible dans cette classe.'])->withInput();
             }
 
             // Calcul du prix selon le mode de vente
             $prixFinal = 0;
-
-            // Si on a un demi tarif, on appliquera plus tard sur le prix calculé
             $isDemi = $validated['demi_tarif'] ?? false;
 
-            // Identifier les gares de départ / arrivée pour le calcul kilométrique
-            $gareDepartId = $voyage->ligne->gare_depart_id;
-            $gareArriveeId = $voyage->ligne->gare_arrivee_id;
 
-            // Classe du wagon choisie
-            $classeWagonId = $validated['classe_wagon_id'];
-
+            $voyage = Voyage::with(['ligne.arrets'])->findOrFail($validated['voyage_id']);
             if ($setting->mode_vente === 'par_kilometrage') {
-                // Calcul par kilométrage : utilise SalePriceCalculator (à implémenter)
                 $prixFinal = SalePriceCalculator::computePriceByKilometrage(
-                    $gareDepartId,
-                    $gareArriveeId,
-                    $classeWagonId,
-                    $setting
+                    $voyage->ligne,
+                    $voyage->ligne->gare_depart_id,
+                    $voyage->ligne->gare_arrivee_id,
+                    $validated['classe_wagon_id'],
+                    $setting,
                 );
             } else {
-                // Mode par voyage : on essaie de trouver un tarif applicable entre ces deux gares pour la classe
-                // En supposant que tu as un modèle TarifVoyage ou TarifGare selon structure
-                $tarif = \App\Models\TarifsGare::where('gare_depart_id', $gareDepartId)
-                    ->where('gare_arrivee_id', $gareArriveeId)
-                    ->where('classe_wagon_id', $classeWagonId)
-                    ->where('date_effet', '<=', now())
-                    ->where(function ($q) {
-                        $q->where('date_expiration', '>=', now())
-                            ->orWhereNull('date_expiration');
-                    })->first();
+                // Mode par voyage - utiliser les tarifs prédéfinis
+                $tarif = $voyage->tarifs()->where('classe_wagon_id', $validated['classe_wagon_id'])->first();
 
-                $prixFinal = $tarif ? $tarif->prix : 0;
+                if (!$tarif) {
+                    return back()->withErrors(['tarif' => 'Aucun tarif disponible pour cette classe.'])->withInput();
+                }
+
+                $prixFinal = $tarif->prix;
             }
 
             // Appliquer demi-tarif si pertinent
@@ -138,21 +168,25 @@ class VenteController
                 $prixFinal = $prixFinal / 2;
             }
 
-            // Créer la vente avec le prix calculé (on trust le calcul, override si nécessaire)
+            // Calcul supplémentaire pour les bagages si nécessaire
+            if ($validated['bagage'] && $validated['poids_bagage'] > 0) {
+                $prixFinal += self::calculateBaggagePrice($validated['poids_bagage']);
+            }
+
             $vente = Vente::create([
                 'client_nom' => $validated['client_nom'],
                 'voyage_id' => $validated['voyage_id'],
                 'mode_paiement_id' => $validated['mode_paiement_id'],
                 'point_vente_id' => $validated['point_vente_id'],
                 'place_id' => $placeLibre->id,
-                'prix' => $prixFinal,
+                'prix' => $prixFinal * $validated['quantite'], // Prix total pour la quantité
                 'quantite' => $validated['quantite'],
                 'bagage' => $validated['bagage'],
                 'poids_bagage' => $validated['bagage'] ? ($validated['poids_bagage'] ?? 0) : 0,
-                'classe_wagon_id' => $classeWagonId,
+                'classe_wagon_id' => $validated['classe_wagon_id'],
                 'demi_tarif' => $isDemi,
                 'statut' => $validated['statut'],
-                'reference' => $validated['reference'] ?? null,
+                'reference' => 'VNT-' . now()->format('YmdHis'),
                 'date_vente' => now(),
             ]);
 
@@ -167,6 +201,18 @@ class VenteController
                 ->withInput()
                 ->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    private static function calculateBaggagePrice(float $poids): float
+    {
+        // Implémentez votre logique de calcul des bagages ici
+        // Par exemple : 500 FCFA par kg au-dessus de 10kg
+        $poidsGratuit = 10;
+        if ($poids <= $poidsGratuit) {
+            return 0;
+        }
+
+        return ($poids - $poidsGratuit) * 500;
     }
 
     public function show(Vente $vente)

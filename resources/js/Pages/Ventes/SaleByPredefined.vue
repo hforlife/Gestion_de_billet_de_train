@@ -1,286 +1,116 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
-import { computed, ref, watch, watchEffect, toRefs } from "vue";
-import Swal from "sweetalert2";
-import axios from "axios"; // manquait
+import { computed, watch } from "vue";
+import Swal from 'sweetalert2';
 
 const props = defineProps({
-    gares: Array,
     voyages: Array,
     trains: Array,
     modesPaiement: Array,
     pointsVente: Array,
-    systemSettings: Object,
 });
 
-// Déstructuration réactive
-const { voyages, gares, modesPaiement, pointsVente, systemSettings } =
-    toRefs(props);
-
-// Génération de référence
-const generateReference = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let ref = "VENTE-";
-    for (let i = 0; i < 8; i++) {
-        ref += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return ref;
-};
-
-// Formulaire principal
 const form = useForm({
     voyage_id: null,
     classe_wagon_id: null,
-    place_id: null,
     client_nom: "",
-    gare_depart_id: "",
-    gare_arrivee_id: "",
-    train_id: "",
-    mode_paiement_id: modesPaiement.value?.[0]?.id || null,
-    point_vente_id: pointsVente.value?.[0]?.id || null,
+    mode_paiement_id: props.modesPaiement[0]?.id || null,
+    point_vente_id: props.pointsVente[0]?.id || null,
     quantite: 1,
     prix: 0,
     demi_tarif: false,
     bagage: false,
     poids_bagage: null,
     statut: "payé",
-    penalite: 0,
-    reference: generateReference(),
 });
 
-// Kilométrage popup
-const showKilometragePopup = ref(false);
-const kilometrageForm = ref({
-    gare_depart_id: null,
-    gare_arrivee_id: null,
-    distance: 0,
-    prix_calcule: 0,
-});
-
-// Sélection du voyage et classes
-const selectedVoyage = computed(
-    () => voyages.value?.find((v) => v.id === form.voyage_id) || null
+const selectedVoyage = computed(() =>
+    props.voyages.find((v) => v.id === form.voyage_id)
 );
 
 const availableClasses = computed(() => selectedVoyage.value?.tarifs || []);
 
-const selectedClass = computed(() => {
-    if (!availableClasses.value || !form.classe_wagon_id) return null;
-    return (
-        availableClasses.value.find((c) => {
-            return (
-                c.classe_wagon_id === form.classe_wagon_id ||
-                (c.classe_wagon && c.classe_wagon.id === form.classe_wagon_id)
-            );
-        }) || null
-    );
-});
-
-// Calcul distance via API
-const calculateDistance = async (departId, arriveeId) => {
-    try {
-        const response = await axios.get(route("api.distances.get"), {
-            params: { depart_id: departId, arrivee_id: arriveeId },
-        });
-        return response.data.distance || 0;
-    } catch (error) {
-        console.error("Erreur calcul distance:", error);
-        return 0;
-    }
-};
-
-// Met à jour la distance et recalcul kilométrique
-const updateKilometrageDistance = async () => {
-    if (
-        !kilometrageForm.value.gare_depart_id ||
-        !kilometrageForm.value.gare_arrivee_id
+const selectedClass = computed(() =>
+    availableClasses.value.find(
+        (c) => c.classe_wagon_id === form.classe_wagon_id
     )
-        return;
+);
 
-    const distance = await calculateDistance(
-        kilometrageForm.value.gare_depart_id,
-        kilometrageForm.value.gare_arrivee_id
-    );
-    kilometrageForm.value.distance = distance;
-    calculateKilometragePrice();
-};
-
-// Ouvre le popup et pré-remplit
-const openKilometragePopup = async () => {
-    if (!form.voyage_id || !systemSettings.value) return;
-
-    const voyage = voyages.value.find((v) => v.id === form.voyage_id);
-    if (!voyage) return;
-
-    kilometrageForm.value = {
-        gare_depart_id: voyage.ligne?.gare_depart_id || null,
-        gare_arrivee_id: voyage.ligne?.gare_arrivee_id || null,
-        distance: 0,
-        prix_calcule: 0,
-    };
-
-    if (
-        kilometrageForm.value.gare_depart_id &&
-        kilometrageForm.value.gare_arrivee_id
-    ) {
-        await updateKilometrageDistance();
-    }
-
-    showKilometragePopup.value = true;
-};
-
-// Prix kilométrique
-const calculateKilometragePrice = () => {
-    if (!form.classe_wagon_id || !systemSettings.value) {
-        kilometrageForm.value.prix_calcule = 0;
-        return;
-    }
-
-    try {
-        const settings = systemSettings.value;
-        const coefficients =
-            typeof settings.coefficients_classes === "string"
-                ? JSON.parse(settings.coefficients_classes)
-                : settings.coefficients_classes || {};
-        const coefficient = coefficients[form.classe_wagon_id] ?? 1.0;
-
-        const tarif_km = parseFloat(settings.tarif_kilometrique) || 0;
-        let prixBase = kilometrageForm.value.distance * tarif_km;
-        let prixFinal = prixBase * coefficient;
-
-        const tarif_min = parseFloat(settings.tarif_minimum);
-        if (!isNaN(tarif_min) && prixFinal < tarif_min) {
-            prixFinal = tarif_min;
-        }
-
-        kilometrageForm.value.prix_calcule = prixFinal;
-    } catch (e) {
-        console.error("Erreur calcul prix kilométrique:", e);
-        kilometrageForm.value.prix_calcule = 0;
-    }
-};
-
-// Prix standard (par voyage)
-const calculateStandardPrice = () => {
+const calculatePrice = () => {
     if (!selectedClass.value) {
-        return 0;
+        form.prix = 0;
+        return;
     }
 
-    let unitPrice = parseFloat(selectedClass.value.prix || 0);
-    const quantity = parseInt(form.quantite, 10) || 1;
-    let total = unitPrice * quantity;
-    if (form.demi_tarif) total = total / 2;
-    return total;
-};
-
-// Prix bagage
-const calculateBaggagePrice = (weight) => {
-    if (!weight || weight <= 0) return 0;
-    const freeWeight = 10;
-    const pricePerKg = 500;
-    return weight > freeWeight ? (weight - freeWeight) * pricePerKg : 0;
-};
-
-// Prix global recalculé
-watchEffect(() => {
-    let base = 0;
-    if (systemSettings.value?.mode_vente === "par_kilometrage") {
-        base = kilometrageForm.value.prix_calcule || 0;
-    } else {
-        base = calculateStandardPrice();
-    }
-
-    // appliquer quantité / demi-tarif si pas déjà dans base (kilométrique est déjà prix unitaire)
-    if (systemSettings.value?.mode_vente === "par_kilometrage") {
-        base = base * (form.demi_tarif ? 0.5 : 1); // demi-tarif sur le total kilométrique
-    }
-
-    let total = base;
-
-    if (form.bagage && form.poids_bagage) {
-        total += calculateBaggagePrice(form.poids_bagage);
-    }
+    const unitPrice = parseFloat(selectedClass.value.prix || 0);
+    const quantity = parseInt(form.quantite) || 1;
+    const total = form.demi_tarif
+        ? (unitPrice * quantity) / 2
+        : unitPrice * quantity;
 
     form.prix = total;
-});
+};
 
-// Sync voyage selection → remplir gares / train
+const getSelectedTrainInfo = () => {
+    const voyage = props.voyages.find((v) => v.id === form.voyage_id);
+    if (!voyage || !voyage.train) return "Non défini";
+    return `${voyage.train.numero}`;
+};
+
+const formatNumber = (value) => new Intl.NumberFormat("fr-FR").format(value);
+
+watch(() => form.classe_wagon_id, calculatePrice);
+watch(() => form.quantite, calculatePrice);
+watch(() => form.demi_tarif, calculatePrice);
 watch(
     () => form.voyage_id,
-    (newVal) => {
+    () => {
         form.classe_wagon_id = null;
-        form.place_id = null;
         form.prix = 0;
-
-        if (selectedVoyage.value) {
-            form.gare_depart_id =
-                selectedVoyage.value.ligne?.gare_depart_id || "";
-            form.gare_arrivee_id =
-                selectedVoyage.value.ligne?.gare_arrivee_id || "";
-            form.train_id = selectedVoyage.value.train?.id || "";
-        } else {
-            form.gare_depart_id = "";
-            form.gare_arrivee_id = "";
-            form.train_id = "";
-        }
     }
 );
 
-// Reset lorsque bagage désactivé
-watch(
-    () => form.bagage,
-    (val) => {
-        if (!val) {
-            form.poids_bagage = null;
-        }
-    }
-);
-
-// Appliquer le prix kilométrique au formulaire (bouton)
-const applyKilometragePrice = () => {
-    // Le watchEffect synchronise déjà form.prix, donc il suffit de fermer
-    showKilometragePopup.value = false;
-};
-
-// Soumission
-const submit = () => {
-    if (!form.voyage_id || !form.classe_wagon_id) {
-        Swal.fire(
-            "Erreur",
-            "Veuillez sélectionner un voyage et une classe",
-            "error"
-        );
-        return;
-    }
-
-    form.post(route("vente.store"), {
-        onSuccess: () => {
-            Swal.fire("Succès", "Vente enregistrée avec succès", "success");
-            resetForm();
-        },
-        onError: (errors) => {
-            Swal.fire(
-                "Erreur",
-                errors.message || "Erreur lors de l'enregistrement",
-                "error"
-            );
-        },
-    });
-};
-
-const resetForm = () => {
+const resetPOS = () => {
     form.reset();
     form.quantite = 1;
     form.prix = 0;
     form.statut = "payé";
-    form.reference = generateReference();
-    form.mode_paiement_id = modesPaiement.value?.[0]?.id || null;
-    form.point_vente_id = pointsVente.value?.[0]?.id || null;
-    // remise à zéro popup si ouvert
-    kilometrageForm.value.distance = 0;
-    kilometrageForm.value.prix_calcule = 0;
-    showKilometragePopup.value = false;
+};
+
+
+const submit = () => {
+    calculatePrice();
+    form.post(route("vente.store"), {
+        onSuccess: () => {
+            Swal.fire({
+                title: "Succès!",
+                text: "La vente a été enregistrée",
+                icon: "success",
+                confirmButtonText: "OK",
+                customClass: {
+                    confirmButton:
+                        "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded",
+                },
+            }).then(() => {
+                resetPOS();
+            });
+        },
+        onError: (errors) => {
+            let errorMessage = errors.message || "Une erreur est survenue";
+
+            if (errors.place || errors.voyage_id) {
+                errorMessage = "Aucune place disponible dans ce train";
+            }
+
+            Swal.fire({
+                title: "Erreur",
+                text: errorMessage,
+                icon: "error",
+                confirmButtonText: "OK",
+            });
+        },
+    });
 };
 </script>
 
@@ -291,14 +121,7 @@ const resetForm = () => {
             <div class="pos-header animate-header">
                 <div class="pos-logo">SOPAFER Vente</div>
                 <div class="pos-date">
-                    {{
-                        new Date().toLocaleDateString("fr-FR", {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                        })
-                    }}
+                    {{ new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
                 </div>
             </div>
 
@@ -311,16 +134,7 @@ const resetForm = () => {
                             placeholder="Rechercher un voyage..."
                             class="pos-search-input"
                         />
-                        <svg
-                            class="search-icon"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
@@ -332,26 +146,22 @@ const resetForm = () => {
                             class="pos-product-card"
                             :class="{
                                 selected: form.voyage_id === voyage.id,
-                                'has-train': voyage.train,
+                                'has-train': voyage.train
                             }"
                             @click="form.voyage_id = voyage.id"
                         >
                             <div class="pos-product-info">
                                 <h3>{{ voyage.nom }}</h3>
                                 <p v-if="voyage.ligne">
-                                    <span class="departure">{{
-                                        voyage.ligne.gare_depart.nom
-                                    }}</span>
+                                    <span class="departure">{{ voyage.ligne.gare_depart.nom }}</span>
                                     <span class="arrow">→</span>
-                                    <span class="arrival">{{
-                                        voyage.ligne.gare_arrivee.nom
-                                    }}</span>
+                                    <span class="arrival">{{ voyage.ligne.gare_arrivee.nom }}</span>
                                 </p>
                                 <div class="pos-product-price">
                                     {{
-
+                                        formatNumber(
                                             voyage.tarifs?.[0]?.prix || 0
-
+                                        )
                                     }}
                                     FCFA
                                 </div>
@@ -368,10 +178,7 @@ const resetForm = () => {
                 <div class="pos-cart custom-scrollbar">
                     <div class="pos-cart-header slide-in-top">
                         <h2>TRANSACTION EN COURS</h2>
-                        <div
-                            class="pos-cart-count pulse"
-                            v-if="form.quantite > 0"
-                        >
+                        <div class="pos-cart-count pulse" v-if="form.quantite > 0">
                             {{ form.quantite }} article(s)
                         </div>
                     </div>
@@ -389,61 +196,33 @@ const resetForm = () => {
                                         required
                                         placeholder=" "
                                     />
-                                    <span class="floating-label"
-                                        >Nom complet</span
-                                    >
+                                    <span class="floating-label">Nom complet</span>
                                 </div>
 
                                 <div class="pos-form-group">
                                     <label>Train</label>
                                     <div class="train-display">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <path
-                                                d="M12 2c-3 0-6 1-6 5v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7c0-4-3-5-6-5z"
-                                            ></path>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 2c-3 0-6 1-6 5v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7c0-4-3-5-6-5z"></path>
                                             <path d="M12 2v5"></path>
                                             <path d="M8 12h8"></path>
                                             <path d="M8 16h8"></path>
                                         </svg>
                                         <input
                                             type="text"
+                                            :value="getSelectedTrainInfo()"
                                             class="pos-input"
                                             readonly
                                         />
                                     </div>
                                 </div>
 
-                                <div
-                                    v-if="selectedVoyage"
-                                    class="pos-form-group"
-                                >
+                                <div v-if="selectedVoyage" class="pos-form-group">
                                     <label>Voyage sélectionné</label>
                                     <div class="voyage-display">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <path
-                                                d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
-                                            ></path>
-                                            <circle
-                                                cx="12"
-                                                cy="10"
-                                                r="3"
-                                            ></circle>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                            <circle cx="12" cy="10" r="3"></circle>
                                         </svg>
                                         <input
                                             type="text"
@@ -472,8 +251,7 @@ const resetForm = () => {
                                                 :value="classe.classe_wagon_id"
                                             >
                                                 {{ classe.classe_wagon?.nom }} -
-                                                {{ classe.prix }}
-                                                FCFA
+                                                {{ formatNumber(classe.prix) }} FCFA
                                             </option>
                                         </select>
                                         <div class="select-arrow"></div>
@@ -487,15 +265,9 @@ const resetForm = () => {
                                         <div class="quantity-selector">
                                             <button
                                                 class="quantity-btn"
-                                                @click="
-                                                    form.quantite > 1
-                                                        ? form.quantite--
-                                                        : null
-                                                "
+                                                @click="form.quantite > 1 ? form.quantite-- : null"
                                                 :disabled="form.quantite <= 1"
-                                            >
-                                                -
-                                            </button>
+                                            >-</button>
                                             <input
                                                 v-model.number="form.quantite"
                                                 type="number"
@@ -506,30 +278,9 @@ const resetForm = () => {
                                             <button
                                                 class="quantity-btn"
                                                 @click="form.quantite++"
-                                            >
-                                                +
-                                            </button>
+                                            >+</button>
                                         </div>
                                     </div>
-
-                                    <!-- Boutton Calcul Kilométrique -->
-                                    <div
-                                        v-if="
-                                            systemSettings?.mode_vente ===
-                                            'par_kilometrage'
-                                        "
-                                        class="pos-form-group"
-                                    >
-                                        <button
-                                            @click="openKilometragePopup"
-                                            class="pos-kilometrage-btn"
-                                        >
-                                            Calculer le prix kilométrique
-                                        </button>
-                                    </div>
-
-                                    <!-- Demi-Tarif -->
-
                                     <div class="pos-form-group checkbox-group">
                                         <label class="custom-checkbox">
                                             <input
@@ -596,12 +347,8 @@ const resetForm = () => {
                                         Bagage supplémentaire
                                     </label>
                                 </div>
-
                                 <transition name="slide-down">
-                                    <div
-                                        v-if="form.bagage"
-                                        class="pos-form-group"
-                                    >
+                                    <div v-if="form.bagage" class="pos-form-group">
                                         <label>Poids (kg)</label>
                                         <input
                                             v-model.number="form.poids_bagage"
@@ -611,62 +358,25 @@ const resetForm = () => {
                                             class="pos-input floating-input"
                                             placeholder=" "
                                         />
-                                        <span class="floating-label"
-                                            >Poids en kg</span
-                                        >
+                                        <span class="floating-label">Poids en kg</span>
                                     </div>
                                 </transition>
 
-                                <!-- N° de Reference -->
-                                <div class="pos-form-group">
-                                    <label>N° de Reference</label>
-                                    <input
-                                        v-model="form.reference"
-                                        type="text"
-                                        class="pos-input floating-input"
-                                        required
-                                        placeholder=" "
-                                    />
-                                    <span class="floating-label"
-                                        >N° de Reference</span
-                                    >
-                                </div>
-
                                 <!-- Total avec animation -->
-                                <div
-                                    class="pos-cart-summary"
-                                    v-if="form.prix > 0"
-                                >
+                                <div class="pos-cart-summary" v-if="form.prix > 0">
                                     <div class="pos-summary-row">
                                         <span>Total:</span>
                                         <span class="pos-total bounce-in">
-                                            {{ form.prix }}  FCFA
+                                            {{ formatNumber(form.prix) }} FCFA
                                         </span>
                                     </div>
                                 </div>
                             </div>
-                            <div
-                                v-else
-                                key="empty-cart"
-                                class="empty-cart-message"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
+                            <div v-else key="empty-cart" class="empty-cart-message">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line
-                                        x1="12"
-                                        y1="16"
-                                        x2="12.01"
-                                        y2="16"
-                                    ></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
                                 </svg>
                                 <p>Sélectionnez un voyage pour commencer</p>
                             </div>
@@ -693,10 +403,7 @@ const resetForm = () => {
 
                         <!-- Actions -->
                         <div class="pos-cart-actions" v-if="form.voyage_id">
-                            <button
-                                @click="resetPOS"
-                                class="pos-cancel-btn hover-effect-btn"
-                            >
+                            <button @click="resetPOS" class="pos-cancel-btn hover-effect-btn">
                                 <span>Annuler</span>
                             </button>
                             <button
@@ -709,100 +416,13 @@ const resetForm = () => {
                                 class="pos-pay-btn hover-effect-btn"
                             >
                                 <span>Valider la vente</span>
-                                <svg
-                                    v-if="!form.processing"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
+                                <svg v-if="!form.processing" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M5 12h14"></path>
                                     <path d="M12 5l7 7-7 7"></path>
                                 </svg>
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <!-- Popup de calcul kilométrique -->
-        <div v-if="showKilometragePopup" class="pos-popup-overlay">
-            <div class="pos-popup">
-                <div class="pos-popup-header">
-                    <h3>Calcul kilométrique</h3>
-                    <button @click="showKilometragePopup = false" class="pos-popup-close">
-                        &times;
-                    </button>
-                </div>
-
-                <div class="pos-popup-content">
-                    <div class="pos-form-group">
-                        <label>Gare de départ</label>
-                        <select
-                            v-model="kilometrageForm.gare_depart_id"
-                            class="pos-input"
-                            @change="updateKilometrageDistance"
-                        >
-                            <option value="" disabled>Sélectionnez une gare</option>
-                            <option
-                                v-for="gare in gares"
-                                :key="gare.id"
-                                :value="gare.id"
-                            >
-                                {{ gare.nom }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="pos-form-group">
-                        <label>Gare d'arrivée</label>
-                        <select
-                            v-model="kilometrageForm.gare_arrivee_id"
-                            class="pos-input"
-                            @change="updateKilometrageDistance"
-                        >
-                            <option value="" disabled>Sélectionnez une gare</option>
-                            <option
-                                v-for="gare in gares"
-                                :key="gare.id"
-                                :value="gare.id"
-                            >
-                                {{ gare.nom }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="pos-form-group">
-                        <label>Distance (km)</label>
-                        <input
-                            v-model.number="kilometrageForm.distance"
-                            type="number"
-                            class="pos-input"
-                            readonly
-                        />
-                    </div>
-
-                    <div class="pos-form-group">
-                        <label>Prix calculé</label>
-                        <input
-                            v-model.number="kilometrageForm.prix_calcule"
-                            type="number"
-                            class="pos-input"
-                            readonly
-                        />
-                    </div>
-                </div>
-
-                <div class="pos-popup-actions">
-                    <button @click="showKilometragePopup = false" class="pos-popup-cancel">
-                        Annuler
-                    </button>
-                    <button @click="applyKilometragePrice" class="pos-popup-confirm">
-                        Appliquer
-                    </button>
                 </div>
             </div>
         </div>
@@ -816,7 +436,7 @@ const resetForm = () => {
     flex-direction: column;
     height: 100vh;
     background: #f8fafc;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     overflow: hidden;
 }
 
@@ -948,7 +568,7 @@ const resetForm = () => {
 }
 
 .pos-product-card.has-train::after {
-    content: "";
+    content: '';
     position: absolute;
     top: 10px;
     right: 10px;
@@ -965,11 +585,7 @@ const resetForm = () => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-        135deg,
-        rgba(59, 130, 246, 0.1) 0%,
-        rgba(59, 130, 246, 0) 100%
-    );
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 100%);
     opacity: 0;
     transition: opacity 0.3s;
 }
@@ -994,8 +610,7 @@ const resetForm = () => {
     gap: 5px;
 }
 
-.departure,
-.arrival {
+.departure, .arrival {
     transition: all 0.3s;
 }
 
@@ -1093,8 +708,7 @@ const resetForm = () => {
     font-size: 14px;
 }
 
-.pos-input,
-.pos-select {
+.pos-input, .pos-select {
     width: 100%;
     padding: 12px 15px;
     border: 1px solid #e2e8f0;
@@ -1104,8 +718,7 @@ const resetForm = () => {
     background: white;
 }
 
-.pos-input:focus,
-.pos-select:focus {
+.pos-input:focus, .pos-select:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     outline: none;
@@ -1270,13 +883,11 @@ const resetForm = () => {
 }
 
 /* Train and Voyage Display */
-.train-display,
-.voyage-display {
+.train-display, .voyage-display {
     position: relative;
 }
 
-.train-display svg,
-.voyage-display svg {
+.train-display svg, .voyage-display svg {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -1286,8 +897,7 @@ const resetForm = () => {
     stroke: #64748b;
 }
 
-.train-display input,
-.voyage-display input {
+.train-display input, .voyage-display input {
     padding-left: 40px;
 }
 
@@ -1364,7 +974,7 @@ const resetForm = () => {
 }
 
 .hover-effect-btn::after {
-    content: "";
+    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1478,12 +1088,7 @@ const resetForm = () => {
 }
 
 @keyframes bounceIn {
-    0%,
-    20%,
-    40%,
-    60%,
-    80%,
-    100% {
+    0%, 20%, 40%, 60%, 80%, 100% {
         transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
     }
     0% {
@@ -1521,26 +1126,22 @@ const resetForm = () => {
 }
 
 /* Transition Effects */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
+.fade-slide-enter-active, .fade-slide-leave-active {
     transition: all 0.3s ease;
 }
 
-.fade-slide-enter-from,
-.fade-slide-leave-to {
+.fade-slide-enter-from, .fade-slide-leave-to {
     opacity: 0;
     transform: translateY(10px);
 }
 
-.slide-down-enter-active,
-.slide-down-leave-active {
+.slide-down-enter-active, .slide-down-leave-active {
     transition: all 0.3s ease;
     max-height: 100px;
     overflow: hidden;
 }
 
-.slide-down-enter-from,
-.slide-down-leave-to {
+.slide-down-enter-from, .slide-down-leave-to {
     opacity: 0;
     max-height: 0;
     transform: translateY(-10px);

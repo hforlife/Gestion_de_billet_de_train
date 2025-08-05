@@ -93,7 +93,7 @@ onMounted(() => {
 
                 <div class="navbar-menu-wrapper d-flex align-items-center">
                     <Link
-                        :href="route('vente.create')"
+                        :href="route('create')"
                         class="btn btn-primary btn-icon-text animate-fade"
                     >
                         Effectuer une Vente

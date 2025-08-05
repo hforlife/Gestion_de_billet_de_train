@@ -14,4 +14,7 @@ class SystemSetting extends Model
         'tarif_minimum',
         'coefficients_classes',
     ];
+    protected $casts = [
+        'coefficients_classes' => 'array',
+    ];
 }

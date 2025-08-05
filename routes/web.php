@@ -37,7 +37,14 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'role:admin|chef|caissier'])->group(function () {
     Route::prefix('/vente')->group(function () {
         Route::get('/', [VenteController::class, 'index'])->name('vente.index');
-        Route::get('/create', [VenteController::class, 'create'])->name('vente.create');
+        // Création selon le mode : prédéfini ou kilométrique
+        Route::get('/create/predefined', [VenteController::class, 'createPredefined'])->name('vente.create.predefined');
+        Route::get('/create/kilometrage', [VenteController::class, 'createKilometrage'])->name('vente.create.kilometrage');
+
+        // Route générique de création qui redirige selon le mode système si besoin
+        Route::get('/create', [VenteController::class, 'create'])->name('create');
+
+        // Stockage (une seule méthode, elle peut détecter/recevoir le mode)
         Route::post('/store', [VenteController::class, 'store'])->name('vente.store');
         Route::get('/{id}', [VenteController::class, 'show'])->name('vente.show');
         Route::get('/{id}/edit', [VenteController::class, 'edit'])->name('vente.edit');
@@ -60,7 +67,7 @@ Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/type', TypeController::class)->except(['show']);                          // Pour les Type de train
     Route::resource('/arret', ArretController::class)->except(['show']);                        // Pour les arrêts
     Route::resource('/voyage', VoyageController::class)->except(['show']);
-    Route::get('/voyages/next-number', [VoyageController::class, 'nextNumber'])->name('voyage.next-number');// Pour les voyages
+    Route::get('/voyages/next-number', [VoyageController::class, 'nextNumber'])->name('voyage.next-number'); // Pour les voyages
     Route::resource('/voyage-reccurent', ReccuringVoyageController::class)->except(['show']);   // Pour les voyages récurrents
     Route::resource('/categories-colis', CategorieColisController::class)->except(['show']);    // Pour les catégories de colis
     Route::resource('/setting', ParametreController::class)->except(['show']);                  // Pour les paramètres
@@ -70,6 +77,7 @@ Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/tarif', TarifController::class)->except(['show']);
     Route::resource('/maintenance', MaintenanceController::class)->except(['show']);
     Route::resource('/distance', DistanceController::class)->except(['show']);
+    Route::get('/api/distances/get', [DistanceController::class, 'get'])->name('api.distances.get');
 
     Route::get(
         '/maintenance/dashboard',

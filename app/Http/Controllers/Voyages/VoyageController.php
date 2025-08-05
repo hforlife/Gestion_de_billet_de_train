@@ -37,7 +37,6 @@ class VoyageController
         return Inertia::render('Voyages/Index', [
             'trains' => Train::select('id', 'numero')->get(),
             'lignes' => Ligne::with(['arrets.gare'])->get(),
-            'tarifs' => TarifsGare::with(['classeWagon', 'gareDepart', 'gareArrivee'])->active()->get(),
             'filters' => $filters,
             'voyages' => $voyages,
         ]);
@@ -48,8 +47,7 @@ class VoyageController
         return Inertia::render('Voyages/Create', [
             'trains' => Train::select('id', 'numero')->get(),
             'lignes' => Ligne::with(['arrets.gare'])->get(),
-            // 'tarifs' => TarifsGare::with(['classeWagon', 'gareDepart', 'gareArrivee'])->active()->get(),
-        ]);
+            ]);
     }
 
     public function nextNumber()
