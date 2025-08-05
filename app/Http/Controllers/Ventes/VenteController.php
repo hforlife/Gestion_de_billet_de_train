@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Exception;
 use SalePriceCalculator;
+use Illuminate\Support\Facades\Auth;
 
 class VenteController
 {
@@ -119,8 +120,12 @@ class VenteController
             'statut' => 'required|in:payé,réservé',
             'reference' => 'required|string|unique:ventes,reference',
         ]);
+        $user = Auth::user();
+
+        $validated['created_by'] = $user->id;
 
         DB::beginTransaction();
+        dd($validated);
         
         try {
             $voyage = Voyage::with(['train.wagons.places', 'ligne.arrets'])->findOrFail($validated['voyage_id']);
@@ -140,7 +145,22 @@ class VenteController
             if (!$placeLibre) {
                 return back()->withErrors(['place' => 'Aucune place disponible dans cette classe.'])->withInput();
             }
-            dd($validated);
+
+             $qrData = [
+                'reference' => $reference,
+                'client' => $validated['client_nom'],
+                'voyage_id' => $validated['voyage_id'],
+                'place_id' => $placeLibre->id,
+                'date' => now()->toDateTimeString()
+            ];
+    
+            $qrCode = QrCode::format('png')
+                ->size(200)
+                ->generate(json_encode($qrData));
+        
+            $qrPath = 'qrcodes/'.$reference.'.png';
+            Storage::disk('public')->put($qrPath, $qrCode);
+            
 
             // // Calcul du prix selon le mode de vente
             // $prixFinal = 0;
