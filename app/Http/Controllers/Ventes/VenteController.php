@@ -75,10 +75,10 @@ class VenteController
     {
         $voyages = Voyage::with([
             'ligne.arrets.gare',
-            'train.wagons.classeWagon',
+            'train.wagons.classe',
             'ligne.gareDepart',
             'ligne.gareArrivee',
-        ])
+            ])
             ->get();
         $classeWagons = ClassesWagon::all();
         $gares = Gare::all();
@@ -102,26 +102,29 @@ class VenteController
     public function store(Request $request)
     {
 
-        dd($request);
         $validated = $request->validate([
             'client_nom' => 'required|string|max:255',
             'voyage_id' => 'required|exists:voyages,id',
             'mode_paiement_id' => 'required|exists:modes_paiement,id',
             'point_vente_id' => 'required|exists:points_ventes,id',
             'classe_wagon_id' => 'required|exists:classes_wagon,id',
-            'demi_tarif' => 'boolean',
-            'distance' => 'required|numeric|min:0',
+            // 'gare_depart_id' => 'required|exists:gares,id',
+            // 'gare_arrivee_id' => 'required|exists:gares,id',
+            // 'distance_km' => 'required|numeric|min:0',
             'quantite' => 'required|integer|min:1|max:10',
-            'bagage' => 'required|boolean',
+            'demi_tarif' => 'boolean',
+            'prix' => 'required|numeric|min:0',
+            'bagage' => 'boolean',
             'poids_bagage' => 'nullable|numeric|min:0|max:30|required_if:bagage,true',
             'statut' => 'required|in:payé,réservé',
+            'reference' => 'required|string|unique:ventes,reference',
         ]);
 
-
         DB::beginTransaction();
-
+        
         try {
-            $voyage = Voyage::with(['train.wagons.places', 'ligne'])->findOrFail($validated['voyage_id']);
+            $voyage = Voyage::with(['train.wagons.places', 'ligne.arrets'])->findOrFail($validated['voyage_id']);
+            $setting = SystemSetting::first();
 
             // Trouver une place libre dans un wagon de la classe sélectionnée
             $placeLibre = Place::whereIn('wagon_id', function ($query) use ($validated) {
@@ -137,41 +140,42 @@ class VenteController
             if (!$placeLibre) {
                 return back()->withErrors(['place' => 'Aucune place disponible dans cette classe.'])->withInput();
             }
+            dd($validated);
 
-            // Calcul du prix selon le mode de vente
-            $prixFinal = 0;
-            $isDemi = $validated['demi_tarif'] ?? false;
+            // // Calcul du prix selon le mode de vente
+            // $prixFinal = 0;
+            // $isDemi = $validated['demi_tarif'] ?? false;
 
 
-            $voyage = Voyage::with(['ligne.arrets'])->findOrFail($validated['voyage_id']);
-            if ($setting->mode_vente === 'par_kilometrage') {
-                $prixFinal = SalePriceCalculator::computePriceByKilometrage(
-                    $voyage->ligne,
-                    $voyage->ligne->gare_depart_id,
-                    $voyage->ligne->gare_arrivee_id,
-                    $validated['classe_wagon_id'],
-                    $setting,
-                );
-            } else {
-                // Mode par voyage - utiliser les tarifs prédéfinis
-                $tarif = $voyage->tarifs()->where('classe_wagon_id', $validated['classe_wagon_id'])->first();
+            // $voyage = Voyage::with(['ligne.arrets'])->findOrFail($validated['voyage_id']);
+            // if ($setting->mode_vente === 'par_kilometrage') {
+            //     $prixFinal = SalePriceCalculator::computePriceByKilometrage(
+            //         $voyage->ligne,
+            //         $voyage->ligne->gare_depart_id,
+            //         $voyage->ligne->gare_arrivee_id,
+            //         $validated['classe_wagon_id'],
+            //         $setting,
+            //     );
+            // } else {
+            //     // Mode par voyage - utiliser les tarifs prédéfinis
+            //     $tarif = $voyage->tarifs()->where('classe_wagon_id', $validated['classe_wagon_id'])->first();
 
-                if (!$tarif) {
-                    return back()->withErrors(['tarif' => 'Aucun tarif disponible pour cette classe.'])->withInput();
-                }
+            //     if (!$tarif) {
+            //         return back()->withErrors(['tarif' => 'Aucun tarif disponible pour cette classe.'])->withInput();
+            //     }
 
-                $prixFinal = $tarif->prix;
-            }
+            //     $prixFinal = $tarif->prix;
+            // }
 
-            // Appliquer demi-tarif si pertinent
-            if ($isDemi) {
-                $prixFinal = $prixFinal / 2;
-            }
+            // // Appliquer demi-tarif si pertinent
+            // if ($isDemi) {
+            //     $prixFinal = $prixFinal / 2;
+            // }
 
-            // Calcul supplémentaire pour les bagages si nécessaire
-            if ($validated['bagage'] && $validated['poids_bagage'] > 0) {
-                $prixFinal += self::calculateBaggagePrice($validated['poids_bagage']);
-            }
+            // // Calcul supplémentaire pour les bagages si nécessaire
+            // if ($validated['bagage'] && $validated['poids_bagage'] > 0) {
+            //     $prixFinal += self::calculateBaggagePrice($validated['poids_bagage']);
+            // }
 
             $vente = Vente::create([
                 'client_nom' => $validated['client_nom'],
@@ -179,14 +183,17 @@ class VenteController
                 'mode_paiement_id' => $validated['mode_paiement_id'],
                 'point_vente_id' => $validated['point_vente_id'],
                 'place_id' => $placeLibre->id,
-                'prix' => $prixFinal * $validated['quantite'], // Prix total pour la quantité
+                'prix' => $validated['prix'],
                 'quantite' => $validated['quantite'],
                 'bagage' => $validated['bagage'],
-                'poids_bagage' => $validated['bagage'] ? ($validated['poids_bagage'] ?? 0) : 0,
+                'poids_bagage' => $validated['bagage'] ? $validated['poids_bagage'] : 0,
                 'classe_wagon_id' => $validated['classe_wagon_id'],
-                'demi_tarif' => $isDemi,
+                'gare_depart_id' => $validated['gare_depart_id'],
+                'gare_arrivee_id' => $validated['gare_arrivee_id'],
+                'distance_km' => $validated['distance_km'],
+                'demi_tarif' => $validated['demi_tarif'],
                 'statut' => $validated['statut'],
-                'reference' => 'VNT-' . now()->format('YmdHis'),
+                'reference' => $validated['reference'],
                 'date_vente' => now(),
             ]);
 
@@ -199,7 +206,7 @@ class VenteController
             DB::rollBack();
             return back()
                 ->withInput()
-                ->withErrors(['error' => $e->getMessage()]);
+                ->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()]);
         }
     }
 

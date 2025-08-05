@@ -39,4 +39,9 @@ class Ligne extends Model
     {
         return $this->hasMany(Voyage::class, 'ligne_id');
     }
+
+    public function classeWagon(): BelongsTo
+    {
+        return $this->belongsTo(ClassesWagon::class, 'classe_wagon_id');
+    }
 }

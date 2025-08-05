@@ -34,6 +34,8 @@ class Vente extends Model
         'reference',
         'qrcode',
         'statut',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -67,6 +69,11 @@ class Vente extends Model
             'voyage_id', // Local key on the ventes table
             'system_settings_id' // Local key on the voyages table
         );
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function voyage(): BelongsTo
