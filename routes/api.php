@@ -31,6 +31,7 @@ Route::group(['middleware'=> ['auth:sanctum']], function(){
         Route::apiResource('/paiements', PaiementController::class);
         Route::apiResource('/pointVentes', PointVenteController::class);
         Route::apiResource('/voyages', VoyageController::class);
+        Route::apiResource('/setting', VoyageController::class);
         Route::apiResource('/ventes', V1VenteController::class);
         // Route::post('/carts/sync', [CartItemController::class, 'syncCart']);
     });
