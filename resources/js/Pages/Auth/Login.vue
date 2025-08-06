@@ -36,7 +36,11 @@ const submit = () => {
                         <div class="auto-form-wrapper">
                             <form @submit.prevent="submit">
                                 <div class="form-group">
+<<<<<<< Updated upstream
                                     <label class="label">Nom d'utilisateur / Email</label>
+=======
+                                    <label class="label">Email ou Nom Utilisateur</label>
+>>>>>>> Stashed changes
                                     <div class="input-group">
                                         <input
                                             id="login"
@@ -46,8 +50,12 @@ const submit = () => {
                                             :message='form.errors.login'
                                             required
                                             autofocus
+<<<<<<< Updated upstream
                                             autocomplete="username"
                                             placeholder="Nom d'utilisateur ou Email"
+=======
+                                            placeholder="email@example.com"
+>>>>>>> Stashed changes
                                             class="form-control"
                                         />
                                         <div class="input-group-append">

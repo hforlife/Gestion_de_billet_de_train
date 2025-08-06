@@ -81,10 +81,23 @@ class VenteController
             })->first();
     
             if (!$placeLibre) {
+<<<<<<< Updated upstream
                 Log::warning('Aucune place disponible', ['voyage_id' => $validated['voyage_id']]);
                 return back()->withErrors(['place' => 'Aucune place disponible dans ce train.']);
+=======
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Erreur de la creation de billet',
+                    'error' => 'Aucune place disponible dans ce train.'
+                ], 500);
+>>>>>>> Stashed changes
             }
+
+            do {
+                $reference = 'TICKET_'.strtoupper(uniqid()).'_'.rand(100, 999);
+            } while (Vente::where('reference', $reference)->exists());
     
+<<<<<<< Updated upstream
             // Génération de référence
             do {
                 $reference = 'TICKET_'.strtoupper(string: uniqid()).'_'.rand(100, 999);
@@ -116,6 +129,23 @@ class VenteController
             }
     
             // Création de la vente
+=======
+            $qrData = [
+                'reference' => $reference,
+                'client' => $validated['client_nom'],
+                'voyage_id' => $validated['voyage_id'],
+                'place_id' => $placeLibre->id,
+                'date' => now()->toDateTimeString()
+            ];
+    
+            $qrCode = QrCode::format('png')
+                ->size(200)
+                ->generate(json_encode($qrData));
+        
+            $qrPath = 'qrcodes/'.$reference.'.png';
+            Storage::disk('public')->put($qrPath, $qrCode);
+   
+>>>>>>> Stashed changes
             $vente = Vente::create([
                 'client_nom' => $validated['client_nom'],
                 'voyage_id' => $validated['voyage_id'],
@@ -130,7 +160,11 @@ class VenteController
                 'demi_tarif' => $validated['demi_tarif'],
                 'statut' => $validated['statut'],
                 'reference' => $reference,
+<<<<<<< Updated upstream
                 'qrcode' => $qrPath ?? null,
+=======
+                'qrcode' => $qrPath,
+>>>>>>> Stashed changes
                 'date_vente' => now(),
                 'created_by' => $user->id,
             ]);
