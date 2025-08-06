@@ -349,6 +349,11 @@ const submit = () => {
                                     required
                                     placeholder="Nom complet"
                                 />
+                                <div
+                                    v-if="form.errors.client_nom"
+                                    v-text="form.errors.client_nom"
+                                    class="text-danger"
+                                ></div>
                             </div>
 
                             <!-- Voyage sélectionné -->
@@ -428,6 +433,11 @@ const submit = () => {
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
+                                    <div
+                                    v-if="form.errors.classe_wagon_id"
+                                    v-text="form.errors.classe_wagon_id"
+                                    class="text-danger"
+                                ></div>
                                 </div>
                             </div>
 
@@ -458,6 +468,11 @@ const submit = () => {
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
+                                    <div
+                                    v-if="form.errors.gare_depart_id"
+                                    v-text="form.errors.gare_depart_id"
+                                    class="text-danger"
+                                ></div>
                                 </div>
                             </div>
 
@@ -487,6 +502,11 @@ const submit = () => {
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
+                                    <div
+                                    v-if="form.errors.gare_arrivee_id"
+                                    v-text="form.errors.gare_arrivee_id"
+                                    class="text-danger"
+                                ></div>
                                 </div>
                             </div>
 
@@ -597,6 +617,11 @@ const submit = () => {
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
+                                    <div
+                                    v-if="form.errors.point_vente_id"
+                                    v-text="form.errors.point_vente_id"
+                                    class="text-danger"
+                                ></div>
                                 </div>
                             </div>
 
@@ -624,6 +649,11 @@ const submit = () => {
                                         <option value="réservé">Réservé</option>
                                     </select>
                                     <div class="select-arrow"></div>
+                                    <div
+                                    v-if="form.errors.statut"
+                                    v-text="form.errors.statut"
+                                    class="text-danger"
+                                ></div>
                                 </div>
                             </div>
 
