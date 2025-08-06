@@ -157,9 +157,6 @@ return new class extends Migration {
             $table->string('client_nom')->nullable();
 
             $table->foreignId('voyage_id')->constrained('voyages')->onDelete('cascade');
-            $table->foreignId('train_id')->constrained('trains')->onDelete('cascade');
-            $table->foreignId('gare_depart_id')->constrained('gares')->onDelete('cascade');
-            $table->foreignId('gare_arrivee_id')->constrained('gares')->onDelete('cascade');
             $table->foreignId('mode_paiement_id')->constrained('modes_paiement');
             $table->foreignId('point_vente_id')->constrained('points_ventes');
             $table->foreignId('classe_wagon_id')->constrained('classes_wagon');

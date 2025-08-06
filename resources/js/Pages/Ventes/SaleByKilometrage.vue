@@ -16,8 +16,6 @@ const props = defineProps({
 const form = useForm({
     voyage_id: "",
     classe_wagon_id: "",
-    gare_depart_id: "",
-    gare_arrivee_id: "",
     client_nom: "",
     mode_paiement_id: props.modesPaiement[0]?.id || null,
     point_vente_id: props.pointsVente[0]?.id || null,
@@ -27,18 +25,19 @@ const form = useForm({
     bagage: false,
     poids_bagage: "",
     statut: "payé",
-    reference: generateReference(),
+    penalite: null,
+    // reference: generateReference(),
 });
 
 // Génération référence
-function generateReference() {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let ref = "VENTE-";
-    for (let i = 0; i < 8; i++) {
-        ref += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return ref;
-}
+// function generateReference() {
+//     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+//     let ref = "TICKET-";
+//     for (let i = 0; i < 8; i++) {
+//         ref += chars.charAt(Math.floor(Math.random() * chars.length));
+//     }
+//     return ref;
+// }
 
 // État pour le kilométrage
 const kilometrageState = reactive({
@@ -157,11 +156,11 @@ try {
     const coeffs = typeof settings.coefficients_classes === "string"
         ? JSON.parse(settings.coefficients_classes)
         : settings.coefficients_classes || {};
-    
+
     coefficient = coeffs[form.classe_wagon_id] ?? 1.0;
 } catch (e) {
     console.error("Erreur de parsing des coefficients", e);
-    
+
     // Fallback manuel si le parsing échoue
     if (form.classe_wagon_id == 1) {
         coefficient = 1.5; // Première classe
@@ -602,7 +601,7 @@ const submit = () => {
                             </div>
 
                             <!-- Référence -->
-                            <div class="pos-form-group">
+                            <!-- <div class="pos-form-group">
                                 <label>Référence</label>
                                 <input
                                     v-model="form.reference"
@@ -610,7 +609,7 @@ const submit = () => {
                                     class="pos-input"
                                     readonly
                                 />
-                            </div>
+                            </div> -->
 
                             <!-- Statut -->
                             <div class="pos-form-group">

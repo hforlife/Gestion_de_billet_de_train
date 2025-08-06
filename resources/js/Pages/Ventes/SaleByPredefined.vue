@@ -23,6 +23,7 @@ const form = useForm({
     bagage: false,
     poids_bagage: null,
     statut: "payé",
+    penalite: null,
 });
 
 const selectedVoyage = computed(() =>
