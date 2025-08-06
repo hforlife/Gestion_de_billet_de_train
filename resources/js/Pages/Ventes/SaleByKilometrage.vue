@@ -468,11 +468,6 @@ const submit = () => {
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
-                                    <div
-                                    v-if="form.errors.gare_depart_id"
-                                    v-text="form.errors.gare_depart_id"
-                                    class="text-danger"
-                                ></div>
                                 </div>
                             </div>
 
@@ -502,11 +497,6 @@ const submit = () => {
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
-                                    <div
-                                    v-if="form.errors.gare_arrivee_id"
-                                    v-text="form.errors.gare_arrivee_id"
-                                    class="text-danger"
-                                ></div>
                                 </div>
                             </div>
 
@@ -597,6 +587,11 @@ const submit = () => {
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
+                                    <div
+                                    v-if="form.errors.mode_paiement_id"
+                                    v-text="form.errors.mode_paiement_id"
+                                    class="text-danger"
+                                ></div>
                                 </div>
                             </div>
 
