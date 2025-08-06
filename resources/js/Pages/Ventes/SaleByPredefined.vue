@@ -2,7 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
 const props = defineProps({
     voyages: Array,
@@ -46,11 +46,10 @@ const calculatePrice = () => {
 
     const unitPrice = parseFloat(selectedClass.value.prix || 0);
     const quantity = parseInt(form.quantite) || 1;
-    const total = form.demi_tarif
-        ? (unitPrice * quantity) / 2
-        : unitPrice * quantity;
 
-    form.prix = total;
+    form.prix = form.demi_tarif
+        ? Math.round((unitPrice * quantity) / 2)
+        : unitPrice * quantity;
 };
 
 const getSelectedTrainInfo = () => {
@@ -78,7 +77,6 @@ const resetPOS = () => {
     form.prix = 0;
     form.statut = "payé";
 };
-
 
 const submit = () => {
     calculatePrice();
@@ -122,7 +120,14 @@ const submit = () => {
             <div class="pos-header animate-header">
                 <div class="pos-logo">SOPAFER Vente</div>
                 <div class="pos-date">
-                    {{ new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+                    {{
+                        new Date().toLocaleDateString("fr-FR", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        })
+                    }}
                 </div>
             </div>
 
@@ -135,7 +140,16 @@ const submit = () => {
                             placeholder="Rechercher un voyage..."
                             class="pos-search-input"
                         />
-                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            class="search-icon"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
@@ -147,16 +161,20 @@ const submit = () => {
                             class="pos-product-card"
                             :class="{
                                 selected: form.voyage_id === voyage.id,
-                                'has-train': voyage.train
+                                'has-train': voyage.train,
                             }"
                             @click="form.voyage_id = voyage.id"
                         >
                             <div class="pos-product-info">
                                 <h3>{{ voyage.nom }}</h3>
                                 <p v-if="voyage.ligne">
-                                    <span class="departure">{{ voyage.ligne.gare_depart.nom }}</span>
+                                    <span class="departure">{{
+                                        voyage.ligne.gare_depart.nom
+                                    }}</span>
                                     <span class="arrow">→</span>
-                                    <span class="arrival">{{ voyage.ligne.gare_arrivee.nom }}</span>
+                                    <span class="arrival">{{
+                                        voyage.ligne.gare_arrivee.nom
+                                    }}</span>
                                 </p>
                                 <div class="pos-product-price">
                                     {{
@@ -179,7 +197,10 @@ const submit = () => {
                 <div class="pos-cart custom-scrollbar">
                     <div class="pos-cart-header slide-in-top">
                         <h2>TRANSACTION EN COURS</h2>
-                        <div class="pos-cart-count pulse" v-if="form.quantite > 0">
+                        <div
+                            class="pos-cart-count pulse"
+                            v-if="form.quantite > 0"
+                        >
                             {{ form.quantite }} article(s)
                         </div>
                     </div>
@@ -197,14 +218,26 @@ const submit = () => {
                                         required
                                         placeholder=" "
                                     />
-                                    <span class="floating-label">Nom complet</span>
+                                    <span class="floating-label"
+                                        >Nom complet</span
+                                    >
                                 </div>
 
                                 <div class="pos-form-group">
                                     <label>Train</label>
                                     <div class="train-display">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M12 2c-3 0-6 1-6 5v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7c0-4-3-5-6-5z"></path>
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <path
+                                                d="M12 2c-3 0-6 1-6 5v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7c0-4-3-5-6-5z"
+                                            ></path>
                                             <path d="M12 2v5"></path>
                                             <path d="M8 12h8"></path>
                                             <path d="M8 16h8"></path>
@@ -218,12 +251,29 @@ const submit = () => {
                                     </div>
                                 </div>
 
-                                <div v-if="selectedVoyage" class="pos-form-group">
+                                <div
+                                    v-if="selectedVoyage"
+                                    class="pos-form-group"
+                                >
                                     <label>Voyage sélectionné</label>
                                     <div class="voyage-display">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                            <circle cx="12" cy="10" r="3"></circle>
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <path
+                                                d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                                            ></path>
+                                            <circle
+                                                cx="12"
+                                                cy="10"
+                                                r="3"
+                                            ></circle>
                                         </svg>
                                         <input
                                             type="text"
@@ -247,12 +297,15 @@ const submit = () => {
                                                 Sélectionnez une classe
                                             </option>
                                             <option
-                                                v-for="classe in availableClasses"
-                                                :key="classe.id"
-                                                :value="classe.classe_wagon_id"
+                                                v-for="tarif in availableClasses"
+                                                :key="tarif.id"
+                                                :value="tarif.classe_wagon_id"
                                             >
-                                                {{ classe.classe_wagon?.nom }} -
-                                                {{ formatNumber(classe.prix) }} FCFA
+                                                {{ tarif.classe_wagon.classe }} -
+                                                {{
+                                                    formatNumber(tarif.prix)
+                                                }}
+                                                FCFA
                                             </option>
                                         </select>
                                         <div class="select-arrow"></div>
@@ -266,9 +319,15 @@ const submit = () => {
                                         <div class="quantity-selector">
                                             <button
                                                 class="quantity-btn"
-                                                @click="form.quantite > 1 ? form.quantite-- : null"
+                                                @click="
+                                                    form.quantite > 1
+                                                        ? form.quantite--
+                                                        : null
+                                                "
                                                 :disabled="form.quantite <= 1"
-                                            >-</button>
+                                            >
+                                                -
+                                            </button>
                                             <input
                                                 v-model.number="form.quantite"
                                                 type="number"
@@ -279,7 +338,9 @@ const submit = () => {
                                             <button
                                                 class="quantity-btn"
                                                 @click="form.quantite++"
-                                            >+</button>
+                                            >
+                                                +
+                                            </button>
                                         </div>
                                     </div>
                                     <div class="pos-form-group checkbox-group">
@@ -349,7 +410,10 @@ const submit = () => {
                                     </label>
                                 </div>
                                 <transition name="slide-down">
-                                    <div v-if="form.bagage" class="pos-form-group">
+                                    <div
+                                        v-if="form.bagage"
+                                        class="pos-form-group"
+                                    >
                                         <label>Poids (kg)</label>
                                         <input
                                             v-model.number="form.poids_bagage"
@@ -359,12 +423,17 @@ const submit = () => {
                                             class="pos-input floating-input"
                                             placeholder=" "
                                         />
-                                        <span class="floating-label">Poids en kg</span>
+                                        <span class="floating-label"
+                                            >Poids en kg</span
+                                        >
                                     </div>
                                 </transition>
 
                                 <!-- Total avec animation -->
-                                <div class="pos-cart-summary" v-if="form.prix > 0">
+                                <div
+                                    class="pos-cart-summary"
+                                    v-if="form.prix > 0"
+                                >
                                     <div class="pos-summary-row">
                                         <span>Total:</span>
                                         <span class="pos-total bounce-in">
@@ -373,11 +442,28 @@ const submit = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div v-else key="empty-cart" class="empty-cart-message">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <div
+                                v-else
+                                key="empty-cart"
+                                class="empty-cart-message"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    <line
+                                        x1="12"
+                                        y1="16"
+                                        x2="12.01"
+                                        y2="16"
+                                    ></line>
                                 </svg>
                                 <p>Sélectionnez un voyage pour commencer</p>
                             </div>
@@ -404,7 +490,10 @@ const submit = () => {
 
                         <!-- Actions -->
                         <div class="pos-cart-actions" v-if="form.voyage_id">
-                            <button @click="resetPOS" class="pos-cancel-btn hover-effect-btn">
+                            <button
+                                @click="resetPOS"
+                                class="pos-cancel-btn hover-effect-btn"
+                            >
                                 <span>Annuler</span>
                             </button>
                             <button
@@ -417,7 +506,16 @@ const submit = () => {
                                 class="pos-pay-btn hover-effect-btn"
                             >
                                 <span>Valider la vente</span>
-                                <svg v-if="!form.processing" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    v-if="!form.processing"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path d="M5 12h14"></path>
                                     <path d="M12 5l7 7-7 7"></path>
                                 </svg>
@@ -437,7 +535,7 @@ const submit = () => {
     flex-direction: column;
     height: 100vh;
     background: #f8fafc;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
     overflow: hidden;
 }
 
@@ -569,7 +667,7 @@ const submit = () => {
 }
 
 .pos-product-card.has-train::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 10px;
     right: 10px;
@@ -586,7 +684,11 @@ const submit = () => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 100%);
+    background: linear-gradient(
+        135deg,
+        rgba(59, 130, 246, 0.1) 0%,
+        rgba(59, 130, 246, 0) 100%
+    );
     opacity: 0;
     transition: opacity 0.3s;
 }
@@ -611,7 +713,8 @@ const submit = () => {
     gap: 5px;
 }
 
-.departure, .arrival {
+.departure,
+.arrival {
     transition: all 0.3s;
 }
 
@@ -709,7 +812,8 @@ const submit = () => {
     font-size: 14px;
 }
 
-.pos-input, .pos-select {
+.pos-input,
+.pos-select {
     width: 100%;
     padding: 12px 15px;
     border: 1px solid #e2e8f0;
@@ -719,7 +823,8 @@ const submit = () => {
     background: white;
 }
 
-.pos-input:focus, .pos-select:focus {
+.pos-input:focus,
+.pos-select:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     outline: none;
@@ -884,11 +989,13 @@ const submit = () => {
 }
 
 /* Train and Voyage Display */
-.train-display, .voyage-display {
+.train-display,
+.voyage-display {
     position: relative;
 }
 
-.train-display svg, .voyage-display svg {
+.train-display svg,
+.voyage-display svg {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -898,7 +1005,8 @@ const submit = () => {
     stroke: #64748b;
 }
 
-.train-display input, .voyage-display input {
+.train-display input,
+.voyage-display input {
     padding-left: 40px;
 }
 
@@ -975,7 +1083,7 @@ const submit = () => {
 }
 
 .hover-effect-btn::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1089,7 +1197,12 @@ const submit = () => {
 }
 
 @keyframes bounceIn {
-    0%, 20%, 40%, 60%, 80%, 100% {
+    0%,
+    20%,
+    40%,
+    60%,
+    80%,
+    100% {
         transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
     }
     0% {
@@ -1127,22 +1240,26 @@ const submit = () => {
 }
 
 /* Transition Effects */
-.fade-slide-enter-active, .fade-slide-leave-active {
+.fade-slide-enter-active,
+.fade-slide-leave-active {
     transition: all 0.3s ease;
 }
 
-.fade-slide-enter-from, .fade-slide-leave-to {
+.fade-slide-enter-from,
+.fade-slide-leave-to {
     opacity: 0;
     transform: translateY(10px);
 }
 
-.slide-down-enter-active, .slide-down-leave-active {
+.slide-down-enter-active,
+.slide-down-leave-active {
     transition: all 0.3s ease;
     max-height: 100px;
     overflow: hidden;
 }
 
-.slide-down-enter-from, .slide-down-leave-to {
+.slide-down-enter-from,
+.slide-down-leave-to {
     opacity: 0;
     max-height: 0;
     transform: translateY(-10px);

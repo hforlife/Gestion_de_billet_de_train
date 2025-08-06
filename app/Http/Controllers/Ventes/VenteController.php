@@ -55,30 +55,42 @@ class VenteController
     }
 
     public function createPredefined()
-    {
-        $voyages = Voyage::with([
-            'ligne.arrets.gare',
-            'train.wagons.classe',
-            'ligne.gareDepart',
-            'ligne.gareArrivee',
-        ])
-            ->get();
-        $modesPaiement = ModesPaiement::all();
-        $pointsVente = PointsVente::with('gare')->get();
+{
+    $voyages = Voyage::with([
+        'ligne.arrets.gare',
+        'train.wagons.classeWagon', // Correction du nom de la relation
+        'ligne.gareDepart',
+        'ligne.gareArrivee',
+        'tarifs.classeWagon' // Chargement explicite des tarifs
+    ])->get();
 
-        return Inertia::render('Ventes/SaleByPredefined', [
-            'voyages' => $voyages,
-            'modesPaiement' => $modesPaiement,
-            'pointsVente' => $pointsVente,
-            // autres props si besoin
-        ]);
-    }
+    $modesPaiement = ModesPaiement::all();
+    $pointsVente = PointsVente::with('gare')->get();
+
+    return Inertia::render('Ventes/SaleByPredefined', [
+        'voyages' => $voyages->map(function ($voyage) {
+            return [
+                ...$voyage->toArray(),
+                'tarifs' => $voyage->tarifs->map(function ($tarif) {
+                    return [
+                        'id' => $tarif->id,
+                        'prix' => $tarif->prix,
+                        'classe_wagon_id' => $tarif->classe_wagon_id,
+                        'classe_wagon' => $tarif->classeWagon
+                    ];
+                })
+            ];
+        }),
+        'modesPaiement' => $modesPaiement,
+        'pointsVente' => $pointsVente,
+    ]);
+}
 
     public function createKilometrage()
     {
         $voyages = Voyage::with([
             'ligne.arrets.gare',
-            'train.wagons.classe',
+            'train.wagons.classeWagon',
             'ligne.gareDepart',
             'ligne.gareArrivee',
         ])

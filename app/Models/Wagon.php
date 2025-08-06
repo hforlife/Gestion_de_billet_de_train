@@ -37,7 +37,7 @@ class Wagon extends Model
     /**
      * Relation : Wagon appartient à une classe (1ère, 2ème, etc).
      */
-    public function classe(): BelongsTo
+    public function classeWagon(): BelongsTo
     {
         return $this->belongsTo(ClassesWagon::class);
     }
