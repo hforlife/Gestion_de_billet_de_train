@@ -149,26 +149,27 @@ const unitKilometragePrice = computed(() => {
     if (distance <= 0 || tarif_km <= 0) return 0;
 
     // Coefficient de classe
-let coefficient = 1.0; // Valeur par défaut
+    let coefficient = 1.0; // Valeur par défaut
 
-try {
-    // Essayez d'abord de récupérer le coefficient depuis les settings
-    const coeffs = typeof settings.coefficients_classes === "string"
-        ? JSON.parse(settings.coefficients_classes)
-        : settings.coefficients_classes || {};
+    try {
+        // Essayez d'abord de récupérer le coefficient depuis les settings
+        const coeffs =
+            typeof settings.coefficients_classes === "string"
+                ? JSON.parse(settings.coefficients_classes)
+                : settings.coefficients_classes || {};
 
-    coefficient = coeffs[form.classe_wagon_id] ?? 1.0;
-} catch (e) {
-    console.error("Erreur de parsing des coefficients", e);
+        coefficient = coeffs[form.classe_wagon_id] ?? 1.0;
+    } catch (e) {
+        console.error("Erreur de parsing des coefficients", e);
 
-    // Fallback manuel si le parsing échoue
-    if (form.classe_wagon_id == 1) {
-        coefficient = 1.5; // Première classe
-    } else if (form.classe_wagon_id == 2) {
-        coefficient = 1.0; // Seconde classe
+        // Fallback manuel si le parsing échoue
+        if (form.classe_wagon_id == 1) {
+            coefficient = 1.5; // Première classe
+        } else if (form.classe_wagon_id == 2) {
+            coefficient = 1.0; // Seconde classe
+        }
+        // Ajoutez d'autres classes au besoin
     }
-    // Ajoutez d'autres classes au besoin
-}
 
     let prix = tarif_km * distance * coefficient;
 
@@ -434,10 +435,10 @@ const submit = () => {
                                     </select>
                                     <div class="select-arrow"></div>
                                     <div
-                                    v-if="form.errors.classe_wagon_id"
-                                    v-text="form.errors.classe_wagon_id"
-                                    class="text-danger"
-                                ></div>
+                                        v-if="form.errors.classe_wagon_id"
+                                        v-text="form.errors.classe_wagon_id"
+                                        class="text-danger"
+                                    ></div>
                                 </div>
                             </div>
 
@@ -588,10 +589,10 @@ const submit = () => {
                                     </select>
                                     <div class="select-arrow"></div>
                                     <div
-                                    v-if="form.errors.mode_paiement_id"
-                                    v-text="form.errors.mode_paiement_id"
-                                    class="text-danger"
-                                ></div>
+                                        v-if="form.errors.mode_paiement_id"
+                                        v-text="form.errors.mode_paiement_id"
+                                        class="text-danger"
+                                    ></div>
                                 </div>
                             </div>
 
@@ -613,10 +614,10 @@ const submit = () => {
                                     </select>
                                     <div class="select-arrow"></div>
                                     <div
-                                    v-if="form.errors.point_vente_id"
-                                    v-text="form.errors.point_vente_id"
-                                    class="text-danger"
-                                ></div>
+                                        v-if="form.errors.point_vente_id"
+                                        v-text="form.errors.point_vente_id"
+                                        class="text-danger"
+                                    ></div>
                                 </div>
                             </div>
 
@@ -645,10 +646,10 @@ const submit = () => {
                                     </select>
                                     <div class="select-arrow"></div>
                                     <div
-                                    v-if="form.errors.statut"
-                                    v-text="form.errors.statut"
-                                    class="text-danger"
-                                ></div>
+                                        v-if="form.errors.statut"
+                                        v-text="form.errors.statut"
+                                        class="text-danger"
+                                    ></div>
                                 </div>
                             </div>
 

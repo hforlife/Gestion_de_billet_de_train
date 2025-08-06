@@ -218,6 +218,11 @@ const submit = () => {
                                         required
                                         placeholder=" "
                                     />
+                                    <div
+                                        v-if="form.errors.client_nom"
+                                        v-text="form.errors.client_nom"
+                                        class="text-danger"
+                                    ></div>
                                     <span class="floating-label"
                                         >Nom complet</span
                                     >
@@ -301,14 +306,20 @@ const submit = () => {
                                                 :key="tarif.id"
                                                 :value="tarif.classe_wagon_id"
                                             >
-                                                {{ tarif.classe_wagon.classe }} -
                                                 {{
-                                                    formatNumber(tarif.prix)
+                                                    tarif.classe_wagon.classe
                                                 }}
+                                                -
+                                                {{ formatNumber(tarif.prix) }}
                                                 FCFA
                                             </option>
                                         </select>
                                         <div class="select-arrow"></div>
+                                        <div
+                                            v-if="form.errors.classe_wagon_id"
+                                            v-text="form.errors.classe_wagon_id"
+                                            class="text-danger"
+                                        ></div>
                                     </div>
                                 </div>
 
@@ -485,6 +496,11 @@ const submit = () => {
                                     <option value="réservé">Réservé</option>
                                 </select>
                                 <div class="select-arrow"></div>
+                                <div
+                                    v-if="form.errors.statut"
+                                    v-text="form.errors.statut"
+                                    class="text-danger"
+                                ></div>
                             </div>
                         </div>
 
