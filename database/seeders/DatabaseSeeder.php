@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ModesPaiementSeeder::class);
         $this->call(PointVenteSeeder::class);
         $this->call(CategorieColisSeeder::class);
+        $this->call(SettingSeeder::class);
 
         // Optionnel : créer des utilisateurs de test
         User::factory(5)->create()->each(function ($user) {
