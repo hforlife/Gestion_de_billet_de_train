@@ -23,10 +23,10 @@ Route::get('/user', function (Request $request) {
 
 Route::post('/login', [LoginController::class, 'login']);
 
-Route::group(['middleware'=> ['auth:sanctum']], function(){
+Route::group(['middleware' => ['auth:sanctum']], function () {
     // Route::get('/logout', [AuthController::class, 'logout']);
-    
-    Route::prefix('v1')->group(function (){
+
+    Route::prefix('v1')->group(function () {
         Route::apiResource('/gares', GareController::class);
         Route::apiResource('/paiements', PaiementController::class);
         Route::apiResource('/pointVentes', PointVenteController::class);
@@ -36,4 +36,3 @@ Route::group(['middleware'=> ['auth:sanctum']], function(){
         // Route::post('/carts/sync', [CartItemController::class, 'syncCart']);
     });
 });
-  
