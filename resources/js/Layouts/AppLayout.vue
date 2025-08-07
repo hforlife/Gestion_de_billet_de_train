@@ -344,7 +344,7 @@ onMounted(() => {
                                         </li>
 
                                         <!-- Distances Gares -->
-                                        <li class="nav-item">
+                                        <!-- <li class="nav-item">
                                             <Link
                                                 class="nav-link"
                                                 :href="route('distance.index')"
@@ -361,7 +361,7 @@ onMounted(() => {
                                                     >Distance Gares</span
                                                 >
                                             </Link>
-                                        </li>
+                                        </li> -->
 
                                         <!-- Types Gare -->
                                         <!-- <li class="nav-item">

@@ -99,7 +99,6 @@ const deletePoint = (id) => {
                             <tr>
                                 <th class="column-id">#</th>
                                 <th>Gare</th>
-                                <th>Type de gare</th>
                                 <th>Type de point</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
@@ -114,7 +113,6 @@ const deletePoint = (id) => {
                                 <td class="column-name">
                                     {{ point.gare_nom }}
                                 </td>
-                                <td>{{ point.gare_type }}</td>
                                 <td class="text-capitalize">
                                     {{ point.type }}
                                 </td>
@@ -184,7 +182,6 @@ const deletePoint = (id) => {
                         /> -->
                     </div>
                 </div>
-                
             </div>
         </div>
     </AppLayout>

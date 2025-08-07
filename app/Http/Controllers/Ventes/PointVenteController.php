@@ -69,10 +69,10 @@ class PointVenteController
                 'type' => $pointsVente->type,
                 'actif' => $pointsVente->actif,
             ],
-            'gares' => Gare::with('typeGare')->get()->map(fn($gare) => [
+            'gares' => Gare::query()->get()->map(fn($gare) => [
                 'id' => $gare->id,
                 'nom' => $gare->nom,
-                'type' => $gare->typeGare->type,
+                'type' => $gare->type,
             ]),
         ]);
     }

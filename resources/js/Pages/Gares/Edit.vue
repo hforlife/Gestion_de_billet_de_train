@@ -12,7 +12,7 @@ const props = defineProps({
 const form = useForm({
     nom: props.gare.nom,
     adresse: props.gare.adresse,
-    type_gare_id: props.gare.type_gare_id,
+    type: props.gare.type,
     distance_km: props.gare.distance_km,
     internet: props.gare.internet,
     electricite: props.gare.electricite,
@@ -48,13 +48,26 @@ const submit = () => {
         <!-- En-tête de page -->
         <div class="row page-title-header">
             <div class="col-12">
-                <div class="page-header d-flex justify-content-between align-items-center">
+                <div
+                    class="page-header d-flex justify-content-between align-items-center"
+                >
                     <h4 class="page-title">Modification d'une gare</h4>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><Link :href="route('dashboard')">Tableau de bord</Link></li>
-                            <li class="breadcrumb-item"><Link :href="route('gare.index')">Gares</Link></li>
-                            <li class="breadcrumb-item active" aria-current="page">Modifier</li>
+                            <li class="breadcrumb-item">
+                                <Link :href="route('dashboard')"
+                                    >Tableau de bord</Link
+                                >
+                            </li>
+                            <li class="breadcrumb-item">
+                                <Link :href="route('gare.index')">Gares</Link>
+                            </li>
+                            <li
+                                class="breadcrumb-item active"
+                                aria-current="page"
+                            >
+                                Modifier
+                            </li>
                         </ol>
                     </nav>
                 </div>
@@ -70,83 +83,119 @@ const submit = () => {
                         <form @submit.prevent="submit" class="pt-3">
                             <!-- Nom -->
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Nom de la gare *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Nom de la gare *</label
+                                >
                                 <div class="col-sm-9">
                                     <input
                                         type="text"
                                         class="form-control"
                                         v-model="form.nom"
-                                        :class="{ 'is-invalid': form.errors.nom }"
+                                        :class="{
+                                            'is-invalid': form.errors.nom,
+                                        }"
                                         required
                                     />
-                                    <div class="invalid-feedback">{{ form.errors.nom }}</div>
+                                    <div class="invalid-feedback">
+                                        {{ form.errors.nom }}
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Adresse -->
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Adresse *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Adresse *</label
+                                >
                                 <div class="col-sm-9">
                                     <input
                                         type="text"
                                         class="form-control"
                                         v-model="form.adresse"
-                                        :class="{ 'is-invalid': form.errors.adresse }"
+                                        :class="{
+                                            'is-invalid': form.errors.adresse,
+                                        }"
                                         required
                                     />
-                                    <div class="invalid-feedback">{{ form.errors.adresse }}</div>
+                                    <div class="invalid-feedback">
+                                        {{ form.errors.adresse }}
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Type de gare -->
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Type de gare *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Type de gare *</label
+                                >
                                 <div class="col-sm-9">
                                     <select
                                         class="form-control"
-                                        v-model="form.type_gare_id"
-                                        :class="{ 'is-invalid': form.errors.type_gare_id }"
+                                        v-model="form.type"
+                                        :class="{
+                                            'is-invalid': form.errors.type,
+                                        }"
                                         required
                                     >
-                                        <option value="">Sélectionnez un type</option>
-                                        <option
-                                            v-for="type in typesGare"
-                                            :key="type.id"
-                                            :value="type.id"
-                                        >
-                                            {{ type.type }}
+                                        <option value="" disabled selected>
+                                            Sélectionnez un type
                                         </option>
+                                        <option value="principale">
+                                            Principale
+                                        </option>
+                                        <option value="passage">Passage</option>
+                                        <option value="halte">Halte</option>
+                                        <option value="fermee">Fermée</option>
                                     </select>
-                                    <div class="invalid-feedback">{{ form.errors.type_gare_id }}</div>
+                                    <div class="invalid-feedback">
+                                        {{ form.errors.type_gare_id }}
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Distance -->
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Distance depuis Bamako (km) *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Distance depuis Bamako (km) *</label
+                                >
                                 <div class="col-sm-9">
                                     <input
                                         type="number"
                                         step="0.01"
                                         class="form-control"
                                         v-model="form.distance_km"
-                                        :class="{ 'is-invalid': form.errors.distance_km }"
+                                        :class="{
+                                            'is-invalid':
+                                                form.errors.distance_km,
+                                        }"
                                         required
                                     />
-                                    <div class="invalid-feedback">{{ form.errors.distance_km }}</div>
+                                    <div class="invalid-feedback">
+                                        {{ form.errors.distance_km }}
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Équipements -->
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Équipements</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Équipements</label
+                                >
                                 <div class="col-sm-9">
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" v-model="form.internet" />
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input"
+                                            v-model="form.internet"
+                                        />
                                         Accès Internet
                                     </div>
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" v-model="form.electricite" />
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input"
+                                            v-model="form.electricite"
+                                        />
                                         Électricité
                                     </div>
                                 </div>
@@ -154,42 +203,66 @@ const submit = () => {
 
                             <!-- Guichets -->
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Nombre de guichets *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Nombre de guichets *</label
+                                >
                                 <div class="col-sm-9">
                                     <input
                                         type="number"
                                         min="0"
                                         class="form-control"
                                         v-model="form.nombre_guichets"
-                                        :class="{ 'is-invalid': form.errors.nombre_guichets }"
+                                        :class="{
+                                            'is-invalid':
+                                                form.errors.nombre_guichets,
+                                        }"
                                         required
                                     />
-                                    <div class="invalid-feedback">{{ form.errors.nombre_guichets }}</div>
+                                    <div class="invalid-feedback">
+                                        {{ form.errors.nombre_guichets }}
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Contrôle bagage -->
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Contrôle des bagages *</label>
+                                <label class="col-sm-3 col-form-label"
+                                    >Contrôle des bagages *</label
+                                >
                                 <div class="col-sm-9">
                                     <select
                                         class="form-control"
                                         v-model="form.controle_bagage"
-                                        :class="{ 'is-invalid': form.errors.controle_bagage }"
+                                        :class="{
+                                            'is-invalid':
+                                                form.errors.controle_bagage,
+                                        }"
                                         required
                                     >
-                                        <option value="physique">Physique</option>
-                                        <option value="electronique">Électronique</option>
+                                        <option value="physique">
+                                            Physique
+                                        </option>
+                                        <option value="electronique">
+                                            Électronique
+                                        </option>
                                         <option value="aucun">Aucun</option>
                                     </select>
-                                    <div class="invalid-feedback">{{ form.errors.controle_bagage }}</div>
+                                    <div class="invalid-feedback">
+                                        {{ form.errors.controle_bagage }}
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Boutons -->
                             <div class="form-group row mt-4">
-                                <div class="col-sm-12 d-flex justify-content-end">
-                                    <Link :href="route('gare.index')" class="btn btn-light mr-2">Annuler</Link>
+                                <div
+                                    class="col-sm-12 d-flex justify-content-end"
+                                >
+                                    <Link
+                                        :href="route('gare.index')"
+                                        class="btn btn-light mr-2"
+                                        >Annuler</Link
+                                    >
                                     <button
                                         type="submit"
                                         class="btn btn-primary"
@@ -201,7 +274,11 @@ const submit = () => {
                                             role="status"
                                             aria-hidden="true"
                                         ></span>
-                                        {{ form.processing ? "Mise à jour..." : "Mettre à jour" }}
+                                        {{
+                                            form.processing
+                                                ? "Mise à jour..."
+                                                : "Mettre à jour"
+                                        }}
                                     </button>
                                 </div>
                             </div>

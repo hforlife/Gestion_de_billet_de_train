@@ -8,47 +8,20 @@ import { ref, onMounted } from "vue";
 
 const tableWrapper = ref(null);
 
-onMounted(() => {
-    console.log("Table wrapper:", tableWrapper.value);
-});
-
 const props = defineProps({
-    roles: Object, // ✅ c’est un objet paginé, pas Array !
+    roles: Object,
+    permissions: Object,
     filters: Object,
-    flash: Object, // ✅ pour les messages flash
+    flash: Object,
 });
-
-// 🔍 Filtres réactifs
-const filters = reactive({
-    search: props.filters.search || "",
-});
-
-// 🔍 Watch pour mise à jour auto lors de la recherche
-watch(
-    () => filters.search,
-    (newValue) => {
-        router.get(
-            route("user.index"),
-            { search: newValue },
-            {
-                preserveState: true,
-                replace: true,
-            }
-        );
-    }
-);
 
 // Affichage du message flash
 if (props.flash && props.flash.success) {
     Swal.fire("Succès", props.flash.success, "success");
 }
-// Fonction pour rediriger vers la page d’édition avec l'ID
-const editRoles = (id) => {
-    router.visit(route("user.edit", id));
-};
 
 // 🗑️ Suppression avec confirmation
-const deleteRoles = (id) => {
+const deleteRole = (id) => {
     Swal.fire({
         title: "Êtes-vous sûr ?",
         text: "Cette action est irréversible !",
@@ -60,11 +33,11 @@ const deleteRoles = (id) => {
         cancelButtonText: "Annuler",
     }).then((result) => {
         if (result.isConfirmed) {
-            router.delete(route("role.destroy", { user: id }), {
+            router.delete(route("role.destroy", { role: id }), {
                 onSuccess: () => {
                     Swal.fire(
                         "Supprimé !",
-                        "Le Rôle a été supprimé avec succès.",
+                        "Le rôle a été supprimé avec succès.",
                         "success"
                     );
                 },
@@ -73,60 +46,32 @@ const deleteRoles = (id) => {
     });
 };
 
-const getRoleClass = (role) => {
-    const rolesMap = {
-        admin: "admin",
-        administrateur: "admin",
-        manager: "manager",
-        gestionnaire: "manager",
-        user: "user",
-        utilisateur: "user",
-    };
-    return rolesMap[role.toLowerCase()] || "user";
-};
-
-const sortBy = (column) => {
-    if (!tableWrapper.value) return;
-    // Logique de tri sécurisée
-    console.log("Trier par:", column);
-};
+// const getPermissionCount = (role) => {
+//     return role.permissions ? role.permissions.length : 0;
+// };
 </script>
+
 <template>
     <AppLayout>
         <!-- En-tête de page -->
         <div class="users-header">
             <div class="header-content">
                 <div class="header-title-wrapper">
-                    <h1 class="page-title">Gestion des Utilisateurs</h1>
+                    <h1 class="page-title">Gestion des Rôles</h1>
                     <Link :href="route('role.create')" class="btn-create-user">
-                        <i class="fas fa-user-plus"></i> Nouveau Role
+                        <Plus :size="16" /> Nouveau Rôle
                     </Link>
                 </div>
                 <div class="breadcrumb-wrapper">
                     <nav class="breadcrumb">
-                        <Link
-                            :href="route('dashboard')"
-                            class="breadcrumb-item"
-                        >
-                            <i class="fas fa-home"></i> Tableau de bord
+                        <Link :href="route('dashboard')" class="breadcrumb-item">
+                            Tableau de bord
                         </Link>
                         <span class="breadcrumb-divider">/</span>
                         <span class="breadcrumb-item active">
-                            <i class="fas fa-users"></i> Utilisateurs
+                            Rôles
                         </span>
                     </nav>
-                    <div class="search-box">
-                        <input
-                            type="text"
-                            v-model="filters.search"
-                            placeholder="Rechercher un utilisateur..."
-                            class="search-input"
-                            @keyup.enter="getResults"
-                        />
-                        <button class="search-btn" @click="getResults">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -138,113 +83,54 @@ const sortBy = (column) => {
                 <!-- En-tête du tableau -->
                 <div class="table-header">
                     <div class="table-title">
-                        <i class="fas fa-list"></i>
-                        <h2>Liste des Utilisateurs</h2>
-                        <span class="badge-count"
-                            >{{ users.total }} utilisateur(s)</span
-                        >
-                    </div>
-                    <div class="table-actions">
-                        <button class="btn-export">
-                            <i class="fas fa-file-export"></i> Exporter
-                        </button>
+                        <h2>Liste des Rôles</h2>
+                        <span class="badge-count">{{ roles.total }} rôle(s)</span>
                     </div>
                 </div>
 
                 <!-- Tableau -->
                 <div class="table-responsive">
-                    <div ref="tableWrapper" class="table-responsive">
+                    <div ref="tableWrapper">
                         <table class="users-table">
                             <thead>
                                 <tr>
                                     <th class="column-id">#</th>
-                                    <th class="column-name">
-                                        <span>Nom</span>
-                                        <button
-                                            class="sort-btn"
-                                            @click="sortBy('name')"
-                                        >
-                                            <i class="fas fa-sort"></i>
-                                        </button>
-                                    </th>
-                                    <th class="column-email">Email</th>
-                                    <th class="column-roles">Rôles</th>
-                                    <th class="column-status">Statut</th>
+                                    <th class="column-name">Nom</th>
+                                    <th class="column-permissions">Permissions</th>
                                     <th class="column-actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr
-                                    v-for="(user, index) in users.data"
-                                    :key="user.id"
-                                >
-                                    <td class="column-id">
-                                        {{ users.from + index }}
-                                    </td>
-                                    <td class="column-name">
-                                        <div class="user-avatar">
-                                            <img
-                                                src="/resources/js/assets/images/user-icon.png"
-                                                alt="User"
-                                                class="avatar-img"
-                                            />
-                                            <span>{{ user.name }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="column-email">
-                                        <a :href="'mailto:' + user.email">{{
-                                            user.email
-                                        }}</a>
-                                    </td>
-                                    <td class="column-roles">
-                                        <div class="roles-tags">
-                                            <span
-                                                v-for="role in user.roles"
-                                                :key="role"
-                                                class="role-tag"
-                                                :class="getRoleClass(role)"
-                                            >
-                                                {{ role }}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td class="column-status">
-                                        <span class="status-badge active"
-                                            >Actif</span
-                                        >
+                                <tr v-for="(role, index) in roles.data" :key="role.id">
+                                    <td class="column-id">{{ roles.from + index }}</td>
+                                    <td class="column-name">{{ role.name }}</td>
+                                    <td class="column-permissions">
+                                        {{ getPermissionCount(role) }} permission(s)
                                     </td>
                                     <td class="column-actions">
                                         <div class="action-buttons">
-                                            <button
-                                                @click="editRoles(user.id)"
+                                            <Link
+                                                :href="route('role.edit', role.id)"
                                                 class="btn-action btn-edit"
                                                 title="Modifier"
                                             >
-                                                <i class="fas fa-edit"></i>
-                                            </button>
+                                                <Pencil :size="16" />
+                                            </Link>
                                             <button
-                                                @click="deleteRoles(user.id)"
+                                                @click="deleteRole(role.id)"
                                                 class="btn-action btn-delete"
                                                 title="Supprimer"
                                             >
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                            <button
-                                                @click="viewUser(user.id)"
-                                                class="btn-action btn-view"
-                                                title="Voir profil"
-                                            >
-                                                <i class="fas fa-eye"></i>
+                                                <Trash :size="16" />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
-                                <tr v-if="users.data.length === 0">
-                                    <td colspan="6" class="no-results">
-                                        <i class="fas fa-user-slash"></i>
-                                        Aucun utilisateur trouvé
+                                <!-- <tr v-if="roles.data.length === 0">
+                                    <td colspan="4" class="no-results">
+                                        Aucun rôle trouvé
                                     </td>
-                                </tr>
+                                </tr> -->
                             </tbody>
                         </table>
                     </div>
@@ -253,14 +139,14 @@ const sortBy = (column) => {
                 <!-- Pagination -->
                 <div class="table-footer">
                     <div class="pagination-info">
-                        Affichage de {{ users.from }} à {{ users.to }} sur
-                        {{ users.total }} entrées
+                        Affichage de {{ roles.from }} à {{ roles.to }} sur
+                        {{ roles.total }} entrées
                     </div>
                     <div class="pagination-controls">
-                         <nav class="mt-4">
-                            <ul class="pagination-controls">
+                        <nav>
+                            <ul class="pagination">
                                 <li
-                                    v-for="link in users.links"
+                                    v-for="link in roles.links"
                                     :key="link.label"
                                     :class="[
                                         'page-item',
@@ -286,7 +172,6 @@ const sortBy = (column) => {
                         </nav>
                     </div>
                 </div>
-
             </div>
         </div>
     </AppLayout>

@@ -24,7 +24,7 @@ class TarifController
                 $filters['search'] ?? null,
                 fn($query, $search) =>
                 $query->whereHas(
-                    'gareDepart',
+                    'voyage',
                     fn($q) =>
                     $q->where('nom', 'like', "%{$search}%")
                 )->orWhereHas(
@@ -89,23 +89,21 @@ class TarifController
 
 
     // Formulaire d'édition
-    public function edit(Tarif $tarif): Response
+    public function edit(TarifsGare $tarif): Response
     {
         return Inertia::render('Tarifs/Edit', [
-            'tarif' => $tarif->load(['gareDepart', 'gareArrivee', 'classeWagon']),
+            'tarif' => $tarif->load(['voyage']),
+            'voyages' => Voyage::all(),
             'gares' => Gare::all(),
             'classes' => ClassesWagon::all(),
-            'lignes' => Ligne::all(),
         ]);
     }
 
     // Mise à jour d'un tarif
-    public function update(Request $request, Tarif $tarif)
+    public function update(Request $request, TarifsGare $tarif)
     {
         $validated = $request->validate([
-            'ligne_id' => 'nullable|exists:lignes,id',
-            'gare_depart_id' => 'required|exists:gares,id|different:gare_arrivee_id',
-            'gare_arrivee_id' => 'required|exists:gares,id',
+            'voyage_id' => 'nullable|exists:voyages,id',
             'classe_wagon_id' => 'required|exists:classes_wagon,id',
             'prix' => 'required|numeric|min:0',
             'date_effet' => 'required|date|after_or_equal:today',

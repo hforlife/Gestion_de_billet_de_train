@@ -16,7 +16,7 @@ class WagonController
     {
         $filters = $request->only('search');
 
-        $wagons = Wagon::with(['train', 'classe'])
+        $wagons = Wagon::with(['train', 'classeWagon'])
             ->filter($filters)        // scopeFilter dans le modèle Wagon
             ->orderBy('numero_wagon')
             ->paginate(10)
@@ -70,7 +70,7 @@ class WagonController
     // Formulaire d'édition
     public function edit(int $id): Response
     {
-        $wagon = Wagon::with('train', 'classe')->findOrFail($id);
+        $wagon = Wagon::with('train', 'classeWagon')->findOrFail($id);
 
         return Inertia::render('Trains/Wagons/Edit', [
             'wagon' => $wagon,

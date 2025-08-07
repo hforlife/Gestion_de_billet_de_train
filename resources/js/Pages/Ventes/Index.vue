@@ -191,7 +191,7 @@ const formatDate = (dateString) => {
                                     </template>
                                     <span v-else>---</span>
                                 </td>
-                                <td class="train-number">{{ vente.train?.numero || "---" }}</td>
+                                <td class="train-number">{{ vente.voyage.train?.numero || "---" }}</td>
                                 <td class="text-end price">{{ formatPrice(vente.prix) }}</td>
                                 <td class="text-center">
                                     <span :class="`status-badge ${vente.bagage ? 'yes' : 'no'}`">

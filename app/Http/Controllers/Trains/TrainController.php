@@ -6,6 +6,7 @@ use App\Models\Train;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Validation\Rule;
 
 class TrainController
 {
@@ -23,7 +24,7 @@ class TrainController
 
         return Inertia::render('Trains/Index', [
             'filters' => $filters,
-            'trains' => $trains->through(fn ($train) => [
+            'trains' => $trains->through(fn($train) => [
                 'id' => $train->id,
                 'numero' => $train->numero,
                 'sens' => $train->sens,
@@ -70,9 +71,15 @@ class TrainController
         $train = Train::findOrFail($id);
 
         $validated = $request->validate([
-            'numero' => ['required', 'string', 'max:255', 'unique:trains,numero,' . $train->id],
+            'numero' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('trains', 'numero')->ignore($train->id),
+            ],
+            'sens' => ['required', 'in:Bamako-Kayes,Kayes-Bamako'],
             'etat' => ['required', 'in:actif,en_maintenance'],
-            'nombre_agents' => ['required', 'string', 'max:255', 'regex:/^\d+$/'], // Assure que c'est un nombre entier
+            'nombre_agents' => ['required', 'max:255', 'regex:/^\d+$/'],
         ]);
 
         $train->update($validated);

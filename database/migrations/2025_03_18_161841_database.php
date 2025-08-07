@@ -269,6 +269,7 @@ return new class extends Migration {
             $table->decimal('tarif_kilometrique', 10, 2)->nullable(); // exemple : 20.32
             $table->decimal('tarif_minimum', 10, 2)->nullable(); // montant minimal d’un billet
             $table->json('coefficients_classes')->nullable(); // ex: {"1": 1.2, "2": 1.0, "3": 0.8}
+            $table->decimal('penalite', 10, 2)->nullable(); // ex: {"1": 1.2, "2": 1.0, "3": 0.8}
             $table->timestamps();
         });
     }
