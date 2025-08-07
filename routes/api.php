@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use App\Http\Api\V1\GareController;
 use App\Http\Api\V1\LoginController;
+use App\Http\Api\V1\TarifController;
 use App\Http\Api\V1\VoyageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Api\V1\PaiementController;
@@ -32,6 +33,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::apiResource('/pointVentes', PointVenteController::class);
         Route::apiResource('/voyages', VoyageController::class);
         Route::apiResource('/setting', VoyageController::class);
+        Route::apiResource('/tarifGare', TarifController::class);
         Route::apiResource('/ventes', V1VenteController::class);
         // Route::post('/carts/sync', [CartItemController::class, 'syncCart']);
     });
