@@ -2,21 +2,22 @@
 
 namespace App\Http\Api\V1;
 
+use App\Models\ClassesWagon;
 use App\Models\PointsVente;
 use App\Models\Gare;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class PointVenteController
+class ClassController
 {
     public function index()
     {
  
         return response()->json([
             'status' => true,
-            'message' => 'Liste des pointsVentes récupérée avec succès.',
-            'pointsVentes' => PointsVente::all(),
+            'message' => 'Liste des classes récupérée avec succès.',
+            'classes' => ClassesWagon::all(),
         ], 200); 
     }
 
