@@ -33,7 +33,7 @@ class DashboardController extends Controller
 
         // Revenus mensuels (12 derniers mois)
         $revenusMensuels = Vente::selectRaw("
-                TO_CHAR(created_at, 'YYYY-MM') as mois,
+                DATE_FORMAT(created_at, 'YYYY-MM') as mois,
                 SUM(prix) as total_revenus
             ")
             ->where('created_at', '>=', now()->subMonths(12))
@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
         // Ventes par mois pour le graphique (12 derniers mois)
         $ventesParMois = Vente::selectRaw("
-                TO_CHAR(created_at, 'YYYY-MM') as mois,
+                DATE_FORMAT(created_at, 'YYYY-MM') as mois,
                 COUNT(*) as total_ventes
             ")
             ->where('created_at', '>=', now()->subMonths(12))

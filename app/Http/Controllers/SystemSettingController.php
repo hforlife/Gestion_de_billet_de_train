@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class SystemSettingController extends Controller
 {
+    use AuthorizesRequests;
     //
     public function store(Request $request)
     {
+        
         $validatedData = $request->validate([
             'mode_vente' => 'required|string|in:par_voyage,par_kilometrage',
             'tarif_kilometrique' => [

@@ -33,28 +33,29 @@ Route::middleware(['auth'])->group(function () {
         ->name('user.profile');
 });
 
+
 // Routes pour caissiers, chefs et admin
-Route::middleware(['auth', 'role:admin|chef|caissier'])->group(function () {
+
     Route::prefix('/vente')->group(function () {
-        Route::get('/', [VenteController::class, 'index'])->name('vente.index');
+        Route::get('/', [VenteController::class, 'index'])->name('vente.index')->middleware('can:viewAny vente');
         // Création selon le mode : prédéfini ou kilométrique
-        Route::get('/create/predefined', [VenteController::class, 'createPredefined'])->name('vente.create.predefined');
-        Route::get('/create/kilometrage', [VenteController::class, 'createKilometrage'])->name('vente.create.kilometrage');
+        Route::get('/create/predefined', [VenteController::class, 'createPredefined'])->name('vente.create.predefined')->middleware('can:createPredefined vente');
+        Route::get('/create/kilometrage', [VenteController::class, 'createKilometrage'])->name('vente.create.kilometrage')->middleware('can:createKilometrage vente');
 
         // Route générique de création qui redirige selon le mode système si besoin
-        Route::get('/create', [VenteController::class, 'create'])->name('create');
+        Route::get('/create', [VenteController::class, 'create'])->name('create')->middleware('can:create vente');
 
         // Stockage (une seule méthode, elle peut détecter/recevoir le mode)
-        Route::post('/store', [VenteController::class, 'store'])->name('vente.store');
-        Route::get('/{id}', [VenteController::class, 'show'])->name('vente.show');
+        Route::post('/store', [VenteController::class, 'store'])->name('vente.store')->middleware('can:create vente');
+        Route::get('/{id}', [VenteController::class, 'show'])->name('vente.show')->middleware('can:view vente');
         Route::get('/{id}/edit', [VenteController::class, 'edit'])->name('vente.edit');
         Route::put('/{vente}', [VenteController::class, 'update'])->name('vente.update');
-        Route::delete('/{id}', [VenteController::class, 'destroy'])->name('vente.destroy');
+        Route::delete('/{id}', [VenteController::class, 'destroy'])->name('vente.destroy')->middleware('can:delete vente');
     });
 
     Route::get('/billet/{id}', [BilletController::class, 'generateBillet'])->name('vente.generate');
     Route::resource('/colis', ColisController::class)->except(['show']);
-});
+
 
 // Routes pour chefs et admin seulement
 Route::middleware(['auth', 'role:admin|chef'])->group(function () {
@@ -79,14 +80,14 @@ Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/distance', DistanceController::class)->except(['show']);
     // Route::get('/api/distances/get', [DistanceController::class, 'get'])->name('api.distances.get');
 
-    Route::get(
-        '/maintenance/dashboard',
-        [MaintenanceController::class, 'dashboard']
-    )->name('maintenance.dashboard');
-    Route::post(
-        '/maintenance/{maintenance}/terminer',
-        [MaintenanceController::class, 'terminer']
-    )->name('maintenance.terminer');
+    // Route::get(
+    //     '/maintenance/dashboard',
+    //     [MaintenanceController::class, 'dashboard']
+    // )->name('maintenance.dashboard');
+    // Route::post(
+    //     '/maintenance/{maintenance}/terminer',
+    //     [MaintenanceController::class, 'terminer']
+    // )->name('maintenance.terminer');
 });
 
 // Routes réservées à l'admin

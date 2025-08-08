@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+
+use App\Models\Vente;
+use App\Policies\VentePolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::policy(Vente::class, VentePolicy::class);
 
         $this->bootRoute();
     }

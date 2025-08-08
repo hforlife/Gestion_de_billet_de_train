@@ -46,9 +46,9 @@ const deleteRole = (id) => {
     });
 };
 
-// const getPermissionCount = (role) => {
-//     return role.permissions ? role.permissions.length : 0;
-// };
+const getPermissionCount = (role) => {
+    return role.permissions ? role.permissions.length : 0;
+};
 </script>
 
 <template>

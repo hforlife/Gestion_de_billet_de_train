@@ -2,22 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+class Role extends SpatieRole
 {
-    //
-    public function permissions()
-    {
-        return $this->belongsToMany(Permission::class, 'role_has_permissions');
-    }
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'model_has_roles');
-    }
-    public function hasPermissionTo($permission)
-    {
-        return $this->permissions()->where('name', $permission)->exists();
-    }
-    
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'roles';
+
+
+    protected $fillable = [
+        'name',
+        'guard_name',
+    ];
+
 }
