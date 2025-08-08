@@ -8,11 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class GareController
 {
+    use AuthorizesRequests;
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny gare');
         $filters = $request->only(['search', 'type_gare']);
 
         return Inertia::render('Gares/Index', [
@@ -22,7 +25,7 @@ class GareController
                 ->filter($filters)
                 ->paginate(10)
                 ->withQueryString()
-                ->through(fn ($gare) => [
+                ->through(fn($gare) => [
                     'id' => $gare->id,
                     'nom' => $gare->nom,
                     'adresse' => $gare->adresse,
@@ -38,11 +41,13 @@ class GareController
 
     public function create(): Response
     {
+        $this->authorize('create gare');
         return Inertia::render('Gares/Create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create gare');
         $validated = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'adresse' => ['required', 'string', 'max:255'],
@@ -62,6 +67,7 @@ class GareController
 
     public function edit(Gare $gare): Response
     {
+        $this->authorize('update gare');
         return Inertia::render('Gares/Edit', [
             'gare' => [
                 'id' => $gare->id,
@@ -79,6 +85,7 @@ class GareController
 
     public function update(Request $request, Gare $gare)
     {
+        $this->authorize('update gare');
         $validated = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'adresse' => ['required', 'string', 'max:255'],
@@ -97,6 +104,7 @@ class GareController
 
     public function destroy(Gare $gare)
     {
+        $this->authorize('delete gare');
         if ($gare->pointsVente()->exists() || $gare->arretsLigne()->exists()) {
             return Redirect::back()->with('error', 'Impossible de supprimer : la gare est utilisée dans le système.');
         }

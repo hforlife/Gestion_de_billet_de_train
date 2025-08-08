@@ -8,12 +8,15 @@ use App\Models\ClassesWagon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class WagonController
 {
+    use AuthorizesRequests;
     // Liste des wagons
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny wagon');
         $filters = $request->only('search');
 
         $wagons = Wagon::with(['train', 'classeWagon'])
@@ -40,6 +43,7 @@ class WagonController
     // Formulaire de création
     public function create(): Response
     {
+        $this->authorize('create wagon');
         return Inertia::render('Trains/Wagons/Create', [
             'trains' => Train::where('etat', 'actif')->get(),
             'classes' => ClassesWagon::all(),
@@ -70,6 +74,7 @@ class WagonController
     // Formulaire d'édition
     public function edit(int $id): Response
     {
+        $this->authorize('update wagon');
         $wagon = Wagon::with('train', 'classeWagon')->findOrFail($id);
 
         return Inertia::render('Trains/Wagons/Edit', [
@@ -82,6 +87,7 @@ class WagonController
     // Mise à jour
     public function update(Request $request, int $id)
     {
+        $this->authorize('update wagon');
         $wagon = Wagon::findOrFail($id);
 
         $validated = $request->validate([
@@ -111,6 +117,7 @@ class WagonController
     // Suppression
     public function destroy(int $id)
     {
+        $this->authorize('delete wagon');
         $wagon = Wagon::findOrFail($id);
         $wagon->places()->delete();
         $wagon->delete();

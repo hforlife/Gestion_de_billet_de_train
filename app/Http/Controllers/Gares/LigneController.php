@@ -8,11 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class LigneController
 {
+    use AuthorizesRequests;
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny ligne');
         $filters = $request->only(['search']);
 
         return Inertia::render('Lignes/Index', [
@@ -42,6 +45,7 @@ class LigneController
 
     public function create(): Response
     {
+        $this->authorize('create ligne');
         return Inertia::render('Lignes/Create', [
             'gares' => Gare::all()->map->only('id', 'nom'),
         ]);
@@ -49,6 +53,7 @@ class LigneController
 
     public function store(Request $request)
     {
+        $this->authorize('create ligne');
         $validated = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'gare_depart_id' => ['required', 'exists:gares,id'],
@@ -80,6 +85,7 @@ class LigneController
 
     public function edit(Ligne $ligne): Response
     {
+        $this->authorize('update ligne');
         return Inertia::render('Lignes/Edit', [
             'ligne' => [
                 'id' => $ligne->id,
@@ -94,6 +100,7 @@ class LigneController
 
     public function update(Request $request, Ligne $ligne)
     {
+        $this->authorize('update ligne');
         $validated = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'gare_depart_id' => ['required', 'exists:gares,id'],
@@ -108,6 +115,7 @@ class LigneController
 
     public function destroy(Ligne $ligne)
     {
+        $this->authorize('delete ligne');
         if ($ligne->arrets()->exists() || $ligne->voyages()->exists()) {
             return Redirect::back()->with('error', 'Impossible de supprimer : la ligne est utilisée dans des voyages ou arrêts.');
         }

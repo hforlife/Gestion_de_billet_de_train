@@ -6,12 +6,15 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use App\Models\CategorieColis;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CategorieColisController
 {
+    use AuthorizesRequests;
     // Index
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny categorie_colis');
         $filters = $request->only('search');
 
         return Inertia::render('Colis/CategoriesColis/Index', [
@@ -33,12 +36,14 @@ class CategorieColisController
     // Formulaire de création
     public function create(): Response
     {
+        $this->authorize('create categorie_colis');
         return Inertia::render('Colis/CategoriesColis/Create');
     }
 
     // Enregistrement
     public function store(Request $request)
     {
+        $this->authorize('create categorie_colis');
         $validated = $request->validate([
             'nom' => 'required|string|unique:categorie_colis,nom',
             'description' => 'nullable|string',
@@ -52,6 +57,7 @@ class CategorieColisController
     // Formulaire de modification
     public function edit(CategorieColis $categorie): Response
     {
+        $this->authorize('update categorie_colis');
         return Inertia::render('Colis/CategoriesColis/Edit', [
             'categorie' => [
                 'id' => $categorie->id,
@@ -64,6 +70,7 @@ class CategorieColisController
     // Mise à jour
     public function update(Request $request, CategorieColis $categorie)
     {
+        $this->authorize('update categorie_colis');
         $validated = $request->validate([
             'nom' => 'required|string|unique:categorie_colis,nom,' . $categorie->id,
             'description' => 'nullable|string',
@@ -77,6 +84,10 @@ class CategorieColisController
     // Suppression
     public function destroy(CategorieColis $categorie)
     {
+        $this->authorize('delete categorie_colis');
+        if ($categorie->colis()->count() > 0) {
+            return redirect()->back()->with('error', 'Cette catégorie ne peut pas être supprimée car elle est liée à des colis.');
+        }
         $categorie->delete();
 
         return redirect()->route('categories-colis.index')->with('success', 'Catégorie supprimée avec succès.');

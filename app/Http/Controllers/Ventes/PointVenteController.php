@@ -7,11 +7,14 @@ use App\Models\Gare;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PointVenteController
 {
+    use AuthorizesRequests;
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny point_vente');
         $filters = $request->only('search');
 
         $pointsVente = PointsVente::with('gare')
@@ -37,6 +40,7 @@ class PointVenteController
 
     public function create(): Response
     {
+        $this->authorize('create point_vente');
         return Inertia::render('PointsVente/Create', [
             'gares' => Gare::query()->get()->map(fn($gare) => [
                 'id' => $gare->id,
@@ -48,6 +52,7 @@ class PointVenteController
 
     public function store(Request $request)
     {
+        $this->authorize('create point_vente');
         $validated = $request->validate([
             'gare_id' => ['required', 'exists:gares,id'],
             'type' => ['required'],
@@ -62,6 +67,7 @@ class PointVenteController
 
     public function edit(PointsVente $pointsVente): Response
     {
+        $this->authorize('update point_vente');
         return Inertia::render('PointsVente/Edit', [
             'pointVente' => [
                 'id' => $pointsVente->id,
@@ -79,6 +85,7 @@ class PointVenteController
 
     public function update(Request $request, PointsVente $pointsVente)
     {
+        $this->authorize('update point_vente');
         $validated = $request->validate([
             'gare_id' => ['required', 'exists:gares,id'],
             'type' => ['required'],
@@ -93,6 +100,7 @@ class PointVenteController
 
     public function destroy(PointsVente $pointsVente)
     {
+        $this->authorize('delete point_vente');
         $pointsVente->delete();
 
         return redirect()->back()

@@ -11,12 +11,15 @@ use App\Models\Voyage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class TarifController
 {
+    use AuthorizesRequests;
     // Liste des tarifs
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny tarif');
         $filters = $request->only(['search', 'gare_depart_id', 'gare_arrivee_id', 'classe_id']);
 
         $tarifs = TarifsGare::with(['voyage', 'classeWagon'])
@@ -63,6 +66,7 @@ class TarifController
     // Formulaire de création
     public function create(): Response
     {
+        $this->authorize('create tarif');
         return Inertia::render('Tarifs/Create', [
             'voyages' => Voyage::all(),
             'gares' => Gare::all(),
@@ -73,6 +77,7 @@ class TarifController
     // Enregistrement d'un nouveau tarif
     public function store(Request $request)
     {
+        $this->authorize('create tarif');
         $validated = $request->validate([
             'voyage_id' => 'nullable|exists:voyages,id',
             'classe_wagon_id' => 'required|exists:classes_wagon,id',
@@ -91,6 +96,7 @@ class TarifController
     // Formulaire d'édition
     public function edit(TarifsGare $tarif): Response
     {
+        $this->authorize('update tarif');
         return Inertia::render('Tarifs/Edit', [
             'tarif' => $tarif->load(['voyage']),
             'voyages' => Voyage::all(),
@@ -102,6 +108,7 @@ class TarifController
     // Mise à jour d'un tarif
     public function update(Request $request, TarifsGare $tarif)
     {
+        $this->authorize('update tarif');
         $validated = $request->validate([
             'voyage_id' => 'nullable|exists:voyages,id',
             'classe_wagon_id' => 'required|exists:classes_wagon,id',
@@ -119,6 +126,7 @@ class TarifController
     // Suppression d'un tarif
     public function destroy(Tarif $tarif)
     {
+        $this->authorize('delete tarif');
         $tarif->delete();
 
         return redirect()->route('tarif.index')

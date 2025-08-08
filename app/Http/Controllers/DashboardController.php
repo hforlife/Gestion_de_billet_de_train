@@ -12,14 +12,17 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Carbon\Carbon;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class DashboardController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
     public function index(): Response
     {
+        $this->authorize('viewAny dashboard');
         // Total des entités
         $ticketsCount = Vente::count();
         $revenusTotaux = Vente::sum('prix');

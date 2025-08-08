@@ -26,9 +26,9 @@ Route::get('/', function () {
 });
 
 // Routes communes à tous les utilisateurs authentifiés
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('can:viewAny dashboard');
 
+Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [UserController::class, 'profile'])
         ->name('user.profile');
 });

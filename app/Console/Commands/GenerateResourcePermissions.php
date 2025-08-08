@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Gares\ArretController;
 use App\Http\Controllers\Gares\GareController;
 use App\Http\Controllers\Gares\LigneController;
+use App\Http\Controllers\ParametreController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\Trains\TrainController;
@@ -61,6 +62,7 @@ class GenerateResourcePermissions extends Command
             PointVenteController::class,
             TarifController::class,
             DashboardController::class,
+            ParametreController::class,
         ];
 
         // Actions de base CRUD (peuvent être étendues)

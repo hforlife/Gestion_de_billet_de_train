@@ -11,23 +11,23 @@ use App\Models\ModesPaiement;
 use App\Models\Place;
 use App\Models\PointsVente;
 use App\Models\SystemSetting;
-use App\Policies\VentePolicy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Exception;
-use SalePriceCalculator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class VenteController
 {
+    use AuthorizesRequests;
     public function index(Request $request)
     {
+        $this->authorize('viewAny vente');
         $search = trim($request->input('search'));
         $voyageId = $request->input('voyage_id');
 
@@ -50,6 +50,7 @@ class VenteController
 
     public function create()
     {
+        $this->authorize('create vente');
         $systemSettings = SystemSetting::first(); // ou via singleton
         if ($systemSettings?->mode_vente === 'par_kilometrage') {
             return redirect()->route('vente.create.kilometrage');
@@ -59,6 +60,8 @@ class VenteController
 
     public function createPredefined()
     {
+        $this->authorize('create vente');
+        $this->authorize('create vente_predefined');
         $voyages = Voyage::with([
             'ligne.arrets.gare',
             'train.wagons.classeWagon', // Correction du nom de la relation
@@ -91,6 +94,8 @@ class VenteController
 
     public function createKilometrage()
     {
+        $this->authorize('create vente');
+        $this->authorize('create vente_kilometrage');
         $voyages = Voyage::with([
             'ligne.arrets.gare',
             'train.wagons.classeWagon',
@@ -117,6 +122,7 @@ class VenteController
 
     public function store(Request $request)
     {
+        $this->authorize('create vente');
         // Validation des données
         $validated = $request->validate([
             'client_nom' => 'required|string|max:255',
@@ -245,6 +251,7 @@ class VenteController
 
     public function show(Vente $vente)
     {
+        $this->authorize('view vente');
         $vente->load([
             'voyage.ligne.gareDepart',
             'voyage.ligne.gareArrivee',
@@ -262,6 +269,7 @@ class VenteController
 
     public function destroy(Vente $vente)
     {
+        $this->authorize('delete vente');
         DB::transaction(function () use ($vente) {
             // Si des items liés existent
             if (method_exists($vente, 'items')) {

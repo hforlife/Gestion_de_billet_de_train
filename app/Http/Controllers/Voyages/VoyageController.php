@@ -10,11 +10,14 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class VoyageController
 {
+    use AuthorizesRequests;
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny voyage');
         $filters = $request->only('search');
 
         $voyages = Voyage::with([
@@ -44,6 +47,7 @@ class VoyageController
 
     public function create(): Response
     {
+        $this->authorize('create voyage');
         return Inertia::render('Voyages/Create', [
             'trains' => Train::select('id', 'numero')->get(),
             'lignes' => Ligne::with(['arrets.gare'])->get(),
@@ -75,6 +79,7 @@ class VoyageController
 
     public function store(Request $request)
     {
+        $this->authorize('create voyage');
         $data = $request->validate([
             'nom' => 'required|string|max:255',
             'numero_voyage' => 'required|string|unique:voyages,numero_voyage',
@@ -101,6 +106,7 @@ class VoyageController
 
     public function edit(Voyage $voyage): Response
     {
+        $this->authorize('update voyage');
         return Inertia::render('Voyages/Edit', [
             'voyage' => $voyage->load([
                 'ligne.arrets.gare',
@@ -114,6 +120,7 @@ class VoyageController
 
     public function update(Request $request, Voyage $voyage)
     {
+        $this->authorize('update voyage');
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'numero_voyage' => 'required|string|unique:voyages,numero_voyage',
@@ -131,6 +138,7 @@ class VoyageController
 
     public function destroy(Voyage $voyage)
     {
+        $this->authorize('delete voyage');
         $voyage->delete();
 
         return redirect()->route('voyage.index')->with('success', 'Voyage supprimé avec succès');

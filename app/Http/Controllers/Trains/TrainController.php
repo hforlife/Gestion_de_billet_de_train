@@ -7,12 +7,15 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Validation\Rule;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class TrainController
 {
+    use AuthorizesRequests;
     // Affichage de la liste des trains
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny train');
         $filters = $request->only('search');
 
         $trains = Train::orderBy('numero')
@@ -37,6 +40,7 @@ class TrainController
     // Formulaire de création
     public function create(): Response
     {
+        $this->authorize('create train');
         return Inertia::render('Trains/Create');
     }
 
@@ -58,6 +62,7 @@ class TrainController
     // Formulaire d’édition
     public function edit(string $id): Response
     {
+        $this->authorize('update train');
         $train = Train::findOrFail($id);
 
         return Inertia::render('Trains/Edit', [
@@ -68,6 +73,7 @@ class TrainController
     // Mise à jour d’un train
     public function update(Request $request, string $id)
     {
+        $this->authorize('update train');
         $train = Train::findOrFail($id);
 
         $validated = $request->validate([
@@ -90,6 +96,7 @@ class TrainController
     // Suppression d’un train
     public function destroy(string $id)
     {
+        $this->authorize('delete train');
         $train = Train::findOrFail($id);
         $train->delete();
 

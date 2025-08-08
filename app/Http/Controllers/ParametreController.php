@@ -7,11 +7,14 @@ use App\Models\Parametre;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ParametreController extends Controller
 {
+    use AuthorizesRequests;
     public function index(): Response
     {
+        $this->authorize('viewAny parametre');
         return Inertia::render('Setting/Parametre/Index', [
             'parametres' => Parametre::orderBy('poids_min')->get()->map(fn ($param) => [
                 'id' => $param->id,
@@ -34,6 +37,7 @@ class ParametreController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create parametre');
         $validated = $request->validate([
             'categorie_id' => ['required', 'exists:categorie_colis,id'],
             'poids_min' => ['required', 'numeric'],

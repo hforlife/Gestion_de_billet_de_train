@@ -8,12 +8,15 @@ use App\Models\Ligne;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ArretController
 {
+    use AuthorizesRequests;
     // Liste des arrêts
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny arret');
         $filters = $request->only(['search', 'ligne_id']);
 
         $arrets = ArretsLigne::with(['ligne', 'gare'])
@@ -53,6 +56,7 @@ class ArretController
     // Formulaire de création
     public function create(): Response
     {
+        $this->authorize('create arret');
         return Inertia::render('Arrets/Create', [
             'lignes' => Ligne::all(['id', 'nom']),
             'gares' => Gare::all(['id', 'nom']),
@@ -62,6 +66,7 @@ class ArretController
     // Enregistrement
     public function store(Request $request)
     {
+        $this->authorize('create arret');
         $validated = $request->validate([
             'ligne_id' => ['required', 'exists:lignes,id'],
             'gare_id' => ['required', 'exists:gares,id'],
@@ -85,6 +90,7 @@ class ArretController
     // Formulaire d'édition
     public function edit(ArretsLigne $arret): Response
     {
+        $this->authorize('update arret');
         return Inertia::render('Arrets/Edit', [
             'arret' => [
                 'id' => $arret->id,
@@ -102,6 +108,7 @@ class ArretController
     // Mise à jour
     public function update(Request $request, ArretsLigne $arret)
     {
+        $this->authorize('update arret');
         $validated = $request->validate([
             'ligne_id' => ['required', 'exists:lignes,id'],
             'gare_id' => ['required', 'exists:gares,id'],
@@ -119,6 +126,7 @@ class ArretController
     // Suppression
     public function destroy(ArretsLigne $arret)
     {
+        $this->authorize('delete arret');
         $arret->delete();
 
         // Réorganiser l'ordre des arrêts restants

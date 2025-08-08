@@ -8,12 +8,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ColisController
 {
+    use AuthorizesRequests;
     // Affichage de la liste des colis
     public function index(Request $request): Response
 {
+    $this->authorize('viewAny colis');
     $filters = $request->only('search');
 
     return Inertia::render('Colis/Index', [
@@ -41,6 +44,7 @@ class ColisController
     // Formulaire de création
     public function create(): Response
     {
+        $this->authorize('create colis');
         return Inertia::render('Colis/Create', [
             'categories' => CategorieColis::with('parametre')->get()->map(fn ($cat) => [
                 'id' => $cat->id,
@@ -57,6 +61,7 @@ class ColisController
     // Enregistrement du colis
     public function store(Request $request)
     {
+        $this->authorize('create colis');
         $validated = $request->validate([
             'user1' => ['required', 'string'],
             'user2' => ['required', 'string'],
@@ -74,6 +79,7 @@ class ColisController
     // Formulaire de modification
     public function edit(string $id): Response
     {
+        $this->authorize('update colis');
         $item = Colis::findOrFail($id);
 
         return Inertia::render('Colis/Edit', [
@@ -85,6 +91,7 @@ class ColisController
     // Mise à jour
     public function update(Request $request, int $id)
     {
+        $this->authorize('update colis');
         $validated = $request->validate([
             'user1' => ['required', 'string'],
             'user2' => ['required', 'string'],
@@ -103,6 +110,7 @@ class ColisController
     // Suppression
     public function destroy(Colis $colis)
     {
+        $this->authorize('delete colis');
         $colis->delete();
 
         return Redirect::back()->with('success', 'Suppression effectuée avec succès.');

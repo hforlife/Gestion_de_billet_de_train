@@ -7,9 +7,11 @@ use App\Models\ClassesWagon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ClasseController extends Controller
 {
+    use AuthorizesRequests;
      // Liste des ClassesWagons
     public function index(Request $request): Response
     {
