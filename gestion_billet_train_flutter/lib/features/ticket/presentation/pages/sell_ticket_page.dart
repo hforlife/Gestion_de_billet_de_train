@@ -19,7 +19,12 @@ class SellTicketPage extends StatefulWidget {
 class _SellTicketPageState extends State<SellTicketPage> {
   String? departureId;
   String? arrivalId;
+  String? paymentId;
+  String? classeId;
+  String? voyageId;
+  String? setting = "null";
   bool hasPenalty = false;
+  bool hasBaguage = false;
   double distance = 0.0;
   double price = 0.0;
   bool isCalculating = false;
@@ -30,6 +35,18 @@ class _SellTicketPageState extends State<SellTicketPage> {
   final List<Map<String, dynamic>> locations = [
     {'id': 'loc1', 'name': 'Gare A'},
     {'id': 'loc2', 'name': 'Gare B'},
+  ];
+  final List<Map<String, dynamic>> voyages = [
+    {'id': 'voy1', 'name': 'Bamako-kayes'},
+    {'id': 'voy2', 'name': 'Kouliko-Mopti'},
+  ];
+  final List<Map<String, dynamic>> paiement = [
+    {'id': 'pay1', 'name': 'Espece'},
+    {'id': 'pay2', 'name': 'Mobile Money'},
+  ];
+  final List<Map<String, dynamic>> classse = [
+    {'id': 'clas1', 'name': 'Prémière classe'},
+    {'id': 'clas2', 'name': 'Deuxième classe'},
   ];
 
   double calculateDistance(double lat1, lon1, double lat2, lon2) {
@@ -56,6 +73,9 @@ class _SellTicketPageState extends State<SellTicketPage> {
     setState(() => isCalculating = true);
     final departure = locations.firstWhere((loc) => loc['id'] == departureId);
     final arrival = locations.firstWhere((loc) => loc['id'] == arrivalId);
+    final voyage = voyages.firstWhere((voy) => voy['id'] == voyageId);
+    final paiment = paiement.firstWhere((pay) => pay['id'] == paymentId);
+    final classe = classse.firstWhere((clas) => clas['id'] == classeId);
     // Simuler des coordonnées (ajoutez-les dans locations si besoin)
     final calculatedDistance = calculateDistance(
       48.8566,
@@ -73,6 +93,9 @@ class _SellTicketPageState extends State<SellTicketPage> {
       soldTicket = {
         'departure': departure['name'],
         'arrival': arrival['name'],
+        'voyage': voyage['name'],
+        'paiement': paiment['name'],
+        'classse': classe['name'],
         'distance': distance,
         'price': price,
         'hasPenalty': hasPenalty,
@@ -628,7 +651,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.04),
+              SizedBox(height: THelperFunctions.screenHeight() * 0.03),
               Text(
                 'Nom du client',
                 style: Theme.of(context).textTheme.labelMedium!.copyWith(
@@ -654,9 +677,9 @@ class _SellTicketPageState extends State<SellTicketPage> {
                   ),
                 ),
               ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.03),
+              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
               Text(
-                'Gare départ',
+                'Voyage',
                 style: Theme.of(context).textTheme.labelMedium!.copyWith(
                   color: TColors.primary,
                   fontSize: TSizes.md,
@@ -664,8 +687,8 @@ class _SellTicketPageState extends State<SellTicketPage> {
               ),
               SizedBox(height: THelperFunctions.screenHeight() * 0.01),
               DropdownButtonFormField<String>(
-                hint: const Text('Sélectionnez une gare'),
-                value: departureId,
+                hint: const Text('Sélectionnez un voyage'),
+                value: voyageId,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -680,49 +703,190 @@ class _SellTicketPageState extends State<SellTicketPage> {
                   ),
                 ),
                 icon: const Icon(Iconsax.arrow_down_1),
-                items: locations.map((loc) {
+                items: voyages.map((voy) {
                   return DropdownMenuItem<String>(
-                    value: loc['id'],
-                    child: Text(loc['name']),
+                    value: voy['id'],
+                    child: Text(voy['name']),
                   );
                 }).toList(),
-                onChanged: (value) => setState(() => departureId = value),
+                onChanged: (value) => setState(() => voyageId = value),
               ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.03),
-              Text(
-                "Gare d'arrivée",
-                style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                  color: TColors.primary,
-                  fontSize: TSizes.md,
-                ),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-              DropdownButtonFormField<String>(
-                hint: const Text('Sélectionnez une gare'),
-                value: arrivalId,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: TColors.grey),
+              if (setting == "par_kilometrage") ...[
+                SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                Text(
+                  'Gare départ',
+                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                    color: TColors.primary,
+                    fontSize: TSizes.md,
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: TColors.grey,
-                      width: 2.0,
+                ),
+                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                DropdownButtonFormField<String>(
+                  hint: const Text('Sélectionnez une gare'),
+                  value: departureId,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: TColors.grey),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: TColors.grey,
+                        width: 2.0,
+                      ),
                     ),
                   ),
+                  icon: const Icon(Iconsax.arrow_down_1),
+                  items: locations.map((loc) {
+                    return DropdownMenuItem<String>(
+                      value: loc['id'],
+                      child: Text(loc['name']),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => departureId = value),
                 ),
-                icon: const Icon(Iconsax.arrow_down_1),
+                SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                Text(
+                  "Gare d'arrivée",
+                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                    color: TColors.primary,
+                    fontSize: TSizes.md,
+                  ),
+                ),
+                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                DropdownButtonFormField<String>(
+                  hint: const Text('Sélectionnez une gare'),
+                  value: arrivalId,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: TColors.grey),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: TColors.grey,
+                        width: 2.0,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Iconsax.arrow_down_1),
 
-                items: locations.map((loc) {
+                  items: locations.map((loc) {
+                    return DropdownMenuItem<String>(
+                      value: loc['id'],
+                      child: Text(loc['name']),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => arrivalId = value),
+                ),
+                SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                Text(
+                  'Gare départ',
+                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                    color: TColors.primary,
+                    fontSize: TSizes.md,
+                  ),
+                ),
+                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                DropdownButtonFormField<String>(
+                  hint: const Text('Sélectionnez une gare'),
+                  value: departureId,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: TColors.grey),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: TColors.grey,
+                        width: 2.0,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Iconsax.arrow_down_1),
+                  items: locations.map((loc) {
+                    return DropdownMenuItem<String>(
+                      value: loc['id'],
+                      child: Text(loc['name']),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => departureId = value),
+                ),
+                SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                Text(
+                  "Gare d'arrivée",
+                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                    color: TColors.primary,
+                    fontSize: TSizes.md,
+                  ),
+                ),
+                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                DropdownButtonFormField<String>(
+                  hint: const Text('Sélectionnez une gare'),
+                  value: arrivalId,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: TColors.grey),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: TColors.grey,
+                        width: 2.0,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Iconsax.arrow_down_1),
+
+                  items: locations.map((loc) {
+                    return DropdownMenuItem<String>(
+                      value: loc['id'],
+                      child: Text(loc['name']),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => arrivalId = value),
+                ),
+              ],
+
+              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+              Text(
+                'Classe',
+                style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                  color: TColors.primary,
+                  fontSize: TSizes.md,
+                ),
+              ),
+              SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+              DropdownButtonFormField<String>(
+                hint: const Text('Sélectionnez une classe'),
+                value: classeId,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: TColors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: TColors.grey,
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+                icon: const Icon(Iconsax.arrow_down_1),
+                items: classse.map((clas) {
                   return DropdownMenuItem<String>(
-                    value: loc['id'],
-                    child: Text(loc['name']),
+                    value: clas['id'],
+                    child: Text(clas['name']),
                   );
                 }).toList(),
-                onChanged: (value) => setState(() => arrivalId = value),
+                onChanged: (value) => setState(() => classeId = value),
               ),
+              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
               if (departureId != null &&
                   arrivalId != null &&
                   departureId == arrivalId)
@@ -730,7 +894,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
                   'Les gares ne peuvent pas être identiques',
                   style: TextStyle(color: Colors.red),
                 ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.03),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -808,6 +971,40 @@ class _SellTicketPageState extends State<SellTicketPage> {
                 ],
               ),
               SizedBox(height: THelperFunctions.screenHeight() * 0.03),
+              Text(
+                'Méthode de paiment',
+                style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                  color: TColors.primary,
+                  fontSize: TSizes.md,
+                ),
+              ),
+              SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+              DropdownButtonFormField<String>(
+                hint: const Text('Sélectionnez une méthode'),
+                value: paymentId,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: TColors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: TColors.grey,
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+                icon: const Icon(Iconsax.arrow_down_1),
+                items: paiement.map((pay) {
+                  return DropdownMenuItem<String>(
+                    value: pay['id'],
+                    child: Text(pay['name']),
+                  );
+                }).toList(),
+                onChanged: (value) => setState(() => paymentId = value),
+              ),
+              SizedBox(height: THelperFunctions.screenHeight() * 0.03),
               Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: THelperFunctions.screenWidth() * 0.02,
@@ -835,6 +1032,63 @@ class _SellTicketPageState extends State<SellTicketPage> {
                   ],
                 ),
               ),
+              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: THelperFunctions.screenWidth() * 0.02,
+                  vertical: THelperFunctions.screenHeight() * 0.005,
+                ), // optionnel
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: TColors.grey, // 💙 Couleur de la bordure
+                    width: 2, // 🌟 Épaisseur de la bordure
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        SizedBox(width: THelperFunctions.screenWidth() * 0.02),
+                        Icon(Iconsax.bag_25),
+                        Text(
+                          "Baguage",
+                          style: GoogleFonts.roboto(
+                            fontSize: TSizes.fontSizeMd,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Switch(
+                      value: hasBaguage,
+                      onChanged: (value) => setState(() => hasBaguage = value),
+                      activeColor: AppColors.primary,
+                    ),
+                  ],
+                ),
+              ),
+              if (hasBaguage == true) ...[
+                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                TextFormField(
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Iconsax.weight),
+                    labelText: TTexts.baguage,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF6B8DC8)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: TColors.primary,
+                        width: 2.0,
+                      ),
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
               SizedBox(height: THelperFunctions.screenHeight() * 0.02),
               if (isFormValid) ...[
                 SizedBox(

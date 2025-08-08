@@ -9,7 +9,7 @@ abstract class AuthRemoteDataSource {
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   static const String _baseUrl =
-      'http://192.168.101.189:8000/api'; // Remplacez par votre URL
+      'http://10.47.158.189:8000/api'; // Remplacez par votre URL
 
   @override
   Future<UserModel> login(String username, String password) async {

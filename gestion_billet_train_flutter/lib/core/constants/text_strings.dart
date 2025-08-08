@@ -4,6 +4,7 @@ class TTexts {
   static const String password = "Mot de passe";
   static const String emailUserName = "Nom d'utilisateur";
   static const String nomClient = "Entrez le nom du client";
+  static const String baguage = "Entrez le poids";
   static const String numPlace = "Ex: 12A";
   static const String quantite = "1";
   static const String loginWord = "Accédez à votre espace de gestion";
