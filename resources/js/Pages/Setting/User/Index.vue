@@ -91,6 +91,7 @@ const sortBy = (column) => {
     console.log("Trier par:", column);
 };
 </script>
+
 <template>
     <AppLayout>
         <!-- En-tête de page -->
@@ -170,7 +171,7 @@ const sortBy = (column) => {
                                     <th class="column-email">Email</th>
                                     <th class="column-roles">Rôles</th>
                                     <th class="column-status">Statut</th>
-                                    <th class="column-actions">Actions</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -213,35 +214,34 @@ const sortBy = (column) => {
                                             >Actif</span
                                         >
                                     </td>
-                                    <td class="column-actions">
+                                    <td>
                                         <div class="action-buttons">
                                             <button
                                                 @click="editUsers(user.id)"
                                                 class="btn-action btn-edit"
-                                                title="Modifier"
                                             >
-                                                <i class="fas fa-edit"></i>
+                                                <Pencil size="16" />
                                             </button>
                                             <button
                                                 @click="deleteUsers(user.id)"
                                                 class="btn-action btn-delete"
-                                                title="Supprimer"
                                             >
-                                                <i class="fas fa-trash-alt"></i>
+                                                <Trash size="16" />
                                             </button>
                                             <button
                                                 @click="viewUser(user.id)"
                                                 class="btn-action btn-view"
-                                                title="Voir profil"
                                             >
-                                                <i class="fas fa-eye"></i>
+                                                <Eye size="16" />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                                 <tr v-if="users.data.length === 0">
-                                    <td colspan="6" class="no-results">
-                                        <i class="fas fa-user-slash"></i>
+                                    <td
+                                        colspan="8"
+                                        class="text-center py-4 text-muted"
+                                    >
                                         Aucun utilisateur trouvé
                                     </td>
                                 </tr>
@@ -250,35 +250,36 @@ const sortBy = (column) => {
                     </div>
                 </div>
 
-                <!-- Pagination -->
+                <!-- 📄 Pagination -->
                 <div class="table-footer">
                     <div class="pagination-info">
-                        Affichage de {{ users.from }} à {{ users.to }} sur
-                        {{ users.total }} entrées
+                        <p class="text-muted">
+                            Affichage de {{ users.from }} à {{ users.to }} sur
+                            {{ users.total }} utilisateurs
+                        </p>
                     </div>
+
                     <div class="pagination-controls">
-                         <nav class="mt-4">
-                            <ul class="pagination-controls">
+                        <nav class="float-end">
+                            <ul class="pagination">
                                 <li
                                     v-for="link in users.links"
                                     :key="link.label"
-                                    :class="[
-                                        'page-item',
-                                        {
-                                            active: link.active,
-                                            disabled: !link.url,
-                                        },
-                                    ]"
+                                    class="page-item"
+                                    :class="{
+                                        active: link.active,
+                                        disabled: !link.url,
+                                    }"
                                 >
                                     <Link
                                         v-if="link.url"
-                                        class="pagination-link"
                                         :href="link.url"
+                                        class="page-link"
                                         v-html="link.label"
                                     />
                                     <span
                                         v-else
-                                        class="pagination-link disabled"
+                                        class="page-link"
                                         v-html="link.label"
                                     ></span>
                                 </li>
@@ -286,7 +287,7 @@ const sortBy = (column) => {
                         </nav>
                     </div>
                 </div>
-                
+                <!-- Fin Pagination -->
             </div>
         </div>
     </AppLayout>

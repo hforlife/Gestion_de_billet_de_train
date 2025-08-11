@@ -135,9 +135,9 @@ const deleteLigne = (id) => {
                             <tr v-for="(ligne, index) in lignes.data" :key="ligne.id">
                                 <td class="column-id">{{ index + 1 }}</td>
                                 <td class="line-name">{{ ligne.nom }}</td>
-                                <td class="departure-station">{{ ligne.gare_depart }}</td>
-                                <td class="arrival-station">{{ ligne.gare_arrivee }}</td>
-                                <td class="text-end distance">{{ ligne.distance_totale }} km</td>
+                                <td class="arrival-station">{{ ligne.gare_depart }}</td>
+                                <td class="departure-station">{{ ligne.gare_arrivee }}</td>
+                                <td class="text-end distance">{{ ligne.distance_totale }}</td>
                                 <td class="text-center">
                                     <div class="action-buttons">
                                         <button
@@ -167,25 +167,40 @@ const deleteLigne = (id) => {
                     </table>
                 </div>
 
-                <!-- Pagination améliorée -->
+                <!-- Pagination -->
                 <div class="table-footer">
                     <div class="pagination-info">
-                        Affichage de {{ lignes.from }} à {{ lignes.to }} sur {{ lignes.total }} lignes
+                        <p class="text-muted">
+                            Affichage de {{ lignes.from }} à {{ lignes.to }} sur
+                            {{ lignes.total }} lignes férroviaires
+                        </p>
                     </div>
                     <div class="pagination-controls">
-                        <Link
-                            v-for="link in lignes.links"
-                            :key="link.label"
-                            class="pagination-link"
-                            :class="{
-                                'active': link.active,
-                                'disabled': !link.url,
-                                'prev-next': link.label.includes('Previous') || link.label.includes('Next')
-                            }"
-                            v-html="link.label"
-                        />
+                        <nav class="float-end">
+                            <ul class="pagination">
+                                <li
+                                    v-for="link in lignes.links"
+                                    :key="link.label"
+                                    class="page-item"
+                                >
+                                    <Link
+                                        v-if="link.url"
+                                        :href="link.url"
+                                        class="page-link"
+                                        v-html="link.label"
+                                    />
+                                    <span
+                                        v-else
+                                        class="page-link"
+                                        v-html="link.label"
+                                    ></span>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
+                <!-- Fin pagination -->
+                 
             </div>
         </div>
     </AppLayout>

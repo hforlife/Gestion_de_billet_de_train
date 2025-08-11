@@ -68,125 +68,191 @@ const deleteArret = (id) => {
 <template>
     <AppLayout>
         <!-- En-tête -->
-        <div class="row page-title-header">
-            <div class="col-12">
-                <div class="page-header">
-                    <h4 class="page-title">Gestion des Arrêts</h4>
-                    <div class="quick-link-wrapper w-100 d-md-flex flex-md-wrap">
-                        <ul class="quick-links ml-auto">
-                            <li><Link :href="route('dashboard')">Tableau de bord</Link></li>
-                            <li>Arrêts</li>
-                        </ul>
-                    </div>
+        <div class="sales-header">
+            <div class="header-content">
+                <div class="header-title-wrapper">
+                    <h1 class="page-title">Gestion des Arrêts</h1>
+                    <Link :href="route('create')" class="btn-create">
+                        <Plus size="16" class="me-1" />
+                        Nouveaux Arrêts
+                    </Link>
+                </div>
+                <div class="breadcrumb-wrapper">
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <Link :href="route('dashboard')"
+                                >Tableau de bord</Link
+                            >
+                            <span class="breadcrumb-divider">/</span>
+                        </li>
+                        <li class="breadcrumb-item active">Arrêts</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Filtres -->
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label>Ligne</label>
-                    <select v-model="filters.ligne_id" class="form-control">
-                        <option value="">Toutes les lignes</option>
-                        <option v-for="ligne in lignes" :key="ligne.id" :value="ligne.id">
+        <div class="sales-container">
+            <!-- Filtres améliorés -->
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label class="filter-label">Filtrer par lignes</label>
+                    <select
+                        v-model="filters.voyage_id"
+                        class="filter-select"
+                        aria-label="Filtrer par lignes"
+                    >
+                        <option value="" selected>Toutes les lignes</option>
+                        <option
+                            v-for="ligne in lignes"
+                            :key="ligne.id"
+                            :value="ligne.id"
+                        >
                             {{ ligne.nom }}
                         </option>
                     </select>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label>Recherche</label>
-                    <input
-                        v-model="filters.search"
-                        type="text"
-                        class="form-control"
-                        placeholder="Rechercher par gare..."
-                    />
-                </div>
-            </div>
-        </div>
 
-        <!-- Tableau -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 class="card-title mb-0">Liste des Arrêts</h4>
-                            <Link :href="route('arret.create')" class="btn btn-primary btn-icon-text">
-                                <Plus size="16" class="me-1" />
-                                Nouvel Arrêt
-                            </Link>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Ligne</th>
-                                        <th>Gare</th>
-                                        <th>Distance (km)</th>
-                                        <th>Ordre</th>
-                                        <th>Vente en train</th>
-                                        <th class="text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="(arret, index) in arrets.data" :key="arret.id">
-                                        <td>{{ arrets.from + index }}</td>
-                                        <td>{{ arret.ligne.nom }}</td>
-                                        <td>{{ arret.gare.nom }}</td>
-                                        <td>{{ arret.distance_depart }} km</td>
-                                        <td>{{ arret.ordre }}</td>
-                                        <td>
-                                            <span :class="arret.vente_chef_train ? 'text-success' : 'text-danger'">
-                                                {{ arret.vente_chef_train ? 'Oui' : 'Non' }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="btn-group btn-group-sm">
-                                                <button @click="editArret(arret.id)" class="btn btn-warning">
-                                                    <Pencil size="14" />
-                                                </button>
-                                                <button @click="deleteArret(arret.id)" class="btn btn-danger">
-                                                    <Trash size="14" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="arrets.data.length === 0">
-                                        <td colspan="7" class="text-center py-4 text-muted">
-                                            Aucun arrêt trouvé
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <p class="text-muted">
-                                    Affichage de {{ arrets.from }} à {{ arrets.to }} sur {{ arrets.total }} arrêts
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <nav class="float-end">
-                                    <ul class="pagination">
-                                        <li v-for="link in arrets.links" :key="link.label"
-                                            class="page-item" :class="{ active: link.active, disabled: !link.url }">
-                                            <Link v-if="link.url" :href="link.url" class="page-link" v-html="link.label" />
-                                            <span v-else class="page-link" v-html="link.label"></span>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
+                <div class="filter-group search-group">
+                    <label class="filter-label">Rechercher</label>
+                    <div class="search-box">
+                        <input
+                            type="text"
+                            v-model="filters.search"
+                            placeholder="Rechercher par gares..."
+                            class="search-input"
+                            aria-label="Rechercher des arrets"
+                            @keyup.enter="
+                                router.get(route('arret.index'), filters)
+                            "
+                        />
+                        <button
+                            class="search-btn"
+                            @click="router.get(route('arret.index'), filters)"
+                            aria-label="Lancer la recherche"
+                        >
+                            <i class="mdi mdi-magnify"></i>
+                        </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Carte du tableau -->
+            <div class="sales-card">
+                <div class="table-header">
+                    <h3 class="table-title">Liste des Arrêts</h3>
+                    <Link
+                        :href="route('create')"
+                        class="btn-create-sm"
+                        aria-label="Créer une nouvelle vente"
+                    >
+                        <Plus size="16" class="me-1" />
+                        Nouvel Arret
+                    </Link>
+                </div>
+                <div class="table-responsive">
+                    <table class="sales-table" aria-label="Liste des arrets">
+                        <thead>
+                            <tr>
+                                <th class="column-id">#</th>
+                                <th>Ligne</th>
+                                <th>Gare</th>
+                                <th>Distance (km)</th>
+                                <th>Ordre</th>
+                                <th>Vente en train</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="(arret, index) in arrets.data"
+                                :key="arret.id"
+                            >
+                                <td>{{ arrets.from + index }}</td>
+                                <td>{{ arret.ligne.nom }}</td>
+                                <td>{{ arret.gare.nom }}</td>
+                                <td>{{ arret.distance_depart }} km</td>
+                                <td>{{ arret.ordre }}</td>
+                                <td>
+                                    <span
+                                        :class="
+                                            arret.vente_chef_train
+                                                ? 'text-success'
+                                                : 'text-danger'
+                                        "
+                                    >
+                                        {{
+                                            arret.vente_chef_train
+                                                ? "Oui"
+                                                : "Non"
+                                        }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button
+                                            @click="editArret(arret.id)"
+                                            class="btn-action btn-edit"
+                                        >
+                                            <Pencil size="14" />
+                                        </button>
+                                        <button
+                                            @click="deleteArret(arret.id)"
+                                            class="btn-action btn-delete"
+                                        >
+                                            <Trash size="14" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="arrets.data.length === 0">
+                                <td
+                                    colspan="7"
+                                    class="text-center py-4 text-muted"
+                                >
+                                    Aucun arrêt trouvé
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="table-footer">
+                    <div class="pagination-info">
+                        <p class="text-muted">
+                            Affichage de {{ arrets.from }} à {{ arrets.to }} sur
+                            {{ arrets.total }} arrets
+                        </p>
+                    </div>
+                    <div class="pagination-controls">
+                        <nav class="float-end">
+                            <ul class="pagination">
+                                <li
+                                    v-for="link in arrets.links"
+                                    :key="link.label"
+                                    class="page-item"
+                                    :class="{
+                                        active: link.active,
+                                        disabled: !link.url,
+                                    }"
+                                >
+                                    <Link
+                                        v-if="link.url"
+                                        :href="link.url"
+                                        class="page-link"
+                                        v-html="link.label"
+                                    />
+                                    <span
+                                        v-else
+                                        class="page-link"
+                                        v-html="link.label"
+                                    ></span>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                <!-- Fin pagination -->
             </div>
         </div>
     </AppLayout>
@@ -194,7 +260,7 @@ const deleteArret = (id) => {
 
 <style scoped>
 /* Style général */
-.users-header {
+.sales-header {
     background-color: #f8f9fa;
     padding: 1.5rem 2rem;
     border-bottom: 1px solid #e1e5eb;
@@ -259,52 +325,74 @@ const deleteArret = (id) => {
     margin: 0 0.5rem;
 }
 
-.users-container {
+.sales-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 1.5rem;
 }
 
-/* Carte principale */
-.users-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e1e5eb;
-    overflow: hidden;
-    margin-bottom: 2rem;
-}
-
-/* En-tête du tableau */
-.table-header {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
-    background-color: #f9fafb;
+/* Filtres */
+.filters-container {
     display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
-    gap: 1rem;
 }
 
-/* Barre de recherche */
+.filter-group {
+    flex: 1;
+    min-width: 250px;
+}
+
+.filter-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e1e5eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background-color: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.filter-select:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.15);
+    outline: none;
+}
+
+.search-group {
+    flex: 2;
+}
+
 .search-box {
     position: relative;
-    min-width: 250px;
 }
 
 .search-input {
     width: 100%;
-    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    padding: 0.75rem 1rem 0.75rem 3rem;
     border: 1px solid #e1e5eb;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    font-size: 1rem;
     transition: all 0.2s;
 }
 
 .search-input:focus {
     border-color: #4a6cf7;
-    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.15);
     outline: none;
 }
 
@@ -313,7 +401,7 @@ const deleteArret = (id) => {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 2.5rem;
+    width: 3rem;
     background: transparent;
     border: none;
     color: #6c757d;
@@ -323,17 +411,72 @@ const deleteArret = (id) => {
     justify-content: center;
 }
 
+/* Carte du tableau */
+.sales-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e1e5eb;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.table-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Boutons */
+.btn-create,
+.btn-create-sm {
+    background-color: #4a6cf7;
+    border: none;
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-create-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-create:hover,
+.btn-create-sm:hover {
+    background-color: #3a5ce4;
+    transform: translateY(-1px);
+}
+
 /* Tableau */
-.users-table {
+.sales-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.users-table thead {
+.sales-table thead {
     background-color: #f8f9fa;
 }
 
-.users-table th {
+.sales-table th {
     padding: 1rem 1.25rem;
     text-align: left;
     font-weight: 600;
@@ -344,17 +487,33 @@ const deleteArret = (id) => {
     border-bottom: 1px solid #e1e5eb;
 }
 
-.users-table td {
+.sales-table th.text-center {
+    text-align: center;
+}
+
+.sales-table th.text-end {
+    text-align: right;
+}
+
+.sales-table td {
     padding: 1rem 1.25rem;
     border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
 }
 
-.users-table tr:last-child td {
+.sales-table td.text-center {
+    text-align: center;
+}
+
+.sales-table td.text-end {
+    text-align: right;
+}
+
+.sales-table tr:last-child td {
     border-bottom: none;
 }
 
-.users-table tr:hover td {
+.sales-table tr:hover td {
     background-color: #f9fafb;
 }
 
@@ -363,27 +522,54 @@ const deleteArret = (id) => {
     width: 60px;
     color: #6c757d;
     font-weight: 500;
+    text-align: center;
 }
 
-.column-name {
+.client-name {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.voyage-info {
+    min-width: 200px;
+}
+
+.voyage-name {
+    font-weight: 500;
+}
+
+.voyage-date {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.train-number {
+    font-family: monospace;
+    font-size: 1.1rem;
+}
+
+.price,
+.quantity,
+.weight {
+    font-family: monospace;
     font-weight: 500;
 }
 
 /* Badges de statut */
 .status-badge {
-    padding: 0.25rem 0.75rem;
+    padding: 0.35rem 0.75rem;
     border-radius: 50px;
     font-size: 0.8rem;
     font-weight: 500;
     display: inline-block;
 }
 
-.status-badge.active {
+.status-badge.yes {
     background-color: #e6f7ff;
     color: #1890ff;
 }
 
-.status-badge.inactive {
+.status-badge.no {
     background-color: #fff2f0;
     color: #ff4d4f;
 }
@@ -391,13 +577,14 @@ const deleteArret = (id) => {
 /* Boutons d'action */
 .action-buttons {
     display: flex;
+    justify-content: center;
     gap: 0.5rem;
 }
 
 .btn-action {
     width: 32px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: none;
     background-color: transparent;
     cursor: pointer;
@@ -409,6 +596,15 @@ const deleteArret = (id) => {
 
 .btn-action:hover {
     transform: scale(1.1);
+}
+
+.btn-view {
+    color: #4a6cf7;
+    background-color: rgba(74, 108, 247, 0.1);
+}
+
+.btn-view:hover {
+    background-color: rgba(74, 108, 247, 0.2);
 }
 
 .btn-edit {
@@ -467,7 +663,7 @@ const deleteArret = (id) => {
 
 .pagination-link {
     padding: 0.5rem 0.75rem;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 1px solid #e1e5eb;
     color: #495057;
     text-decoration: none;
@@ -498,50 +694,43 @@ const deleteArret = (id) => {
     font-weight: bold;
 }
 
-/* Boutons */
-.btn-create-user {
-    background-color: #4a6cf7;
-    border: none;
-    color: white;
-    padding: 0.5rem 1.25rem;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-create-user:hover {
-    background-color: #3a5ce4;
-    transform: translateY(-1px);
-}
-
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
+    .filters-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .filter-group,
+    .search-group {
+        min-width: 100%;
+    }
+
+    .sales-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
     .header-title-wrapper {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
 
-    .table-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .search-box {
-        width: 100%;
-    }
-
     .table-footer {
         flex-direction: column;
     }
+}
 
-    .users-table {
-        display: block;
-        overflow-x: auto;
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        width: 100%;
     }
 }
 </style>

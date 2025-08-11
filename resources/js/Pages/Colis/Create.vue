@@ -61,167 +61,459 @@ const submit = () => {
 
 <template>
     <AppLayout>
-        <!-- Titre -->
-        <div class="row page-title-header">
-            <div class="col-12">
-                <div class="page-header">
-                    <h4 class="page-title">Gestion des Colis</h4>
+        <!-- En-tête de page -->
+        <div class="form-header">
+            <div class="header-content">
+                <div class="header-title-wrapper">
+                    <h1 class="page-title">Gestion des Colis</h1>
+                    <nav class="breadcrumb-wrapper">
+                        <ol class="breadcrumb">
+                            <li>
+                                <a href="#" class="breadcrumb-item">Accueil</a>
+                                <span class="breadcrumb-divider">/</span>
+                            </li>
+                            <li>
+                                <a href="#" class="breadcrumb-item">Colis</a>
+                                <span class="breadcrumb-divider">/</span>
+                            </li>
+                            <li>
+                                <span class="breadcrumb-item active">Nouveau colis</span>
+                            </li>
+                        </ol>
+                    </nav>
                 </div>
             </div>
         </div>
-        <!-- Fin Titre -->
 
         <!-- Formulaire -->
-        <div class="row flex-grow">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Formulaire Colis</h4>
-                        <form class="forms-sample" @submit.prevent="submit">
-                            <div class="form-group">
-                                <label for="user1">Nom de l'expéditeur</label>
-                                <input
-                                    type="text"
-                                    id="user1"
-                                    class="form-control"
-                                    v-model="form.user1"
-                                    placeholder="Entrer Nom de l'Expéditeur"
-                                />
-                                <div
-                                    v-if="form.errors.user1"
-                                    v-text="form.errors.user1"
-                                    class="text-danger"
-                                ></div>
+        <div class="form-container">
+            <div class="form-card">
+                <div class="creation-form">
+                    <h2 class="section-title">
+                        <i class="mdi mdi-package-variant-closed"></i>
+                        Formulaire Colis
+                    </h2>
+
+                    <form @submit.prevent="submit">
+                        <div class="form-grid">
+                            <!-- Expéditeur -->
+                            <div class="form-section">
+                                <div class="form-group">
+                                    <label for="user1" class="form-label required">Nom de l'expéditeur</label>
+                                    <input
+                                        type="text"
+                                        class="form-input"
+                                        :class="{ 'is-invalid': form.errors.user1 }"
+                                        id="user1"
+                                        v-model="form.user1"
+                                        placeholder="Entrer le nom complet"
+                                    />
+                                    <div v-if="form.errors.user1" class="form-error">
+                                        {{ form.errors.user1 }}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="user2">Nom du destinataire</label>
-                                <input
-                                    type="text"
-                                    id="user2"
-                                    class="form-control"
-                                    v-model="form.user2"
-                                    placeholder="Entrer Nom du Destinataire"
-                                />
-                                <div
-                                    v-if="form.errors.user2"
-                                    v-text="form.errors.user2"
-                                    class="text-danger"
-                                ></div>
+                            <!-- Destinataire -->
+                            <div class="form-section">
+                                <div class="form-group">
+                                    <label for="user2" class="form-label required">Nom du destinataire</label>
+                                    <input
+                                        type="text"
+                                        class="form-input"
+                                        :class="{ 'is-invalid': form.errors.user2 }"
+                                        id="user2"
+                                        v-model="form.user2"
+                                        placeholder="Entrer le nom complet"
+                                    />
+                                    <div v-if="form.errors.user2" class="form-error">
+                                        {{ form.errors.user2 }}
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Catégorie de colis -->
-                            <div class="form-group">
-                                <label for="categorie">Catégorie</label>
-                                <select
-                                    v-model="form.categorie_colis_id"
-                                    class="form-control"
-                                >
-                                    <option value="" disabled>
-                                        -- Sélectionner une catégorie --
-                                    </option>
-                                    <option
-                                        v-for="cat in categories"
-                                        :key="cat.id"
-                                        :value="cat.id"
+                            <!-- Catégorie -->
+                            <div class="form-section">
+                                <div class="form-group">
+                                    <label for="categorie" class="form-label required">Catégorie</label>
+                                    <select
+                                        class="form-select"
+                                        :class="{ 'is-invalid': form.errors.categorie_colis_id }"
+                                        v-model="form.categorie_colis_id"
                                     >
-                                        {{ cat.nom }}
-                                    </option>
-                                </select>
-                                <div
-                                    v-if="form.errors.categorie_colis_id"
-                                    class="text-danger"
-                                >
-                                    {{ form.errors.categorie_colis_id }}
+                                        <option value="" disabled>-- Sélectionner une catégorie --</option>
+                                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                                            {{ cat.nom }}
+                                        </option>
+                                    </select>
+                                    <div v-if="form.errors.categorie_colis_id" class="form-error">
+                                        {{ form.errors.categorie_colis_id }}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="poids">Poids du colis (Kg)</label>
-                                <input
-                                    type="number"
-                                    id="poids"
-                                    class="form-control"
-                                    v-model="form.poids"
-                                    placeholder="Entrer Poids"
-                                />
-                                <div
-                                    v-if="form.errors.poids"
-                                    v-text="form.errors.poids"
-                                    class="text-danger"
-                                ></div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="tarif">Tarif (FCFA)</label>
-                                <input
-                                    type="number"
-                                    id="tarif"
-                                    class="form-control"
-                                    v-model="form.tarif"
-                                    placeholder="Calcul automatique"
-                                    disabled
-                                />
-                                <div
-                                    v-if="form.errors.tarif"
-                                    class="text-danger"
-                                >
-                                    {{ form.errors.tarif }}
+                            <!-- Poids -->
+                            <div class="form-section">
+                                <div class="form-group">
+                                    <label for="poids" class="form-label required">Poids du colis</label>
+                                    <div class="input-with-unit">
+                                        <input
+                                            type="number"
+                                            class="form-input"
+                                            :class="{ 'is-invalid': form.errors.poids }"
+                                            id="poids"
+                                            v-model="form.poids"
+                                            placeholder="0.00"
+                                            step="0.01"
+                                            min="0"
+                                        />
+                                        <span class="input-unit">kg</span>
+                                    </div>
+                                    <div v-if="form.errors.poids" class="form-error">
+                                        {{ form.errors.poids }}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="statut">Statut</label>
-                                <select
-                                    class="form-control"
-                                    v-model="form.statut"
-                                >
-                                    <option value="" disabled>
-                                        -- Choisissez un statut --
-                                    </option>
-                                    <option value="enregistré">
-                                        Enregistré
-                                    </option>
-                                    <option value="perdu">Perdu</option>
-                                    <option value="livré">Livré</option>
-                                </select>
-                                <div
-                                    v-if="form.errors.statut"
-                                    v-text="form.errors.statut"
-                                    class="text-danger"
-                                ></div>
+                            <!-- Tarif -->
+                            <div class="form-section">
+                                <div class="form-group">
+                                    <label for="tarif" class="form-label">Tarif</label>
+                                    <div class="input-with-unit">
+                                        <input
+                                            type="number"
+                                            class="form-input"
+                                            :class="{ 'is-invalid': form.errors.tarif }"
+                                            id="tarif"
+                                            v-model="form.tarif"
+                                            placeholder="Calcul automatique"
+                                            disabled
+                                        />
+                                        <span class="input-unit">FCFA</span>
+                                    </div>
+                                    <div v-if="form.errors.tarif" class="form-error">
+                                        {{ form.errors.tarif }}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="d-flex justify-content-end mt-4">
-                                <button
-                                    type="reset"
-                                    class="btn btn-light mr-2"
-                                    @click="form.reset()"
-                                >
-                                    Annuler
-                                </button>
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary"
-                                    :disabled="form.processing"
-                                >
-                                    <span
-                                        v-if="form.processing"
-                                        class="spinner-border spinner-border-sm"
-                                        role="status"
-                                        aria-hidden="true"
-                                    ></span>
-                                    {{
-                                        form.processing
-                                            ? "En cours..."
-                                            : "Valider"
-                                    }}
-                                </button>
+                            <!-- Statut -->
+                            <div class="form-section">
+                                <div class="form-group">
+                                    <label for="statut" class="form-label required">Statut</label>
+                                    <select
+                                        class="form-select"
+                                        :class="{ 'is-invalid': form.errors.statut }"
+                                        v-model="form.statut"
+                                    >
+                                        <option value="" disabled>-- Choisissez un statut --</option>
+                                        <option value="enregistré">Enregistré</option>
+                                        <option value="perdu">Perdu</option>
+                                        <option value="livré">Livré</option>
+                                    </select>
+                                    <div v-if="form.errors.statut" class="form-error">
+                                        {{ form.errors.statut }}
+                                    </div>
+                                </div>
                             </div>
-                        </form>
-                    </div>
+                        </div>
+
+                        <!-- Actions du formulaire -->
+                        <div class="form-actions">
+                            <button
+                                type="button"
+                                class="btn-cancel"
+                                @click="form.reset()"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                type="submit"
+                                class="btn-submit"
+                                :disabled="form.processing"
+                            >
+                                <span v-if="form.processing" class="spinner"></span>
+                                {{ form.processing ? "En cours..." : "Enregistrer" }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+/* Style général */
+.form-header {
+    background-color: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e1e5eb;
+    margin-bottom: 1.5rem;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-title-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.breadcrumb-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item {
+    color: #6c757d;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.breadcrumb-item:hover {
+    color: #4a6cf7;
+}
+
+.breadcrumb-item.active {
+    color: #4a6cf7;
+    font-weight: 500;
+}
+
+.breadcrumb-divider {
+    color: #adb5bd;
+    margin: 0 0.5rem;
+}
+
+.form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Carte du formulaire */
+.form-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e1e5eb;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.creation-form {
+    padding: 2rem;
+}
+
+/* Sections du formulaire */
+.form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    color: #4a6cf7;
+    margin-right: 0.5rem;
+}
+
+/* Grille de formulaire */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Groupes de champs */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.form-label.required::after {
+    content: " *";
+    color: #ff4d4f;
+}
+
+/* Champs de formulaire */
+.form-input,
+.form-select,
+textarea.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e1e5eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background-color: white;
+}
+
+textarea.form-input {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-input:focus,
+.form-select:focus,
+textarea.form-input:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.15);
+    outline: none;
+}
+
+.form-input.is-invalid,
+.form-select.is-invalid,
+textarea.form-input.is-invalid {
+    border-color: #ff4d4f;
+}
+
+.form-input.is-invalid:focus,
+.form-select.is-invalid:focus,
+textarea.form-input.is-invalid:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 77, 79, 0.15);
+}
+
+/* Messages d'erreur */
+.form-error {
+    color: #ff4d4f;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+/* Boutons */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.btn-cancel {
+    background-color: white;
+    border: 1px solid #e1e5eb;
+    color: #495057;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #f8f9fa;
+    border-color: #dae0e5;
+}
+
+.btn-submit {
+    background-color: #4a6cf7;
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-submit:hover:not(:disabled) {
+    background-color: #3a5ce4;
+    transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-title-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-cancel, .btn-submit {
+        width: 100%;
+    }
+
+    .creation-form {
+        padding: 1.5rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>

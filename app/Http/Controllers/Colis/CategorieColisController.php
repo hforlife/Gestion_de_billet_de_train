@@ -25,7 +25,7 @@ class CategorieColisController
                 })
                 ->paginate(10)
                 ->withQueryString()
-                ->through(fn ($cat) => [
+                ->through(fn($cat) => [
                     'id' => $cat->id,
                     'nom' => $cat->nom,
                     'description' => $cat->description,
@@ -55,15 +55,12 @@ class CategorieColisController
     }
 
     // Formulaire de modification
-    public function edit(CategorieColis $categorie): Response
+    public function edit($id): Response
     {
         $this->authorize('update categorie_colis');
+        $categorie = CategorieColis::find($id);
         return Inertia::render('Colis/CategoriesColis/Edit', [
-            'categorie' => [
-                'id' => $categorie->id,
-                'nom' => $categorie->nom,
-                'description' => $categorie->description,
-            ],
+            'categorie' => $categorie,
         ]);
     }
 
@@ -72,7 +69,7 @@ class CategorieColisController
     {
         $this->authorize('update categorie_colis');
         $validated = $request->validate([
-            'nom' => 'required|string|unique:categorie_colis,nom,' . $categorie->id,
+            'nom' => 'required|string',
             'description' => 'nullable|string',
         ]);
 

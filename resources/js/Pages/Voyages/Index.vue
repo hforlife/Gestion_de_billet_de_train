@@ -88,7 +88,9 @@ const formatStatus = (statut) => {
                 <div class="breadcrumb-wrapper">
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <Link :href="route('dashboard')">Tableau de bord</Link>
+                            <Link :href="route('dashboard')"
+                                >Tableau de bord</Link
+                            >
                             <span class="breadcrumb-divider">/</span>
                         </li>
                         <li class="breadcrumb-item active">Voyages</li>
@@ -119,10 +121,7 @@ const formatStatus = (statut) => {
             <div class="voyage-card">
                 <div class="table-header">
                     <h3 class="table-title">Liste des voyages</h3>
-                    <Link
-                        :href="route('voyage.create')"
-                        class="btn-create-sm"
-                    >
+                    <Link :href="route('voyage.create')" class="btn-create-sm">
                         <Plus size="16" class="me-1" />
                         Nouveau Voyage
                     </Link>
@@ -144,21 +143,36 @@ const formatStatus = (statut) => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(voyage, index) in voyages.data" :key="voyage.id">
+                            <tr
+                                v-for="(voyage, index) in voyages.data"
+                                :key="voyage.id"
+                            >
                                 <td class="column-id">{{ index + 1 }}</td>
                                 <td class="voyage-name">{{ voyage.nom }}</td>
-                                <td class="train-number">{{ voyage.train.numero }}</td>
-                                <td class="line-name">{{ voyage.ligne.nom }}</td>
+                                <td class="train-number">
+                                    {{ voyage.train.numero }}
+                                </td>
+                                <td class="line-name">
+                                    {{ voyage.ligne.nom }}
+                                </td>
                                 <td class="departure-time">
-                                    <div class="date">{{ formatDate(voyage.date_depart) }}</div>
+                                    <div class="date">
+                                        {{ formatDate(voyage.date_depart) }}
+                                    </div>
                                     <!-- <div class="time">{{ formatTime(voyage.date_depart) }}</div> -->
                                 </td>
                                 <td class="arrival-time">
-                                    <div class="date">{{ formatDate(voyage.date_arrivee) }}</div>
+                                    <div class="date">
+                                        {{ formatDate(voyage.date_arrivee) }}
+                                    </div>
                                     <!-- <div class="time">{{ formatTime(voyage.date_arrivee) }}</div> -->
                                 </td>
                                 <td>
-                                    <span :class="`status-badge ${getStatusClass(voyage.statut)}`">
+                                    <span
+                                        :class="`status-badge ${getStatusClass(
+                                            voyage.statut
+                                        )}`"
+                                    >
                                         {{ formatStatus(voyage.statut) }}
                                     </span>
                                 </td>
@@ -191,25 +205,44 @@ const formatStatus = (statut) => {
                     </table>
                 </div>
 
-                <!-- Pagination améliorée -->
+                <!-- 📄 Pagination -->
                 <div class="table-footer">
                     <div class="pagination-info">
-                        Affichage de {{ voyages.from }} à {{ voyages.to }} sur {{ voyages.total }} voyages
+                        <p class="text-muted">
+                            Affichage de {{ voyages.from }} à
+                            {{ voyages.to }} sur {{ voyages.total }} voyages
+                        </p>
                     </div>
+
                     <div class="pagination-controls">
-                        <Link
-                            v-for="link in voyages.links"
-                            :key="link.label"
-                            class="pagination-link"
-                            :class="{
-                                'active': link.active,
-                                'disabled': !link.url,
-                                'prev-next': link.label.includes('Previous') || link.label.includes('Next')
-                            }"
-                            v-html="link.label"
-                        />
+                        <nav class="float-end">
+                            <ul class="pagination">
+                                <li
+                                    v-for="link in voyages.links"
+                                    :key="link.label"
+                                    class="page-item"
+                                    :class="{
+                                        active: link.active,
+                                        disabled: !link.url,
+                                    }"
+                                >
+                                    <Link
+                                        v-if="link.url"
+                                        :href="link.url"
+                                        class="page-link"
+                                        v-html="link.label"
+                                    />
+                                    <span
+                                        v-else
+                                        class="page-link"
+                                        v-html="link.label"
+                                    ></span>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
+                <!-- 📄 Pagination -->
             </div>
         </div>
     </AppLayout>
@@ -357,7 +390,8 @@ const formatStatus = (statut) => {
 }
 
 /* Boutons */
-.btn-create, .btn-create-sm {
+.btn-create,
+.btn-create-sm {
     background-color: #4a6cf7;
     border: none;
     color: white;
@@ -377,7 +411,8 @@ const formatStatus = (statut) => {
     font-size: 0.9rem;
 }
 
-.btn-create:hover, .btn-create-sm:hover {
+.btn-create:hover,
+.btn-create-sm:hover {
     background-color: #3a5ce4;
     transform: translateY(-1px);
 }
@@ -447,15 +482,18 @@ const formatStatus = (statut) => {
     color: #6c757d;
 }
 
-.departure-time, .arrival-time {
+.departure-time,
+.arrival-time {
     min-width: 120px;
 }
 
-.departure-time .date, .arrival-time .date {
+.departure-time .date,
+.arrival-time .date {
     font-weight: 500;
 }
 
-.departure-time .time, .arrival-time .time {
+.departure-time .time,
+.arrival-time .time {
     font-size: 0.85rem;
     color: #6c757d;
 }

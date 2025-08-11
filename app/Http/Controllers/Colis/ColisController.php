@@ -15,41 +15,41 @@ class ColisController
     use AuthorizesRequests;
     // Affichage de la liste des colis
     public function index(Request $request): Response
-{
-    $this->authorize('viewAny colis');
-    $filters = $request->only('search');
+    {
+        $this->authorize('viewAny colis');
+        $filters = $request->only('search');
 
-    return Inertia::render('Colis/Index', [
-        'filters' => $filters,
-        'colis' => Colis::with('categorieColis') // ⬅️ Charger la relation
-            ->orderBy('user1')
-            ->when($filters['search'] ?? null, function ($query, $search) {
-                $query->where('user1', 'like', "%{$search}%")
-                      ->orWhere('user2', 'like', "%{$search}%");
-            })
-            ->paginate(10)
-            ->through(fn ($item) => [
-                'id' => $item->id,
-                'user1' => $item->user1,
-                'user2' => $item->user2,
-                'categorie' => $item->categorieColis,
-                'poids' => $item->poids,
-                'tarif' => $item->tarif,
-                'statut' => $item->statut,
+        return Inertia::render('Colis/Index', [
+            'filters' => $filters,
+            'colis' => Colis::with('categorieColis') // ⬅️ Charger la relation
+                ->orderBy('user1')
+                ->when($filters['search'] ?? null, function ($query, $search) {
+                    $query->where('user1', 'like', "%{$search}%")
+                        ->orWhere('user2', 'like', "%{$search}%");
+                })
+                ->paginate(10)
+                ->through(fn($item) => [
+                    'id' => $item->id,
+                    'user1' => $item->user1,
+                    'user2' => $item->user2,
+                    'categorie' => $item->categorieColis,
+                    'poids' => $item->poids,
+                    'tarif' => $item->tarif,
+                    'statut' => $item->statut,
 
-            ]),
-    ]);
-}
+                ]),
+        ]);
+    }
 
     // Formulaire de création
     public function create(): Response
     {
         $this->authorize('create colis');
         return Inertia::render('Colis/Create', [
-            'categories' => CategorieColis::with('parametre')->get()->map(fn ($cat) => [
+            'categories' => CategorieColis::with('parametre')->get()->map(fn($cat) => [
                 'id' => $cat->id,
                 'nom' => $cat->nom,
-                'tarifs' => $cat->parametre->map(fn ($p) => [
+                'tarifs' => $cat->parametre->map(fn($p) => [
                     'poids_min' => $p->poids_min,
                     'poids_max' => $p->poids_max,
                     'prix_par_kg' => $p->prix_par_kg,

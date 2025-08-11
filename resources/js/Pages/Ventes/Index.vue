@@ -95,7 +95,9 @@ const formatDate = (dateString) => {
                 <div class="breadcrumb-wrapper">
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <Link :href="route('dashboard')">Tableau de bord</Link>
+                            <Link :href="route('dashboard')"
+                                >Tableau de bord</Link
+                            >
                             <span class="breadcrumb-divider">/</span>
                         </li>
                         <li class="breadcrumb-item active">Ventes</li>
@@ -121,7 +123,9 @@ const formatDate = (dateString) => {
                             :key="voyage.id"
                             :value="voyage.id"
                         >
-                            {{ voyage.nom }} ({{ formatDate(voyage.date_depart) }})
+                            {{ voyage.nom }} ({{
+                                formatDate(voyage.date_depart)
+                            }})
                         </option>
                     </select>
                 </div>
@@ -135,7 +139,9 @@ const formatDate = (dateString) => {
                             placeholder="Rechercher par client..."
                             class="search-input"
                             aria-label="Rechercher des ventes"
-                            @keyup.enter="router.get(route('vente.index'), filters)"
+                            @keyup.enter="
+                                router.get(route('vente.index'), filters)
+                            "
                         />
                         <button
                             class="search-btn"
@@ -179,33 +185,65 @@ const formatDate = (dateString) => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(vente, index) in ventes.data" :key="vente.id">
-                                <td class="column-id">{{ ventes.from + index }}</td>
-                                <td class="client-name">{{ vente.client_nom || "---" }}</td>
+                            <tr
+                                v-for="(vente, index) in ventes.data"
+                                :key="vente.id"
+                            >
+                                <td class="column-id">
+                                    {{ ventes.from + index }}
+                                </td>
+                                <td class="client-name">
+                                    {{ vente.client_nom || "---" }}
+                                </td>
                                 <td class="voyage-info">
                                     <template v-if="vente.voyage">
-                                        <div class="voyage-name">{{ vente.voyage.nom }}</div>
+                                        <div class="voyage-name">
+                                            {{ vente.voyage.nom }}
+                                        </div>
                                         <div class="voyage-date">
-                                            {{ formatDate(vente.voyage.date_depart) }}
+                                            {{
+                                                formatDate(
+                                                    vente.voyage.date_depart
+                                                )
+                                            }}
                                         </div>
                                     </template>
                                     <span v-else>---</span>
                                 </td>
-                                <td class="train-number">{{ vente.voyage.train?.numero || "---" }}</td>
-                                <td class="text-end price">{{ formatPrice(vente.prix) }}</td>
+                                <td class="train-number">
+                                    {{ vente.voyage.train?.numero || "---" }}
+                                </td>
+                                <td class="text-end price">
+                                    {{ formatPrice(vente.prix) }}
+                                </td>
                                 <td class="text-center">
-                                    <span :class="`status-badge ${vente.bagage ? 'yes' : 'no'}`">
+                                    <span
+                                        :class="`status-badge ${
+                                            vente.bagage ? 'yes' : 'no'
+                                        }`"
+                                    >
                                         {{ vente.bagage ? "Oui" : "Non" }}
                                     </span>
                                 </td>
                                 <td class="text-end quantity">
-                                    {{ vente.quantite ? `${vente.quantite} Billets` : "---" }}
+                                    {{
+                                        vente.quantite
+                                            ? `${vente.quantite} Billets`
+                                            : "---"
+                                    }}
                                 </td>
                                 <td class="text-end weight">
-                                    {{ vente.poids_bagage ? `${vente.poids_bagage} kg` : "---" }}
+                                    {{
+                                        vente.poids_bagage
+                                            ? `${vente.poids_bagage} kg`
+                                            : "---"
+                                    }}
                                 </td>
-                                <td class="text-center">
-                                    <div class="action-buttons" aria-label="Actions">
+                                <td>
+                                    <div
+                                        class="action-buttons"
+                                        aria-label="Actions"
+                                    >
                                         <button
                                             @click="showVente(vente.id)"
                                             class="btn-action btn-view"
@@ -214,7 +252,9 @@ const formatDate = (dateString) => {
                                             <Eye size="16" />
                                         </button>
                                         <Link
-                                            :href="route('vente.edit', vente.id)"
+                                            :href="
+                                                route('vente.edit', vente.id)
+                                            "
                                             class="btn-action btn-edit"
                                             aria-label="Modifier"
                                         >
@@ -240,28 +280,39 @@ const formatDate = (dateString) => {
                     </table>
                 </div>
 
-                <!-- Pagination améliorée -->
+                <!-- Pagination -->
                 <div class="table-footer">
                     <div class="pagination-info">
-                        Affichage de {{ ventes.from }} à {{ ventes.to }} sur {{ ventes.total }} ventes
+                        <p class="text-muted">
+                            Affichage de {{ ventes.from }} à {{ ventes.to }} sur
+                            {{ ventes.total }} ventes
+                        </p>
                     </div>
                     <div class="pagination-controls">
-                        <Link
-                            v-for="link in ventes.links"
-                            :key="link.label"
-
-                            class="pagination-link"
-                            :class="{
-                                'active': link.active,
-                                'disabled': !link.url,
-                                'prev-next': link.label.includes('Previous') || link.label.includes('Next')
-                            }"
-                            :aria-label="`Page ${link.label}`"
-                            :aria-current="link.active ? 'page' : null"
-                            v-html="link.label"
-                        />
+                        <nav class="float-end">
+                            <ul class="pagination">
+                                <li
+                                    v-for="link in ventes.links"
+                                    :key="link.label"
+                                    class="page-item"
+                                >
+                                    <Link
+                                        v-if="link.url"
+                                        :href="link.url"
+                                        class="page-link"
+                                        v-html="link.label"
+                                    />
+                                    <span
+                                        v-else
+                                        class="page-link"
+                                        v-html="link.label"
+                                    ></span>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
+                <!-- Fin pagination -->
             </div>
         </div>
     </AppLayout>
@@ -448,7 +499,8 @@ const formatDate = (dateString) => {
 }
 
 /* Boutons */
-.btn-create, .btn-create-sm {
+.btn-create,
+.btn-create-sm {
     background-color: #4a6cf7;
     border: none;
     color: white;
@@ -468,7 +520,8 @@ const formatDate = (dateString) => {
     font-size: 0.9rem;
 }
 
-.btn-create:hover, .btn-create-sm:hover {
+.btn-create:hover,
+.btn-create-sm:hover {
     background-color: #3a5ce4;
     transform: translateY(-1px);
 }
@@ -555,7 +608,9 @@ const formatDate = (dateString) => {
     font-size: 1.1rem;
 }
 
-.price, .quantity, .weight {
+.price,
+.quantity,
+.weight {
     font-family: monospace;
     font-weight: 500;
 }
@@ -706,7 +761,8 @@ const formatDate = (dateString) => {
         gap: 1rem;
     }
 
-    .filter-group, .search-group {
+    .filter-group,
+    .search-group {
         min-width: 100%;
     }
 

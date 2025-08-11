@@ -64,13 +64,14 @@ const getPermissionCount = (role) => {
                 </div>
                 <div class="breadcrumb-wrapper">
                     <nav class="breadcrumb">
-                        <Link :href="route('dashboard')" class="breadcrumb-item">
+                        <Link
+                            :href="route('dashboard')"
+                            class="breadcrumb-item"
+                        >
                             Tableau de bord
                         </Link>
                         <span class="breadcrumb-divider">/</span>
-                        <span class="breadcrumb-item active">
-                            Rôles
-                        </span>
+                        <span class="breadcrumb-item active"> Rôles </span>
                     </nav>
                 </div>
             </div>
@@ -84,7 +85,9 @@ const getPermissionCount = (role) => {
                 <div class="table-header">
                     <div class="table-title">
                         <h2>Liste des Rôles</h2>
-                        <span class="badge-count">{{ roles.total }} rôle(s)</span>
+                        <span class="badge-count"
+                            >{{ roles.total }} rôle(s)</span
+                        >
                     </div>
                 </div>
 
@@ -96,21 +99,33 @@ const getPermissionCount = (role) => {
                                 <tr>
                                     <th class="column-id">#</th>
                                     <th class="column-name">Nom</th>
-                                    <th class="column-permissions">Permissions</th>
+                                    <th class="column-permissions">
+                                        Permissions
+                                    </th>
                                     <th class="column-actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(role, index) in roles.data" :key="role.id">
-                                    <td class="column-id">{{ roles.from + index }}</td>
+                                <tr
+                                    v-for="(role, index) in roles.data"
+                                    :key="role.id"
+                                >
+                                    <td class="column-id">
+                                        {{ roles.from + index }}
+                                    </td>
                                     <td class="column-name">{{ role.name }}</td>
                                     <td class="column-permissions">
-                                        {{ getPermissionCount(role) }} permission(s)
+                                        {{
+                                            getPermissionCount(role)
+                                        }}
+                                        permission(s)
                                     </td>
                                     <td class="column-actions">
                                         <div class="action-buttons">
                                             <Link
-                                                :href="route('role.edit', role.id)"
+                                                :href="
+                                                    route('role.edit', role.id)
+                                                "
                                                 class="btn-action btn-edit"
                                                 title="Modifier"
                                             >
@@ -126,45 +141,46 @@ const getPermissionCount = (role) => {
                                         </div>
                                     </td>
                                 </tr>
-                                <!-- <tr v-if="roles.data.length === 0">
+                                <tr v-if="roles.data.length === 0">
                                     <td colspan="4" class="no-results">
                                         Aucun rôle trouvé
                                     </td>
-                                </tr> -->
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Pagination -->
+                <!-- 📄 Pagination -->
                 <div class="table-footer">
                     <div class="pagination-info">
-                        Affichage de {{ roles.from }} à {{ roles.to }} sur
-                        {{ roles.total }} entrées
+                        <p class="text-muted">
+                            Affichage de {{ roles.from }} à {{ roles.to }} sur
+                            {{ roles.total }} roles
+                        </p>
                     </div>
+
                     <div class="pagination-controls">
-                        <nav>
+                        <nav class="float-end">
                             <ul class="pagination">
                                 <li
                                     v-for="link in roles.links"
                                     :key="link.label"
-                                    :class="[
-                                        'page-item',
-                                        {
-                                            active: link.active,
-                                            disabled: !link.url,
-                                        },
-                                    ]"
+                                    class="page-item"
+                                    :class="{
+                                        active: link.active,
+                                        disabled: !link.url,
+                                    }"
                                 >
                                     <Link
                                         v-if="link.url"
-                                        class="pagination-link"
                                         :href="link.url"
+                                        class="page-link"
                                         v-html="link.label"
                                     />
                                     <span
                                         v-else
-                                        class="pagination-link disabled"
+                                        class="page-link"
                                         v-html="link.label"
                                     ></span>
                                 </li>
@@ -172,6 +188,7 @@ const getPermissionCount = (role) => {
                         </nav>
                     </div>
                 </div>
+                <!-- Fin Pagination -->
             </div>
         </div>
     </AppLayout>

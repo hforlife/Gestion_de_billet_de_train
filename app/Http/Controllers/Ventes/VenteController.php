@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Ventes;
 
 use App\Models\ClassesWagon;
-use App\Models\Distance;
 use App\Models\Gare;
 use App\Models\Vente;
 use App\Models\Voyage;
@@ -61,7 +60,7 @@ class VenteController
     public function createPredefined()
     {
         $this->authorize('create vente');
-        $this->authorize('create vente_predefined');
+        $this->authorize('createPredefined vente');
         $voyages = Voyage::with([
             'ligne.arrets.gare',
             'train.wagons.classeWagon', // Correction du nom de la relation
@@ -95,7 +94,7 @@ class VenteController
     public function createKilometrage()
     {
         $this->authorize('create vente');
-        $this->authorize('create vente_kilometrage');
+        $this->authorize('createKilometrage vente');
         $voyages = Voyage::with([
             'ligne.arrets.gare',
             'train.wagons.classeWagon',
@@ -252,6 +251,7 @@ class VenteController
     public function show(Vente $vente)
     {
         $this->authorize('view vente');
+
         $vente->load([
             'voyage.ligne.gareDepart',
             'voyage.ligne.gareArrivee',
@@ -260,6 +260,7 @@ class VenteController
             'modePaiement',
             'pointVente.gare',
             'classeWagon',
+            'createdBy'
         ]);
 
         return Inertia::render('Ventes/Show', [

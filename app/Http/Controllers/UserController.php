@@ -117,19 +117,5 @@ class UserController extends Controller
         return Redirect::route('user.index')->with('success', 'Utilisateur supprimé avec succès.');
     }
 
-    public function profile(): Response
-    {
-        $this->authorize('view profile');
-        $user = Auth::user();
 
-        return Inertia::render('Setting/Profile/Index', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'username' => $user->username,
-                'email' => $user->email,
-                'roles' => $user->getRoleNames(),
-            ]
-        ]);
-    }
 }

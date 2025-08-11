@@ -3,24 +3,24 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Vente;
+use App\Models\Voyage;
 
-class VentePolicy
+class VoyagePolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('viewAny vente');
+        return $user->can('viewAny voyage');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Vente $vente): bool
+    public function view(User $user, Voyage $Voyage): bool
     {
-        return $user->can('view vente');
+        return $user->can('view voyage');
     }
 
     /**
@@ -28,29 +28,29 @@ class VentePolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create vente');
+        return $user->can('create Voyage');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Vente $vente): bool
+    public function update(User $user, Voyage $Voyage): bool
     {
-        return false;
+        return $user->can('update voyage');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Vente $vente): bool
+    public function delete(User $user, Voyage $Voyage): bool
     {
-        return $user->can('delete vente');
+        return $user->can('delete voyage');
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Vente $vente): bool
+    public function restore(User $user, Voyage $Voyage): bool
     {
         return false;
     }
@@ -58,7 +58,7 @@ class VentePolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Vente $vente): bool
+    public function forceDelete(User $user, Voyage $Voyage): bool
     {
         return false;
     }

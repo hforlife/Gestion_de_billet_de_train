@@ -31,7 +31,7 @@
                 </div>
                 <div class="col-lg-6 error-page-divider text-lg-left pl-lg-4">
                   <h2>ERREUR!</h2>
-                  <h3 class="font-weight-light">L'utilisateur n'est pas connecté(e)!</h3>
+                  <h3 class="font-weight-light">Permissions Requise!</h3>
                 </div>
               </div>
               <div class="row mt-5">
@@ -42,7 +42,6 @@
               <div class="row mt-5">
                 <div class="col-12 mt-xl-2">
                   <p class="text-white font-weight-medium text-center">Copyright &copy; 2025 Tous droits réservé.</p>
-                  <p class="footer-text text-center"><a href="https://doucsoft.tech/"> Free Bootstrap template </a> from BootstrapDash templates</p>
                 </div>
               </div>
             </div>

@@ -27,12 +27,12 @@ class DatabaseSeeder extends Seeder
         $this->call(CategorieColisSeeder::class);
 
         // Optionnel : créer des utilisateurs de test
-        User::factory(5)->create()->each(function ($user) {
-            $user->assignRole('caissier');
-        });
+        // User::factory(5)->create()->each(function ($user) {
+        //     $user->assignRole('caissier');
+        // });
 
-        User::factory(3)->create()->each(function ($user) {
-            $user->assignRole('chef');
-        });
+        // User::factory(3)->create()->each(function ($user) {
+        //     $user->assignRole('chef');
+        // });
     }
 }

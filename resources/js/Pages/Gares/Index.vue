@@ -70,10 +70,7 @@ const deleteGare = (id) => {
             <div class="header-content">
                 <div class="header-title-wrapper">
                     <h1 class="page-title">Gestion des Gares</h1>
-                    <Link
-                        :href="route('gare.create')"
-                        class="btn-create"
-                    >
+                    <Link :href="route('gare.create')" class="btn-create">
                         <Plus size="16" class="me-1" />
                         Nouvelle Gare
                     </Link>
@@ -81,7 +78,9 @@ const deleteGare = (id) => {
                 <div class="breadcrumb-wrapper">
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <Link :href="route('dashboard')">Tableau de bord</Link>
+                            <Link :href="route('dashboard')"
+                                >Tableau de bord</Link
+                            >
                             <span class="breadcrumb-divider">/</span>
                         </li>
                         <li class="breadcrumb-item active">Gares</li>
@@ -102,10 +101,7 @@ const deleteGare = (id) => {
                         class="search-input"
                         @keyup.enter="getResults"
                     />
-                    <button
-                        class="search-btn"
-                        @click="getResults"
-                    >
+                    <button class="search-btn" @click="getResults">
                         <i class="mdi mdi-magnify"></i>
                     </button>
                 </div>
@@ -113,6 +109,18 @@ const deleteGare = (id) => {
 
             <!-- Carte du tableau -->
             <div class="data-card">
+                <div class="table-header">
+                    <h3 class="table-title">Liste des gares</h3>
+                    <Link
+                        :href="route('gare.create')"
+                        class="btn-create-sm"
+                        aria-label="Créer une nouvelle gare"
+                    >
+                        <Plus size="16" class="me-1" />
+                        Nouvelle Gare
+                    </Link>
+                </div>
+
                 <div class="table-container">
                     <!-- Tableau amélioré -->
                     <div class="table-responsive">
@@ -132,28 +140,43 @@ const deleteGare = (id) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(gare, index) in gares.data" :key="gare.id">
+                                <tr
+                                    v-for="(gare, index) in gares.data"
+                                    :key="gare.id"
+                                >
                                     <td class="column-id">{{ index + 1 }}</td>
                                     <td class="gare-name">{{ gare.nom }}</td>
-                                    <td class="gare-address">{{ gare.adresse }}</td>
+                                    <td class="gare-address">
+                                        {{ gare.adresse }}
+                                    </td>
                                     <td class="gare-type">{{ gare.type }}</td>
                                     <td class="text-center">
-                                        <span :class="`status-badge ${gare.internet.toLowerCase()}`">
+                                        <span
+                                            :class="`status-badge ${gare.internet.toLowerCase()}`"
+                                        >
                                             {{ gare.internet }}
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <span :class="`status-badge ${gare.electricite.toLowerCase()}`">
+                                        <span
+                                            :class="`status-badge ${gare.electricite.toLowerCase()}`"
+                                        >
                                             {{ gare.electricite }}
                                         </span>
                                     </td>
-                                    <td class="text-center">{{ gare.nombre_guichets }}</td>
                                     <td class="text-center">
-                                        <span :class="`status-badge ${gare.controle_bagage.toLowerCase()}`">
+                                        {{ gare.nombre_guichets }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span
+                                            :class="`status-badge ${gare.controle_bagage.toLowerCase()}`"
+                                        >
                                             {{ gare.controle_bagage }}
                                         </span>
                                     </td>
-                                    <td class="text-center">{{ gare.distance_km }}</td>
+                                    <td class="text-center">
+                                        {{ gare.distance_km }}
+                                    </td>
                                     <td class="text-center">
                                         <div class="action-buttons">
                                             <button
@@ -183,26 +206,43 @@ const deleteGare = (id) => {
                         </table>
                     </div>
 
-                    <!-- Pagination améliorée -->
+                    <!-- Pagination -->
                     <div class="table-footer">
                         <div class="pagination-info">
-                            Affichage de {{ gares.from }} à {{ gares.to }} sur {{ gares.total }} gares
+                            <p class="text-muted">
+                                Affichage de {{ gares.from }} à
+                                {{ gares.to }} sur {{ gares.total }} gares
+                            </p>
                         </div>
                         <div class="pagination-controls">
-                            <!-- <Link
-                                v-for="link in gares.links"
-                                :key="link.label"
-                                :href="link.url"
-                                class="pagination-link"
-                                :class="{
-                                    'active': link.active,
-                                    'disabled': !link.url,
-                                    'prev-next': link.label.includes('Previous') || link.label.includes('Next')
-                                }"
-                                v-html="link.label"
-                            /> -->
+                            <nav class="float-end">
+                                <ul class="pagination">
+                                    <li
+                                        v-for="link in gares.links"
+                                        :key="link.label"
+                                        class="page-item"
+                                        :class="{
+                                        active: link.active,
+                                        disabled: !link.url,
+                                    }"
+                                    >
+                                        <Link
+                                            v-if="link.url"
+                                            :href="link.url"
+                                            class="page-link"
+                                            v-html="link.label"
+                                        />
+                                        <span
+                                            v-else
+                                            class="page-link"
+                                            v-html="link.label"
+                                        ></span>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
                     </div>
+                    <!-- Fin pagination -->
                 </div>
             </div>
         </div>
@@ -354,8 +394,53 @@ const deleteGare = (id) => {
     margin-bottom: 2rem;
 }
 
+.table-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
 .table-container {
     padding: 1.5rem;
+}
+
+/* Boutons */
+.btn-create,
+.btn-create-sm {
+    background-color: #4a6cf7;
+    border: none;
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-create-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-create:hover,
+.btn-create-sm:hover {
+    background-color: #3a5ce4;
+    transform: translateY(-1px);
 }
 
 /* Tableau */

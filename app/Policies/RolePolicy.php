@@ -9,26 +9,26 @@ class RolePolicy
 {
     public function viewAny(User $user)
     {
-        return $user->can('view roles');
+        return $user->can('viewAny role');
     }
 
     public function view(User $user, Role $role)
     {
-        return $user->can('view roles');
+        return $user->can('viewAny role');
     }
 
     public function create(User $user)
     {
-        return $user->can('manage roles');
+        return $user->can('create role');
     }
 
     public function update(User $user, Role $role)
     {
-        return $user->can('manage roles');
+        return $user->can('update role');
     }
 
     public function delete(User $user, Role $role)
     {
-        return $user->can('manage roles') && !in_array($role->name, ['admin', 'chef', 'caissier']);
+        return $user->can('delete role') && !in_array($role->name, ['admin', 'chef', 'caissier']);
     }
 }
