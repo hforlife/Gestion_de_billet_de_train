@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -6,7 +7,9 @@ import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
 import 'package:gestion_billet_train_flutter/core/constants/text_strings.dart';
+import 'package:gestion_billet_train_flutter/features/ticket/data/models/setting_model.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:iconsax/iconsax.dart'; // Ajustez selon votre projet
 
 class SellTicketPage extends StatefulWidget {
@@ -22,32 +25,91 @@ class _SellTicketPageState extends State<SellTicketPage> {
   String? paymentId;
   String? classeId;
   String? voyageId;
-  String? setting = "null";
+
   bool hasPenalty = false;
   bool hasBaguage = false;
+
   double distance = 0.0;
   double price = 0.0;
+
   bool isCalculating = false;
   bool showReceipt = false;
+  bool loading = false;
+
   Map<String, dynamic>? soldTicket;
 
-  // Données simulées (remplacez par vos données réelles)
-  final List<Map<String, dynamic>> locations = [
-    {'id': 'loc1', 'name': 'Gare A'},
-    {'id': 'loc2', 'name': 'Gare B'},
-  ];
-  final List<Map<String, dynamic>> voyages = [
-    {'id': 'voy1', 'name': 'Bamako-kayes'},
-    {'id': 'voy2', 'name': 'Kouliko-Mopti'},
-  ];
-  final List<Map<String, dynamic>> paiement = [
-    {'id': 'pay1', 'name': 'Espece'},
-    {'id': 'pay2', 'name': 'Mobile Money'},
-  ];
-  final List<Map<String, dynamic>> classse = [
-    {'id': 'clas1', 'name': 'Prémière classe'},
-    {'id': 'clas2', 'name': 'Deuxième classe'},
-  ];
+  List<Map<String, dynamic>> locations = [];
+  List<Map<String, dynamic>> voyages = [];
+  List<Map<String, dynamic>> paiement = [];
+  List<Map<String, dynamic>> classse = [];
+
+  SettingModel? setting;
+  @override
+  void initState() {
+    super.initState();
+    fetchInitialData();
+  }
+
+  Future<void> fetchInitialData() async {
+    setState(() => loading = true);
+    try {
+      final responseSettings = await http.get(
+        Uri.parse('http://192.168.137.221:8000/api/v1/setting'),
+      );
+      if (responseSettings.statusCode == 200) {
+        final jsonData = jsonDecode(responseSettings.body);
+        if (jsonData['status'] == true && jsonData['setting'] != null) {
+          setState(() {
+            setting = SettingModel.fromJson(jsonData['setting']);
+          });
+        }
+      }
+
+      final responseLocations = await http.get(
+        Uri.parse('http://192.168.137.221:8000/api/v1/locations'),
+      );
+      if (responseLocations.statusCode == 200) {
+        final jsonData = jsonDecode(responseLocations.body);
+        setState(() {
+          locations = List<Map<String, dynamic>>.from(jsonData['locations']);
+        });
+      }
+
+      final responseVoyages = await http.get(
+        Uri.parse('http://192.168.137.221:8000/api/v1/voyages'),
+      );
+      if (responseVoyages.statusCode == 200) {
+        final jsonData = jsonDecode(responseVoyages.body);
+        setState(() {
+          voyages = List<Map<String, dynamic>>.from(jsonData['voyages']);
+        });
+      }
+
+      final responsePaiement = await http.get(
+        Uri.parse('http://192.168.137.221:8000/api/v1/paiements'),
+      );
+      if (responsePaiement.statusCode == 200) {
+        final jsonData = jsonDecode(responsePaiement.body);
+        setState(() {
+          paiement = List<Map<String, dynamic>>.from(jsonData['paiements']);
+        });
+      }
+
+      final responseClasse = await http.get(
+        Uri.parse('http://192.168.137.221:8000/api/v1/classes'),
+      );
+      if (responseClasse.statusCode == 200) {
+        final jsonData = jsonDecode(responseClasse.body);
+        setState(() {
+          classse = List<Map<String, dynamic>>.from(jsonData['classes']);
+        });
+      }
+    } catch (e) {
+      // gérer erreur réseau ou autre
+      print('Erreur fetch data: $e');
+    }
+    setState(() => loading = false);
+  }
 
   double calculateDistance(double lat1, lon1, double lat2, lon2) {
     // Simplification : formule approximative
@@ -638,624 +700,660 @@ class _SellTicketPageState extends State<SellTicketPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Vente de Ticket')),
-      body: Padding(
-        padding: EdgeInsets.all(THelperFunctions.screenWidth() * 0.08),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Vendre un billet',
-                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                  color: TColors.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.03),
-              Text(
-                'Nom du client',
-                style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                  color: TColors.primary,
-                  fontSize: TSizes.md,
-                ),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-              TextFormField(
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Iconsax.user),
-                  labelText: TTexts.nomClient,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF6B8DC8)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: TColors.primary,
-                      width: 2.0,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-              Text(
-                'Voyage',
-                style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                  color: TColors.primary,
-                  fontSize: TSizes.md,
-                ),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-              DropdownButtonFormField<String>(
-                hint: const Text('Sélectionnez un voyage'),
-                value: voyageId,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: TColors.grey),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: TColors.grey,
-                      width: 2.0,
-                    ),
-                  ),
-                ),
-                icon: const Icon(Iconsax.arrow_down_1),
-                items: voyages.map((voy) {
-                  return DropdownMenuItem<String>(
-                    value: voy['id'],
-                    child: Text(voy['name']),
-                  );
-                }).toList(),
-                onChanged: (value) => setState(() => voyageId = value),
-              ),
-              if (setting == "par_kilometrage") ...[
-                SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-                Text(
-                  'Gare départ',
-                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                    color: TColors.primary,
-                    fontSize: TSizes.md,
-                  ),
-                ),
-                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                DropdownButtonFormField<String>(
-                  hint: const Text('Sélectionnez une gare'),
-                  value: departureId,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: TColors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                        color: TColors.grey,
-                        width: 2.0,
-                      ),
-                    ),
-                  ),
-                  icon: const Icon(Iconsax.arrow_down_1),
-                  items: locations.map((loc) {
-                    return DropdownMenuItem<String>(
-                      value: loc['id'],
-                      child: Text(loc['name']),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => departureId = value),
-                ),
-                SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-                Text(
-                  "Gare d'arrivée",
-                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                    color: TColors.primary,
-                    fontSize: TSizes.md,
-                  ),
-                ),
-                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                DropdownButtonFormField<String>(
-                  hint: const Text('Sélectionnez une gare'),
-                  value: arrivalId,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: TColors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                        color: TColors.grey,
-                        width: 2.0,
-                      ),
-                    ),
-                  ),
-                  icon: const Icon(Iconsax.arrow_down_1),
-
-                  items: locations.map((loc) {
-                    return DropdownMenuItem<String>(
-                      value: loc['id'],
-                      child: Text(loc['name']),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => arrivalId = value),
-                ),
-                SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-                Text(
-                  'Gare départ',
-                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                    color: TColors.primary,
-                    fontSize: TSizes.md,
-                  ),
-                ),
-                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                DropdownButtonFormField<String>(
-                  hint: const Text('Sélectionnez une gare'),
-                  value: departureId,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: TColors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                        color: TColors.grey,
-                        width: 2.0,
-                      ),
-                    ),
-                  ),
-                  icon: const Icon(Iconsax.arrow_down_1),
-                  items: locations.map((loc) {
-                    return DropdownMenuItem<String>(
-                      value: loc['id'],
-                      child: Text(loc['name']),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => departureId = value),
-                ),
-                SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-                Text(
-                  "Gare d'arrivée",
-                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                    color: TColors.primary,
-                    fontSize: TSizes.md,
-                  ),
-                ),
-                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                DropdownButtonFormField<String>(
-                  hint: const Text('Sélectionnez une gare'),
-                  value: arrivalId,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: TColors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                        color: TColors.grey,
-                        width: 2.0,
-                      ),
-                    ),
-                  ),
-                  icon: const Icon(Iconsax.arrow_down_1),
-
-                  items: locations.map((loc) {
-                    return DropdownMenuItem<String>(
-                      value: loc['id'],
-                      child: Text(loc['name']),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => arrivalId = value),
-                ),
-              ],
-
-              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-              Text(
-                'Classe',
-                style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                  color: TColors.primary,
-                  fontSize: TSizes.md,
-                ),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-              DropdownButtonFormField<String>(
-                hint: const Text('Sélectionnez une classe'),
-                value: classeId,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: TColors.grey),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: TColors.grey,
-                      width: 2.0,
-                    ),
-                  ),
-                ),
-                icon: const Icon(Iconsax.arrow_down_1),
-                items: classse.map((clas) {
-                  return DropdownMenuItem<String>(
-                    value: clas['id'],
-                    child: Text(clas['name']),
-                  );
-                }).toList(),
-                onChanged: (value) => setState(() => classeId = value),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-              if (departureId != null &&
-                  arrivalId != null &&
-                  departureId == arrivalId)
-                const Text(
-                  'Les gares ne peuvent pas être identiques',
-                  style: TextStyle(color: Colors.red),
-                ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Quantité",
-                        style: Theme.of(context).textTheme.labelMedium!
-                            .copyWith(
-                              color: TColors.primary,
-                              fontSize: TSizes.md,
-                            ),
-                      ),
-                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                      SizedBox(
-                        width: THelperFunctions.screenWidth() * 0.4,
-                        child: TextFormField(
-                          decoration: InputDecoration(
-                            labelText: TTexts.quantite,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF6B8DC8),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: TColors.primary,
-                                width: 2.0,
-                              ),
-                            ),
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Numéro de place",
-                        style: Theme.of(context).textTheme.labelMedium!
-                            .copyWith(
-                              color: TColors.primary,
-                              fontSize: TSizes.md,
-                            ),
-                      ),
-                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                      SizedBox(
-                        width: THelperFunctions.screenWidth() * 0.4,
-                        child: TextFormField(
-                          decoration: InputDecoration(
-                            labelText: TTexts.numPlace,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF6B8DC8),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: TColors.primary,
-                                width: 2.0,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.03),
-              Text(
-                'Méthode de paiment',
-                style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                  color: TColors.primary,
-                  fontSize: TSizes.md,
-                ),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-              DropdownButtonFormField<String>(
-                hint: const Text('Sélectionnez une méthode'),
-                value: paymentId,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: TColors.grey),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: TColors.grey,
-                      width: 2.0,
-                    ),
-                  ),
-                ),
-                icon: const Icon(Iconsax.arrow_down_1),
-                items: paiement.map((pay) {
-                  return DropdownMenuItem<String>(
-                    value: pay['id'],
-                    child: Text(pay['name']),
-                  );
-                }).toList(),
-                onChanged: (value) => setState(() => paymentId = value),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.03),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: THelperFunctions.screenWidth() * 0.02,
-                  vertical: THelperFunctions.screenHeight() * 0.005,
-                ), // optionnel
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: TColors.grey, // 💙 Couleur de la bordure
-                    width: 2, // 🌟 Épaisseur de la bordure
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: loading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: EdgeInsets.all(THelperFunctions.screenWidth() * 0.08),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Appliquer une pénalité (+20%)",
-                      style: GoogleFonts.roboto(fontSize: TSizes.fontSizeMd),
-                    ),
-                    Switch(
-                      value: hasPenalty,
-                      onChanged: (value) => setState(() => hasPenalty = value),
-                      activeColor: AppColors.primary,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: THelperFunctions.screenWidth() * 0.02,
-                  vertical: THelperFunctions.screenHeight() * 0.005,
-                ), // optionnel
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: TColors.grey, // 💙 Couleur de la bordure
-                    width: 2, // 🌟 Épaisseur de la bordure
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(width: THelperFunctions.screenWidth() * 0.02),
-                        Icon(Iconsax.bag_25),
-                        Text(
-                          "Baguage",
-                          style: GoogleFonts.roboto(
-                            fontSize: TSizes.fontSizeMd,
+                      'Vendre un billet',
+                      style: Theme.of(context).textTheme.headlineSmall!
+                          .copyWith(
+                            color: TColors.primary,
+                            fontWeight: FontWeight.w500,
                           ),
+                    ),
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.03),
+                    Text(
+                      'Nom du client',
+                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                        color: TColors.primary,
+                        fontSize: TSizes.md,
+                      ),
+                    ),
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Iconsax.user),
+                        labelText: TTexts.nomClient,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF6B8DC8),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: TColors.primary,
+                            width: 2.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                    Text(
+                      'Voyage',
+                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                        color: TColors.primary,
+                        fontSize: TSizes.md,
+                      ),
+                    ),
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                    DropdownButtonFormField<String>(
+                      hint: const Text('Sélectionnez un voyage'),
+                      value: voyageId,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: TColors.grey),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: TColors.grey,
+                            width: 2.0,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Iconsax.arrow_down_1),
+                      items: voyages.map((voy) {
+                        return DropdownMenuItem<String>(
+                          value: voy['id'],
+                          child: Text(voy['name']),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => voyageId = value),
+                    ),
+                    if (setting == "par_kilometrage") ...[
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                      Text(
+                        'Gare départ',
+                        style: Theme.of(context).textTheme.labelMedium!
+                            .copyWith(
+                              color: TColors.primary,
+                              fontSize: TSizes.md,
+                            ),
+                      ),
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                      DropdownButtonFormField<String>(
+                        hint: const Text('Sélectionnez une gare'),
+                        value: departureId,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: TColors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: TColors.grey,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Iconsax.arrow_down_1),
+                        items: locations.map((loc) {
+                          return DropdownMenuItem<String>(
+                            value: loc['id'],
+                            child: Text(loc['name']),
+                          );
+                        }).toList(),
+                        onChanged: (value) =>
+                            setState(() => departureId = value),
+                      ),
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                      Text(
+                        "Gare d'arrivée",
+                        style: Theme.of(context).textTheme.labelMedium!
+                            .copyWith(
+                              color: TColors.primary,
+                              fontSize: TSizes.md,
+                            ),
+                      ),
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                      DropdownButtonFormField<String>(
+                        hint: const Text('Sélectionnez une gare'),
+                        value: arrivalId,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: TColors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: TColors.grey,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Iconsax.arrow_down_1),
+
+                        items: locations.map((loc) {
+                          return DropdownMenuItem<String>(
+                            value: loc['id'],
+                            child: Text(loc['name']),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => arrivalId = value),
+                      ),
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                      Text(
+                        'Gare départ',
+                        style: Theme.of(context).textTheme.labelMedium!
+                            .copyWith(
+                              color: TColors.primary,
+                              fontSize: TSizes.md,
+                            ),
+                      ),
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                      DropdownButtonFormField<String>(
+                        hint: const Text('Sélectionnez une gare'),
+                        value: departureId,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: TColors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: TColors.grey,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Iconsax.arrow_down_1),
+                        items: locations.map((loc) {
+                          return DropdownMenuItem<String>(
+                            value: loc['id'],
+                            child: Text(loc['name']),
+                          );
+                        }).toList(),
+                        onChanged: (value) =>
+                            setState(() => departureId = value),
+                      ),
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                      Text(
+                        "Gare d'arrivée",
+                        style: Theme.of(context).textTheme.labelMedium!
+                            .copyWith(
+                              color: TColors.primary,
+                              fontSize: TSizes.md,
+                            ),
+                      ),
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                      DropdownButtonFormField<String>(
+                        hint: const Text('Sélectionnez une gare'),
+                        value: arrivalId,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: TColors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: TColors.grey,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Iconsax.arrow_down_1),
+
+                        items: locations.map((loc) {
+                          return DropdownMenuItem<String>(
+                            value: loc['id'],
+                            child: Text(loc['name']),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => arrivalId = value),
+                      ),
+                    ],
+
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                    Text(
+                      'Classe',
+                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                        color: TColors.primary,
+                        fontSize: TSizes.md,
+                      ),
+                    ),
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                    DropdownButtonFormField<String>(
+                      hint: const Text('Sélectionnez une classe'),
+                      value: classeId,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: TColors.grey),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: TColors.grey,
+                            width: 2.0,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Iconsax.arrow_down_1),
+                      items: classse.map((clas) {
+                        return DropdownMenuItem<String>(
+                          value: clas['id'],
+                          child: Text(clas['name']),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => classeId = value),
+                    ),
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                    if (departureId != null &&
+                        arrivalId != null &&
+                        departureId == arrivalId)
+                      const Text(
+                        'Les gares ne peuvent pas être identiques',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Quantité",
+                              style: Theme.of(context).textTheme.labelMedium!
+                                  .copyWith(
+                                    color: TColors.primary,
+                                    fontSize: TSizes.md,
+                                  ),
+                            ),
+                            SizedBox(
+                              height: THelperFunctions.screenHeight() * 0.01,
+                            ),
+                            SizedBox(
+                              width: THelperFunctions.screenWidth() * 0.4,
+                              child: TextFormField(
+                                decoration: InputDecoration(
+                                  labelText: TTexts.quantite,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF6B8DC8),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: TColors.primary,
+                                      width: 2.0,
+                                    ),
+                                  ),
+                                ),
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Numéro de place",
+                              style: Theme.of(context).textTheme.labelMedium!
+                                  .copyWith(
+                                    color: TColors.primary,
+                                    fontSize: TSizes.md,
+                                  ),
+                            ),
+                            SizedBox(
+                              height: THelperFunctions.screenHeight() * 0.01,
+                            ),
+                            SizedBox(
+                              width: THelperFunctions.screenWidth() * 0.4,
+                              child: TextFormField(
+                                decoration: InputDecoration(
+                                  labelText: TTexts.numPlace,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF6B8DC8),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: TColors.primary,
+                                      width: 2.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    Switch(
-                      value: hasBaguage,
-                      onChanged: (value) => setState(() => hasBaguage = value),
-                      activeColor: AppColors.primary,
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.03),
+                    Text(
+                      'Méthode de paiment',
+                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                        color: TColors.primary,
+                        fontSize: TSizes.md,
+                      ),
+                    ),
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                    DropdownButtonFormField<String>(
+                      hint: const Text('Sélectionnez une méthode'),
+                      value: paymentId,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: TColors.grey),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: TColors.grey,
+                            width: 2.0,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Iconsax.arrow_down_1),
+                      items: paiement.map((pay) {
+                        return DropdownMenuItem<String>(
+                          value: pay['id'],
+                          child: Text(pay['name']),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => paymentId = value),
+                    ),
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.03),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: THelperFunctions.screenWidth() * 0.02,
+                        vertical: THelperFunctions.screenHeight() * 0.005,
+                      ), // optionnel
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: TColors.grey, // 💙 Couleur de la bordure
+                          width: 2, // 🌟 Épaisseur de la bordure
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Appliquer une pénalité (+20%)",
+                            style: GoogleFonts.roboto(
+                              fontSize: TSizes.fontSizeMd,
+                            ),
+                          ),
+                          Switch(
+                            value: hasPenalty,
+                            onChanged: (value) =>
+                                setState(() => hasPenalty = value),
+                            activeColor: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: THelperFunctions.screenWidth() * 0.02,
+                        vertical: THelperFunctions.screenHeight() * 0.005,
+                      ), // optionnel
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: TColors.grey, // 💙 Couleur de la bordure
+                          width: 2, // 🌟 Épaisseur de la bordure
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: THelperFunctions.screenWidth() * 0.02,
+                              ),
+                              Icon(Iconsax.bag_25),
+                              Text(
+                                "Baguage",
+                                style: GoogleFonts.roboto(
+                                  fontSize: TSizes.fontSizeMd,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Switch(
+                            value: hasBaguage,
+                            onChanged: (value) =>
+                                setState(() => hasBaguage = value),
+                            activeColor: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (hasBaguage == true) ...[
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                      TextFormField(
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Iconsax.weight),
+                          labelText: TTexts.baguage,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF6B8DC8),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: TColors.primary,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                    if (isFormValid) ...[
+                      SizedBox(
+                        height: THelperFunctions.screenHeight() * 0.36,
+                        width: THelperFunctions.screenWidth() * 0.9,
+                        child: Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(TSizes.defaultSpace),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Résumé',
+                                  style: TextStyle(
+                                    fontSize: TSizes.lg,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height:
+                                      THelperFunctions.screenHeight() * 0.03,
+                                ),
+                                if (isCalculating)
+                                  const CircularProgressIndicator(),
+                                if (!isCalculating) ...[
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Distance',
+                                        style: TextStyle(fontSize: TSizes.md),
+                                      ),
+                                      Text(
+                                        "$distance km",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium!
+                                            .copyWith(
+                                              color: TColors.black,
+                                              fontSize: TSizes.md * 1.2,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height:
+                                        THelperFunctions.screenHeight() * 0.01,
+                                  ),
+                                  if (hasPenalty)
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Pénalité',
+                                          style: TextStyle(fontSize: TSizes.md),
+                                        ),
+                                        Text(
+                                          "20%",
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelMedium!
+                                              .copyWith(
+                                                color: TColors.error,
+                                                fontSize: TSizes.md * 1.2,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  SizedBox(
+                                    height:
+                                        THelperFunctions.screenHeight() * 0.01,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Prix unitaire',
+                                        style: TextStyle(fontSize: TSizes.md),
+                                      ),
+                                      Text(
+                                        "15.000 FCFA",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium!
+                                            .copyWith(
+                                              color: TColors.black,
+                                              fontSize: TSizes.md * 1.2,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height:
+                                        THelperFunctions.screenHeight() * 0.01,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Quantité',
+                                        style: TextStyle(fontSize: TSizes.md),
+                                      ),
+                                      Text(
+                                        "35",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium!
+                                            .copyWith(
+                                              color: TColors.black,
+                                              fontSize: TSizes.md * 1.2,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  Divider(
+                                    color: Colors.grey,
+                                    thickness: 0.5,
+                                    height:
+                                        THelperFunctions.screenHeight() * 0.02,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Prix Total',
+                                        style: TextStyle(
+                                          fontSize: TSizes.md,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        '$price FCFA',
+                                        style: TextStyle(
+                                          fontSize: TSizes.md * 1.2,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                    SizedBox(
+                      height: THelperFunctions.screenHeight() * 0.07,
+                      width: THelperFunctions.screenWidth() * 0.9,
+                      child: ElevatedButton(
+                        onPressed: isFormValid ? handleSellTicket : null,
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: isFormValid
+                              ? TColors.buttonSecondary
+                              : TColors.buttonPrimary.withAlpha(200),
+                          minimumSize: Size(
+                            THelperFunctions.screenWidth() * 0.4,
+                            50,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Valider la Vente',
+                          style: TextStyle(fontSize: TSizes.md),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              if (hasBaguage == true) ...[
-                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                TextFormField(
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Iconsax.weight),
-                    labelText: TTexts.baguage,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF6B8DC8)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                        color: TColors.primary,
-                        width: 2.0,
-                      ),
-                    ),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ],
-              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-              if (isFormValid) ...[
-                SizedBox(
-                  height: THelperFunctions.screenHeight() * 0.36,
-                  width: THelperFunctions.screenWidth() * 0.9,
-                  child: Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(TSizes.defaultSpace),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Résumé',
-                            style: TextStyle(
-                              fontSize: TSizes.lg,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(
-                            height: THelperFunctions.screenHeight() * 0.03,
-                          ),
-                          if (isCalculating) const CircularProgressIndicator(),
-                          if (!isCalculating) ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Distance',
-                                  style: TextStyle(fontSize: TSizes.md),
-                                ),
-                                Text(
-                                  "$distance km",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium!
-                                      .copyWith(
-                                        color: TColors.black,
-                                        fontSize: TSizes.md * 1.2,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(
-                              height: THelperFunctions.screenHeight() * 0.01,
-                            ),
-                            if (hasPenalty)
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Pénalité',
-                                    style: TextStyle(fontSize: TSizes.md),
-                                  ),
-                                  Text(
-                                    "20%",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium!
-                                        .copyWith(
-                                          color: TColors.error,
-                                          fontSize: TSizes.md * 1.2,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            SizedBox(
-                              height: THelperFunctions.screenHeight() * 0.01,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Prix unitaire',
-                                  style: TextStyle(fontSize: TSizes.md),
-                                ),
-                                Text(
-                                  "15.000 FCFA",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium!
-                                      .copyWith(
-                                        color: TColors.black,
-                                        fontSize: TSizes.md * 1.2,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(
-                              height: THelperFunctions.screenHeight() * 0.01,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Quantité',
-                                  style: TextStyle(fontSize: TSizes.md),
-                                ),
-                                Text(
-                                  "35",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium!
-                                      .copyWith(
-                                        color: TColors.black,
-                                        fontSize: TSizes.md * 1.2,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            Divider(
-                              color: Colors.grey,
-                              thickness: 0.5,
-                              height: THelperFunctions.screenHeight() * 0.02,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Prix Total',
-                                  style: TextStyle(
-                                    fontSize: TSizes.md,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  '$price FCFA',
-                                  style: TextStyle(
-                                    fontSize: TSizes.md * 1.2,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-              SizedBox(
-                height: THelperFunctions.screenHeight() * 0.07,
-                width: THelperFunctions.screenWidth() * 0.9,
-                child: ElevatedButton(
-                  onPressed: isFormValid ? handleSellTicket : null,
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: isFormValid
-                        ? TColors.buttonSecondary
-                        : TColors.buttonPrimary.withAlpha(200),
-                    minimumSize: Size(THelperFunctions.screenWidth() * 0.4, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text(
-                    'Valider la Vente',
-                    style: TextStyle(fontSize: TSizes.md),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
