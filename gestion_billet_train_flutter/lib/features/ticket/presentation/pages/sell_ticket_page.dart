@@ -7,9 +7,15 @@ import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
 import 'package:gestion_billet_train_flutter/core/constants/text_strings.dart';
+import 'package:gestion_billet_train_flutter/core/network/network_info.dart';
+import 'package:gestion_billet_train_flutter/features/ticket/data/datasources/ticket_local_datasource.dart';
+import 'package:gestion_billet_train_flutter/features/ticket/data/datasources/ticket_remote_datasource.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/data/models/setting_model.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/data/models/ticket_model.dart';
+import 'package:gestion_billet_train_flutter/features/ticket/presentation/bloc/ticket_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:iconsax/iconsax.dart';
 
@@ -50,13 +56,27 @@ class _SellTicketPageState extends State<SellTicketPage> {
 
   SettingModel? setting;
 
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  late Box _dataBox; // Will be initialized eagerly
+  final TicketLocalDataSource _localDataSource =
+      GetIt.instance<TicketLocalDataSource>();
+  final TicketRemoteDataSource _remoteDataSource =
+      GetIt.instance<TicketRemoteDataSource>();
+  final TicketBloc _ticketBloc = GetIt.instance<TicketBloc>();
+  final NetworkInfo _networkInfo = GetIt.instance<NetworkInfo>();
+
   @override
   void initState() {
     super.initState();
+    _openHiveBox(); // Eager initialization
     fetchInitialData();
   }
 
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  Future<void> _openHiveBox() async {
+    _dataBox = await Hive.openBox(
+      'initialData',
+    ); // Synchronous for this context
+  }
 
   Future<String?> getToken() async {
     return await _secureStorage.read(key: 'bearer_token');
@@ -65,6 +85,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
   Future<void> fetchInitialData() async {
     setState(() => loading = true);
     try {
+      await _openHiveBox(); // Ensure _dataBox is initialized before proceeding
       final token = await getToken();
       if (token == null) throw Exception('Token non trouvé');
 
@@ -73,76 +94,148 @@ class _SellTicketPageState extends State<SellTicketPage> {
         'Content-Type': 'application/json',
       };
 
-      final responses = await Future.wait([
-        http.get(
+      if (await _networkInfo.isConnected) {
+        // Fetch data online if connected
+        final responseSettings = await http.get(
           Uri.parse('http://192.168.137.221:8000/api/v1/setting'),
           headers: headers,
-        ),
-        http.get(
+        );
+        if (responseSettings.statusCode == 200) {
+          final jsonData = jsonDecode(responseSettings.body);
+          if (jsonData['status'] == true && jsonData['setting'] != null) {
+            setting = SettingModel.fromJson(
+              jsonData['setting'] as Map<String, dynamic>,
+            );
+            await _dataBox.put('setting', setting!.toJson());
+          }
+        }
+
+        final responseLocations = await http.get(
           Uri.parse('http://192.168.137.221:8000/api/v1/gares'),
           headers: headers,
-        ),
-        http.get(
+        );
+        if (responseLocations.statusCode == 200) {
+          final jsonData = jsonDecode(responseLocations.body);
+          if (jsonData['status'] == true && jsonData['gares'] != null) {
+            locations = (jsonData['gares'] as List)
+                .map((item) => item as Map<String, dynamic>)
+                .toList();
+            await _dataBox.put('locations', locations);
+          }
+        }
+
+        final responseVoyages = await http.get(
           Uri.parse('http://192.168.137.221:8000/api/v1/voyages'),
           headers: headers,
-        ),
-        http.get(
+        );
+        if (responseVoyages.statusCode == 200) {
+          final jsonData = jsonDecode(responseVoyages.body);
+          voyages = (jsonData['voyages'] as List)
+              .map((item) => item as Map<String, dynamic>)
+              .toList();
+          await _dataBox.put('voyages', voyages);
+        }
+
+        final responsePaiement = await http.get(
           Uri.parse('http://192.168.137.221:8000/api/v1/paiements'),
           headers: headers,
-        ),
-        http.get(
+        );
+        if (responsePaiement.statusCode == 200) {
+          final jsonData = jsonDecode(responsePaiement.body);
+          paiement = (jsonData['paiements'] as List)
+              .map((item) => item as Map<String, dynamic>)
+              .toList();
+          await _dataBox.put('paiement', paiement);
+        }
+
+        final responseClasse = await http.get(
           Uri.parse('http://192.168.137.221:8000/api/v1/classes'),
           headers: headers,
-        ),
-      ]);
+        );
+        if (responseClasse.statusCode == 200) {
+          final jsonData = jsonDecode(responseClasse.body);
+          classse = (jsonData['classes'] as List)
+              .map((item) => item as Map<String, dynamic>)
+              .toList();
+          await _dataBox.put('classse', classse);
+        }
+      }
 
-      if (responses[0].statusCode == 200) {
-        final jsonData = jsonDecode(responses[0].body);
-        if (jsonData['status'] == true && jsonData['setting'] != null) {
-          setState(() => setting = SettingModel.fromJson(jsonData['setting']));
-        }
-      }
-      if (responses[1].statusCode == 200) {
-        final jsonData = jsonDecode(responses[1].body);
-        if (jsonData['status'] == true && jsonData['gares'] != null) {
-          setState(
-            () =>
-                locations = List<Map<String, dynamic>>.from(jsonData['gares']),
-          );
-        }
-      }
-      if (responses[2].statusCode == 200) {
-        final jsonData = jsonDecode(responses[2].body);
-        if (jsonData['status'] == true && jsonData['voyages'] != null) {
-          setState(
-            () =>
-                voyages = List<Map<String, dynamic>>.from(jsonData['voyages']),
-          );
-        }
-      }
-      if (responses[3].statusCode == 200) {
-        final jsonData = jsonDecode(responses[3].body);
-        if (jsonData['status'] == true && jsonData['paiements'] != null) {
-          setState(
-            () => paiement = List<Map<String, dynamic>>.from(
-              jsonData['paiements'],
-            ),
-          );
-        }
-      }
-      if (responses[4].statusCode == 200) {
-        final jsonData = jsonDecode(responses[4].body);
-        if (jsonData['status'] == true && jsonData['classes'] != null) {
-          setState(
-            () =>
-                classse = List<Map<String, dynamic>>.from(jsonData['classes']),
-          );
-        }
-      }
+      // Always load from Hive as fallback or primary source if offline
+      final storedSetting = _dataBox.get('setting');
+      setting = storedSetting != null
+          ? SettingModel.fromJson(
+              Map<String, dynamic>.from(storedSetting as Map),
+            )
+          : SettingModel(
+              id: 1,
+              modeVente: 'par_kilometrage',
+              tarifKilometrique: 100.0,
+              tarifMinimum: 5000.0,
+              coefficientsClasses: {'1': 1.0, '2': 0.8},
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+      locations =
+          (_dataBox.get('locations') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              .toList() ??
+          [];
+      voyages =
+          (_dataBox.get('voyages') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              .toList() ??
+          [];
+      paiement =
+          (_dataBox.get('paiement') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              .toList() ??
+          [];
+      classse =
+          (_dataBox.get('classse') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              .toList() ??
+          [];
     } catch (e) {
       print('Erreur fetch data: $e');
+      // Fallback to Hive data in case of any error
+      final storedSetting = _dataBox.get('setting');
+      setting = storedSetting != null
+          ? SettingModel.fromJson(
+              Map<String, dynamic>.from(storedSetting as Map),
+            )
+          : SettingModel(
+              id: 1,
+              modeVente: 'par_kilometrage',
+              tarifKilometrique: 100.0,
+              tarifMinimum: 5000.0,
+              coefficientsClasses: {'1': 1.0, '2': 0.8},
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+      locations =
+          (_dataBox.get('locations') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              .toList() ??
+          [];
+      voyages =
+          (_dataBox.get('voyages') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              .toList() ??
+          [];
+      paiement =
+          (_dataBox.get('paiement') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              .toList() ??
+          [];
+      classse =
+          (_dataBox.get('classse') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              .toList() ??
+          [];
+    } finally {
+      setState(() => loading = false); // Ensure loading is always turned off
     }
-    setState(() => loading = false);
   }
 
   double calculateDistanceFromGares(String? departureId, String? arrivalId) {
@@ -172,76 +265,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
     if (basePrice < tarifMin) basePrice = tarifMin;
     if (hasPenalty) basePrice *= 1.2;
     return basePrice;
-  }
-
-  Future<void> sellTicket() async {
-    final token = await getToken();
-    if (token == null) return;
-
-    final int? qty = int.tryParse(quantity ?? '1');
-    if (qty == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Quantité invalide')));
-      return;
-    }
-
-    final ticket = TicketModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      departure:
-          locations.firstWhere(
-            (loc) => loc['id'].toString() == departureId!,
-          )['nom'] ??
-          '',
-      destination:
-          locations.firstWhere(
-            (loc) => loc['id'].toString() == arrivalId!,
-          )['nom'] ??
-          '',
-      price: price * qty, // Total price based on quantity
-      isValidated: false,
-      hasPenalty: hasPenalty,
-      createdAt: DateTime.now(),
-      trainNumber:
-          voyages.firstWhere(
-            (voy) => voy['id'].toString() == voyageId!,
-          )['trainNumber'] ??
-          '',
-      classType:
-          classse.firstWhere(
-            (clas) => clas['id'].toString() == classeId!,
-          )['classe'] ??
-          '',
-      wagon: 'A',
-      seatNumber: seatNumber,
-      travelDate: DateTime.now(),
-      isSynced: false,
-      clientName: clientName,
-      quantity: qty,
-    );
-
-    final headers = {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    };
-
-    final response = await http.post(
-      Uri.parse('http://192.168.137.221:8000/api/v1/tickets'),
-      headers: headers,
-      body: jsonEncode(ticket.toJson()),
-    );
-
-    if (response.statusCode == 201) {
-      final jsonData = jsonDecode(response.body);
-      setState(
-        () => soldTicket = TicketModel.fromJson(jsonData['ticket']).toJson(),
-      ); // Convert to Map
-    } else {
-      print('Erreur vente: ${response.body}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de la vente: ${response.body}')),
-      );
-    }
   }
 
   void handleSellTicket() {
@@ -314,7 +337,62 @@ class _SellTicketPageState extends State<SellTicketPage> {
         'quantity': quantity,
       };
     });
-    sellTicket();
+
+    final int? qty = int.tryParse(quantity ?? '1');
+    if (qty == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Quantité invalide')));
+      return;
+    }
+
+    final ticket = TicketModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      departure:
+          locations.firstWhere(
+            (loc) => loc['id'].toString() == departureId!,
+          )['nom'] ??
+          '',
+      destination:
+          locations.firstWhere(
+            (loc) => loc['id'].toString() == arrivalId!,
+          )['nom'] ??
+          '',
+      price: price * qty,
+      isValidated: false,
+      hasPenalty: hasPenalty,
+      createdAt: DateTime.now(),
+      trainNumber:
+          voyages.firstWhere(
+            (voy) => voy['id'].toString() == voyageId!,
+          )['trainNumber'] ??
+          '',
+      classType:
+          classse.firstWhere(
+            (clas) => clas['id'].toString() == classeId!,
+          )['classe'] ??
+          '',
+      wagon: 'A',
+      seatNumber: seatNumber,
+      travelDate: DateTime.now(),
+      isSynced: false,
+      clientName: clientName,
+      quantity: qty,
+    );
+
+    _ticketBloc.add(SellTicketEvent(ticket.toEntity()));
+  }
+
+  Future<void> syncTickets() async {
+    final unsyncedTickets = await _localDataSource.getUnsyncedTickets();
+    for (final ticketModel in unsyncedTickets) {
+      try {
+        await _remoteDataSource.saveTicket(ticketModel);
+        await _localDataSource.markAsSynced(ticketModel.id);
+      } catch (e) {
+        print('Sync failed for ticket ${ticketModel.id}: $e');
+      }
+    }
   }
 
   void handleBackToSell() {
@@ -352,7 +430,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
       seatNumber != null &&
       quantity != null &&
       setting != null;
-
   @override
   Widget build(BuildContext context) {
     if (showReceipt && soldTicket != null) {
@@ -522,7 +599,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     ),
                                   ),
                                   Text(
-                                    '${(soldTicket!['price'] * int.tryParse(soldTicket!['quantity'] ?? '1')).toStringAsFixed(2)} FCFA',
+                                    '${(soldTicket!['price'] * (int.tryParse(soldTicket!['quantity'] ?? '1') ?? 1)).toStringAsFixed(2)} FCFA',
                                     style: TextStyle(
                                       fontSize: TSizes.md * 1.3,
                                       fontWeight: FontWeight.bold,
