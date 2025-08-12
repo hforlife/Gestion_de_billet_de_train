@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:gestion_billet_train_flutter/features/auth/data/models/user_model.dart';
 import 'package:http/http.dart' as http;
 
@@ -9,11 +10,13 @@ abstract class AuthRemoteDataSource {
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   static const String _baseUrl =
-      'http://10.47.158.189:8000/api'; // Remplacez par votre URL
+      'http://192.168.137.221:8000/api'; // Remplacez par votre URL
+
+  // Instance de flutter_secure_storage
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
   Future<UserModel> login(String username, String password) async {
-    print('Appel API avec username: $username, password: $password');
     try {
       final response = await http
           .post(
@@ -23,18 +26,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('Réponse API: ${response.statusCode} - ${response.body}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == true || data['success'] == true) {
+          // Stocker le token dans le storage sécurisé
+          final token =
+              data['token'] ?? data['access_token'] ?? 'default_token';
+          await _secureStorage.write(key: 'bearer_token', value: token);
+
           final userData = data['user'] ?? data['data'];
           return UserModel(
             id: userData['id'] ?? 0,
             name: userData['name'] ?? username,
             email: userData['email'] ?? '$username@example.com',
             username: userData['username'] ?? username,
-            token: data['token'] ?? data['access_token'] ?? 'default_token',
+            token: token,
           );
         } else {
           throw Exception(data['message'] ?? 'Échec de la connexion');
@@ -45,7 +51,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         );
       }
     } catch (e) {
-      print('Exception dans login: $e');
       throw Exception('Erreur lors de l\'appel API: ${e.toString()}');
     }
   }

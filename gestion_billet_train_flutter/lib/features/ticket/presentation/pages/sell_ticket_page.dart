@@ -1,16 +1,17 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:gestion_billet_train_flutter/core/constants/app_colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
 import 'package:gestion_billet_train_flutter/core/constants/text_strings.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/data/models/setting_model.dart';
+import 'package:gestion_billet_train_flutter/features/ticket/data/models/ticket_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:iconsax/iconsax.dart'; // Ajustez selon votre projet
+import 'package:iconsax/iconsax.dart';
 
 class SellTicketPage extends StatefulWidget {
   const SellTicketPage({super.key});
@@ -25,6 +26,10 @@ class _SellTicketPageState extends State<SellTicketPage> {
   String? paymentId;
   String? classeId;
   String? voyageId;
+  String? clientName;
+  String? seatNumber;
+  String? quantity;
+  String? bearerToken;
 
   bool hasPenalty = false;
   bool hasBaguage = false;
@@ -44,132 +49,272 @@ class _SellTicketPageState extends State<SellTicketPage> {
   List<Map<String, dynamic>> classse = [];
 
   SettingModel? setting;
+
   @override
   void initState() {
     super.initState();
     fetchInitialData();
   }
 
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  Future<String?> getToken() async {
+    return await _secureStorage.read(key: 'bearer_token');
+  }
+
   Future<void> fetchInitialData() async {
     setState(() => loading = true);
     try {
-      final responseSettings = await http.get(
-        Uri.parse('http://192.168.137.221:8000/api/v1/setting'),
-      );
-      if (responseSettings.statusCode == 200) {
-        final jsonData = jsonDecode(responseSettings.body);
+      final token = await getToken();
+      if (token == null) throw Exception('Token non trouvé');
+
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+
+      final responses = await Future.wait([
+        http.get(
+          Uri.parse('http://192.168.137.221:8000/api/v1/setting'),
+          headers: headers,
+        ),
+        http.get(
+          Uri.parse('http://192.168.137.221:8000/api/v1/gares'),
+          headers: headers,
+        ),
+        http.get(
+          Uri.parse('http://192.168.137.221:8000/api/v1/voyages'),
+          headers: headers,
+        ),
+        http.get(
+          Uri.parse('http://192.168.137.221:8000/api/v1/paiements'),
+          headers: headers,
+        ),
+        http.get(
+          Uri.parse('http://192.168.137.221:8000/api/v1/classes'),
+          headers: headers,
+        ),
+      ]);
+
+      if (responses[0].statusCode == 200) {
+        final jsonData = jsonDecode(responses[0].body);
         if (jsonData['status'] == true && jsonData['setting'] != null) {
-          setState(() {
-            setting = SettingModel.fromJson(jsonData['setting']);
-          });
+          setState(() => setting = SettingModel.fromJson(jsonData['setting']));
         }
       }
-
-      final responseLocations = await http.get(
-        Uri.parse('http://192.168.137.221:8000/api/v1/locations'),
-      );
-      if (responseLocations.statusCode == 200) {
-        final jsonData = jsonDecode(responseLocations.body);
-        setState(() {
-          locations = List<Map<String, dynamic>>.from(jsonData['locations']);
-        });
+      if (responses[1].statusCode == 200) {
+        final jsonData = jsonDecode(responses[1].body);
+        if (jsonData['status'] == true && jsonData['gares'] != null) {
+          setState(
+            () =>
+                locations = List<Map<String, dynamic>>.from(jsonData['gares']),
+          );
+        }
       }
-
-      final responseVoyages = await http.get(
-        Uri.parse('http://192.168.137.221:8000/api/v1/voyages'),
-      );
-      if (responseVoyages.statusCode == 200) {
-        final jsonData = jsonDecode(responseVoyages.body);
-        setState(() {
-          voyages = List<Map<String, dynamic>>.from(jsonData['voyages']);
-        });
+      if (responses[2].statusCode == 200) {
+        final jsonData = jsonDecode(responses[2].body);
+        if (jsonData['status'] == true && jsonData['voyages'] != null) {
+          setState(
+            () =>
+                voyages = List<Map<String, dynamic>>.from(jsonData['voyages']),
+          );
+        }
       }
-
-      final responsePaiement = await http.get(
-        Uri.parse('http://192.168.137.221:8000/api/v1/paiements'),
-      );
-      if (responsePaiement.statusCode == 200) {
-        final jsonData = jsonDecode(responsePaiement.body);
-        setState(() {
-          paiement = List<Map<String, dynamic>>.from(jsonData['paiements']);
-        });
+      if (responses[3].statusCode == 200) {
+        final jsonData = jsonDecode(responses[3].body);
+        if (jsonData['status'] == true && jsonData['paiements'] != null) {
+          setState(
+            () => paiement = List<Map<String, dynamic>>.from(
+              jsonData['paiements'],
+            ),
+          );
+        }
       }
-
-      final responseClasse = await http.get(
-        Uri.parse('http://192.168.137.221:8000/api/v1/classes'),
-      );
-      if (responseClasse.statusCode == 200) {
-        final jsonData = jsonDecode(responseClasse.body);
-        setState(() {
-          classse = List<Map<String, dynamic>>.from(jsonData['classes']);
-        });
+      if (responses[4].statusCode == 200) {
+        final jsonData = jsonDecode(responses[4].body);
+        if (jsonData['status'] == true && jsonData['classes'] != null) {
+          setState(
+            () =>
+                classse = List<Map<String, dynamic>>.from(jsonData['classes']),
+          );
+        }
       }
     } catch (e) {
-      // gérer erreur réseau ou autre
       print('Erreur fetch data: $e');
     }
     setState(() => loading = false);
   }
 
-  double calculateDistance(double lat1, lon1, double lat2, lon2) {
-    // Simplification : formule approximative
-    const double earthRadius = 6371; // km
-    final double dLat = (lat2 - lat1) * (3.14159 / 180);
-    final double dLon = (lon2 - lon1) * (3.14159 / 180);
-    final double a =
-        dLat * dLat +
-        dLon * dLon * cos(lat1 * 3.14159 / 180) * cos(lat2 * 3.14159 / 180);
-    return earthRadius * 2 * asin(sqrt(a));
+  double calculateDistanceFromGares(String? departureId, String? arrivalId) {
+    if (departureId == null || arrivalId == null) return 0.0;
+    final depart = locations.firstWhere(
+      (loc) => loc['id'].toString() == departureId,
+      orElse: () => {},
+    );
+    final arrivee = locations.firstWhere(
+      (loc) => loc['id'].toString() == arrivalId,
+      orElse: () => {},
+    );
+    if (depart.isEmpty || arrivee.isEmpty) return 0.0;
+    final double distDepart =
+        double.tryParse(depart['distance_km']?.toString() ?? '0') ?? 0;
+    final double distArrivee =
+        double.tryParse(arrivee['distance_km']?.toString() ?? '0') ?? 0;
+    return (distDepart - distArrivee).abs();
   }
 
-  double calculatePrice(double distance, bool hasPenalty) {
-    double basePrice = distance * 0.5; // 0.5 € par km (exemple)
-    return hasPenalty ? basePrice * 1.2 : basePrice; // +20% avec pénalité
+  double calculatePrice() {
+    if (setting == null || classeId == null) return 0.0;
+    final double tarifKm = setting!.tarifKilometrique;
+    final double tarifMin = setting!.tarifMinimum;
+    final double coefClasse = setting!.coefficientsClasses[classeId!] ?? 1.0;
+    double basePrice = distance * tarifKm * coefClasse;
+    if (basePrice < tarifMin) basePrice = tarifMin;
+    if (hasPenalty) basePrice *= 1.2;
+    return basePrice;
+  }
+
+  Future<void> sellTicket() async {
+    final token = await getToken();
+    if (token == null) return;
+
+    final int? qty = int.tryParse(quantity ?? '1');
+    if (qty == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Quantité invalide')));
+      return;
+    }
+
+    final ticket = TicketModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      departure:
+          locations.firstWhere(
+            (loc) => loc['id'].toString() == departureId!,
+          )['nom'] ??
+          '',
+      destination:
+          locations.firstWhere(
+            (loc) => loc['id'].toString() == arrivalId!,
+          )['nom'] ??
+          '',
+      price: price * qty, // Total price based on quantity
+      isValidated: false,
+      hasPenalty: hasPenalty,
+      createdAt: DateTime.now(),
+      trainNumber:
+          voyages.firstWhere(
+            (voy) => voy['id'].toString() == voyageId!,
+          )['trainNumber'] ??
+          '',
+      classType:
+          classse.firstWhere(
+            (clas) => clas['id'].toString() == classeId!,
+          )['classe'] ??
+          '',
+      wagon: 'A',
+      seatNumber: seatNumber,
+      travelDate: DateTime.now(),
+      isSynced: false,
+      clientName: clientName,
+      quantity: qty,
+    );
+
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    };
+
+    final response = await http.post(
+      Uri.parse('http://192.168.137.221:8000/api/v1/tickets'),
+      headers: headers,
+      body: jsonEncode(ticket.toJson()),
+    );
+
+    if (response.statusCode == 201) {
+      final jsonData = jsonDecode(response.body);
+      setState(
+        () => soldTicket = TicketModel.fromJson(jsonData['ticket']).toJson(),
+      ); // Convert to Map
+    } else {
+      print('Erreur vente: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la vente: ${response.body}')),
+      );
+    }
   }
 
   void handleSellTicket() {
-    if (departureId == null || arrivalId == null || departureId == arrivalId) {
+    if (departureId == null ||
+        arrivalId == null ||
+        departureId == arrivalId ||
+        setting == null ||
+        clientName == null ||
+        seatNumber == null ||
+        quantity == null) {
       return;
     }
 
     setState(() => isCalculating = true);
-    final departure = locations.firstWhere((loc) => loc['id'] == departureId);
-    final arrival = locations.firstWhere((loc) => loc['id'] == arrivalId);
-    final voyage = voyages.firstWhere((voy) => voy['id'] == voyageId);
-    final paiment = paiement.firstWhere((pay) => pay['id'] == paymentId);
-    final classe = classse.firstWhere((clas) => clas['id'] == classeId);
-    // Simuler des coordonnées (ajoutez-les dans locations si besoin)
-    final calculatedDistance = calculateDistance(
-      48.8566,
-      2.3522,
-      48.8584,
-      2.2945,
-    ); // Exemple
-    final calculatedPrice = calculatePrice(calculatedDistance, hasPenalty);
-
+    final calculatedDistance = calculateDistanceFromGares(
+      departureId,
+      arrivalId,
+    );
+    final calculatedPrice = calculatePrice();
     setState(() {
       distance = calculatedDistance;
       price = calculatedPrice;
       isCalculating = false;
       showReceipt = true;
       soldTicket = {
-        'departure': departure['name'],
-        'arrival': arrival['name'],
-        'voyage': voyage['name'],
-        'paiement': paiment['name'],
-        'classse': classe['name'],
+        'departure':
+            locations.firstWhere(
+              (loc) => loc['id'].toString() == departureId!,
+            )['nom'] ??
+            '',
+        'arrival':
+            locations.firstWhere(
+              (loc) => loc['id'].toString() == arrivalId!,
+            )['nom'] ??
+            '',
+        'voyage':
+            voyages.firstWhere(
+              (voy) => voy['id'].toString() == voyageId!,
+            )['name'] ??
+            '',
+        'paiement':
+            paiement.firstWhere(
+              (pay) => pay['id'].toString() == paymentId!,
+            )['name'] ??
+            '',
+        'classse':
+            classse.firstWhere(
+              (clas) => clas['id'].toString() == classeId!,
+            )['classe'] ??
+            '',
         'distance': distance,
         'price': price,
         'hasPenalty': hasPenalty,
-        'trainNumber': 'T123', // Simulé
-        'wagonClass': '1ère', // Simulé
-        'wagon': 'A', // Simulé
-        'seat': '1', // Simulé
-        'tripNumber': 'TRP001', // Simulé
-        'saleDate': DateTime.now().toIso8601String(), // Simulé
-        'qrCode': 'QR_CODE_123', // Simulé
+        'trainNumber':
+            voyages.firstWhere(
+              (voy) => voy['id'].toString() == voyageId!,
+            )['trainNumber'] ??
+            'T123',
+        'wagonClass':
+            classse.firstWhere(
+              (clas) => clas['id'].toString() == classeId!,
+            )['type'] ??
+            '1ère',
+        'wagon': 'A',
+        'seat': seatNumber,
+        'tripNumber': 'TRP_${DateTime.now().millisecondsSinceEpoch}',
+        'saleDate': DateTime.now().toIso8601String(),
+        'qrCode': 'QR_${DateTime.now().millisecondsSinceEpoch}',
+        'clientName': clientName,
+        'quantity': quantity,
       };
     });
+    sellTicket();
   }
 
   void handleBackToSell() {
@@ -178,17 +323,35 @@ class _SellTicketPageState extends State<SellTicketPage> {
       soldTicket = null;
       departureId = null;
       arrivalId = null;
+      paymentId = null;
+      classeId = null;
+      voyageId = null;
+      clientName = null;
+      seatNumber = null;
+      quantity = null;
       hasPenalty = false;
+      hasBaguage = false;
+      distance = 0.0;
+      price = 0.0;
     });
   }
 
   String formatDate(String dateString) {
     final date = DateTime.parse(dateString);
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   bool get isFormValid =>
-      departureId != null && arrivalId != null && departureId != arrivalId;
+      departureId != null &&
+      arrivalId != null &&
+      departureId != arrivalId &&
+      voyageId != null &&
+      classeId != null &&
+      paymentId != null &&
+      clientName != null &&
+      seatNumber != null &&
+      quantity != null &&
+      setting != null;
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +409,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
                               ),
                             ],
                           ),
-
                           SizedBox(
                             height: THelperFunctions.screenHeight() * 0.015,
                           ),
@@ -280,7 +442,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                               ),
                                             ),
                                             Text(
-                                              "Gare de Bamako",
+                                              soldTicket!['departure'],
                                               style: TextStyle(
                                                 fontSize: TSizes.md * 1.2,
                                                 fontWeight: FontWeight.bold,
@@ -329,7 +491,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                               ),
                                             ),
                                             Text(
-                                              "Gare de Koulikoro",
+                                              soldTicket!['arrival'],
                                               style: TextStyle(
                                                 fontSize: TSizes.md * 1.2,
                                                 fontWeight: FontWeight.bold,
@@ -360,7 +522,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     ),
                                   ),
                                   Text(
-                                    '65.000 FCFA',
+                                    '${(soldTicket!['price'] * int.tryParse(soldTicket!['quantity'] ?? '1')).toStringAsFixed(2)} FCFA',
                                     style: TextStyle(
                                       fontSize: TSizes.md * 1.3,
                                       fontWeight: FontWeight.bold,
@@ -373,7 +535,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           SizedBox(
                             height: THelperFunctions.screenHeight() * 0.025,
                           ),
-
                           ExpansionTile(
                             title: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -396,7 +557,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     style: TextStyle(fontSize: TSizes.md),
                                   ),
                                   Text(
-                                    "Amadou Diarra",
+                                    soldTicket!['clientName'],
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium!
@@ -411,7 +572,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
                               SizedBox(
                                 height: THelperFunctions.screenHeight() * 0.025,
                               ),
-
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -421,7 +581,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     style: TextStyle(fontSize: TSizes.md),
                                   ),
                                   Text(
-                                    "15.000 FCFA",
+                                    '${soldTicket!['price'].toStringAsFixed(2)} FCFA',
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium!
@@ -436,7 +596,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
                               SizedBox(
                                 height: THelperFunctions.screenHeight() * 0.02,
                               ),
-
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -446,7 +605,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     style: TextStyle(fontSize: TSizes.md),
                                   ),
                                   Text(
-                                    "TR-2024-001234",
+                                    soldTicket!['voyage'],
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium!
@@ -461,17 +620,16 @@ class _SellTicketPageState extends State<SellTicketPage> {
                               SizedBox(
                                 height: THelperFunctions.screenHeight() * 0.02,
                               ),
-
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Réference du ticket',
+                                    'Référence du ticket',
                                     style: TextStyle(fontSize: TSizes.md),
                                   ),
                                   Text(
-                                    "REF-2024-001234",
+                                    soldTicket!['tripNumber'],
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium!
@@ -486,7 +644,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
                               SizedBox(
                                 height: THelperFunctions.screenHeight() * 0.02,
                               ),
-
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -496,7 +653,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     style: TextStyle(fontSize: TSizes.md),
                                   ),
                                   Text(
-                                    "462.2 km",
+                                    '${soldTicket!['distance'].toStringAsFixed(1)} km',
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium!
@@ -511,7 +668,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
                               SizedBox(
                                 height: THelperFunctions.screenHeight() * 0.02,
                               ),
-
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -521,7 +677,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     style: TextStyle(fontSize: TSizes.md),
                                   ),
                                   Text(
-                                    "30/07/2025, 18:18",
+                                    formatDate(soldTicket!['saleDate']),
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium!
@@ -536,7 +692,6 @@ class _SellTicketPageState extends State<SellTicketPage> {
                               SizedBox(
                                 height: THelperFunctions.screenHeight() * 0.02,
                               ),
-
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -546,7 +701,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     style: TextStyle(fontSize: TSizes.md),
                                   ),
                                   Text(
-                                    "5",
+                                    soldTicket!['quantity'],
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium!
@@ -561,28 +716,28 @@ class _SellTicketPageState extends State<SellTicketPage> {
                               SizedBox(
                                 height: THelperFunctions.screenHeight() * 0.02,
                               ),
-
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Pénalité',
-                                    style: TextStyle(fontSize: TSizes.md),
-                                  ),
-                                  Text(
-                                    "Appliquer",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium!
-                                        .copyWith(
-                                          color: TColors.error,
-                                          fontSize: TSizes.md,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ],
-                              ),
+                              if (soldTicket!['hasPenalty'])
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Pénalité',
+                                      style: TextStyle(fontSize: TSizes.md),
+                                    ),
+                                    Text(
+                                      'Appliquer',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium!
+                                          .copyWith(
+                                            color: TColors.error,
+                                            fontSize: TSizes.md,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ],
+                                ),
                               SizedBox(
                                 height: THelperFunctions.screenHeight() * 0.02,
                               ),
@@ -616,7 +771,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                             ),
                                           ),
                                           Text(
-                                            "QT123456ABCDEF",
+                                            soldTicket!['qrCode'],
                                             style: TextStyle(
                                               fontSize: TSizes.md,
                                               fontWeight: FontWeight.bold,
@@ -743,6 +898,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           ),
                         ),
                       ),
+                      onChanged: (value) => setState(() => clientName = value),
                     ),
                     SizedBox(height: THelperFunctions.screenHeight() * 0.02),
                     Text(
@@ -770,15 +926,17 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         ),
                       ),
                       icon: const Icon(Iconsax.arrow_down_1),
-                      items: voyages.map((voy) {
-                        return DropdownMenuItem<String>(
-                          value: voy['id'],
-                          child: Text(voy['name']),
-                        );
-                      }).toList(),
+                      items: voyages
+                          .map(
+                            (voy) => DropdownMenuItem<String>(
+                              value: voy['id'].toString(),
+                              child: Text(voy['name'] ?? "Pas de nom"),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (value) => setState(() => voyageId = value),
                     ),
-                    if (setting == "par_kilometrage") ...[
+                    if (setting?.modeVente == "par_kilometrage") ...[
                       SizedBox(height: THelperFunctions.screenHeight() * 0.02),
                       Text(
                         'Gare départ',
@@ -806,18 +964,20 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           ),
                         ),
                         icon: const Icon(Iconsax.arrow_down_1),
-                        items: locations.map((loc) {
-                          return DropdownMenuItem<String>(
-                            value: loc['id'],
-                            child: Text(loc['name']),
-                          );
-                        }).toList(),
+                        items: locations
+                            .map(
+                              (loc) => DropdownMenuItem<String>(
+                                value: loc['id'].toString(),
+                                child: Text(loc['nom'] ?? 'Gare sans nom'),
+                              ),
+                            )
+                            .toList(),
                         onChanged: (value) =>
                             setState(() => departureId = value),
                       ),
                       SizedBox(height: THelperFunctions.screenHeight() * 0.02),
                       Text(
-                        "Gare d'arrivée",
+                        'Gare d\'arrivée',
                         style: Theme.of(context).textTheme.labelMedium!
                             .copyWith(
                               color: TColors.primary,
@@ -842,89 +1002,18 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           ),
                         ),
                         icon: const Icon(Iconsax.arrow_down_1),
-
-                        items: locations.map((loc) {
-                          return DropdownMenuItem<String>(
-                            value: loc['id'],
-                            child: Text(loc['name']),
-                          );
-                        }).toList(),
+                        items: locations
+                            .map(
+                              (loc) => DropdownMenuItem<String>(
+                                value: loc['id'].toString(),
+                                child: Text(loc['nom'] ?? 'Gare sans nom'),
+                              ),
+                            )
+                            .toList(),
                         onChanged: (value) => setState(() => arrivalId = value),
                       ),
                       SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-                      Text(
-                        'Gare départ',
-                        style: Theme.of(context).textTheme.labelMedium!
-                            .copyWith(
-                              color: TColors.primary,
-                              fontSize: TSizes.md,
-                            ),
-                      ),
-                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                      DropdownButtonFormField<String>(
-                        hint: const Text('Sélectionnez une gare'),
-                        value: departureId,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: TColors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
-                              color: TColors.grey,
-                              width: 2.0,
-                            ),
-                          ),
-                        ),
-                        icon: const Icon(Iconsax.arrow_down_1),
-                        items: locations.map((loc) {
-                          return DropdownMenuItem<String>(
-                            value: loc['id'],
-                            child: Text(loc['name']),
-                          );
-                        }).toList(),
-                        onChanged: (value) =>
-                            setState(() => departureId = value),
-                      ),
-                      SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-                      Text(
-                        "Gare d'arrivée",
-                        style: Theme.of(context).textTheme.labelMedium!
-                            .copyWith(
-                              color: TColors.primary,
-                              fontSize: TSizes.md,
-                            ),
-                      ),
-                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                      DropdownButtonFormField<String>(
-                        hint: const Text('Sélectionnez une gare'),
-                        value: arrivalId,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: TColors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
-                              color: TColors.grey,
-                              width: 2.0,
-                            ),
-                          ),
-                        ),
-                        icon: const Icon(Iconsax.arrow_down_1),
-
-                        items: locations.map((loc) {
-                          return DropdownMenuItem<String>(
-                            value: loc['id'],
-                            child: Text(loc['name']),
-                          );
-                        }).toList(),
-                        onChanged: (value) => setState(() => arrivalId = value),
-                      ),
                     ],
-
                     SizedBox(height: THelperFunctions.screenHeight() * 0.02),
                     Text(
                       'Classe',
@@ -951,12 +1040,14 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         ),
                       ),
                       icon: const Icon(Iconsax.arrow_down_1),
-                      items: classse.map((clas) {
-                        return DropdownMenuItem<String>(
-                          value: clas['id'],
-                          child: Text(clas['name']),
-                        );
-                      }).toList(),
+                      items: classse
+                          .map(
+                            (clas) => DropdownMenuItem<String>(
+                              value: clas['id'].toString(),
+                              child: Text(clas['classe'] ?? "Pas de classe"),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (value) => setState(() => classeId = value),
                     ),
                     SizedBox(height: THelperFunctions.screenHeight() * 0.02),
@@ -1004,6 +1095,8 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                   ),
                                 ),
                                 keyboardType: TextInputType.number,
+                                onChanged: (value) =>
+                                    setState(() => quantity = value),
                               ),
                             ),
                           ],
@@ -1041,6 +1134,8 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     ),
                                   ),
                                 ),
+                                onChanged: (value) =>
+                                    setState(() => seatNumber = value),
                               ),
                             ),
                           ],
@@ -1073,12 +1168,14 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         ),
                       ),
                       icon: const Icon(Iconsax.arrow_down_1),
-                      items: paiement.map((pay) {
-                        return DropdownMenuItem<String>(
-                          value: pay['id'],
-                          child: Text(pay['name']),
-                        );
-                      }).toList(),
+                      items: paiement
+                          .map(
+                            (pay) => DropdownMenuItem<String>(
+                              value: pay['id'].toString(),
+                              child: Text(pay['type'] ?? "Pas de type"),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (value) => setState(() => paymentId = value),
                     ),
                     SizedBox(height: THelperFunctions.screenHeight() * 0.03),
@@ -1086,12 +1183,9 @@ class _SellTicketPageState extends State<SellTicketPage> {
                       padding: EdgeInsets.symmetric(
                         horizontal: THelperFunctions.screenWidth() * 0.02,
                         vertical: THelperFunctions.screenHeight() * 0.005,
-                      ), // optionnel
+                      ),
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: TColors.grey, // 💙 Couleur de la bordure
-                          width: 2, // 🌟 Épaisseur de la bordure
-                        ),
+                        border: Border.all(color: TColors.grey, width: 2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -1117,12 +1211,9 @@ class _SellTicketPageState extends State<SellTicketPage> {
                       padding: EdgeInsets.symmetric(
                         horizontal: THelperFunctions.screenWidth() * 0.02,
                         vertical: THelperFunctions.screenHeight() * 0.005,
-                      ), // optionnel
+                      ),
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: TColors.grey, // 💙 Couleur de la bordure
-                          width: 2, // 🌟 Épaisseur de la bordure
-                        ),
+                        border: Border.all(color: TColors.grey, width: 2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -1151,7 +1242,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         ],
                       ),
                     ),
-                    if (hasBaguage == true) ...[
+                    if (hasBaguage) ...[
                       SizedBox(height: THelperFunctions.screenHeight() * 0.01),
                       TextFormField(
                         decoration: InputDecoration(
@@ -1257,7 +1348,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                         style: TextStyle(fontSize: TSizes.md),
                                       ),
                                       Text(
-                                        "15.000 FCFA",
+                                        "$price FCFA",
                                         style: Theme.of(context)
                                             .textTheme
                                             .labelMedium!
@@ -1281,7 +1372,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                         style: TextStyle(fontSize: TSizes.md),
                                       ),
                                       Text(
-                                        "35",
+                                        quantity ?? '1',
                                         style: Theme.of(context)
                                             .textTheme
                                             .labelMedium!
@@ -1310,7 +1401,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                         ),
                                       ),
                                       Text(
-                                        '$price FCFA',
+                                        '${(price * (int.tryParse(quantity ?? '1') ?? 1)).toStringAsFixed(2)} FCFA',
                                         style: TextStyle(
                                           fontSize: TSizes.md * 1.2,
                                           fontWeight: FontWeight.bold,

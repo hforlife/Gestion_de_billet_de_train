@@ -13,6 +13,8 @@ class ScanTicket {
     if (qrCode == 'AIEK123') {
       return Right(
         Ticket(
+          clientName: "Amadou Diarra",
+          quantity: 1,
           id: qrCode, // Changer en String si id est de type String
           departure: 'Gare A',
           destination: 'Gare B', // Correction du nom

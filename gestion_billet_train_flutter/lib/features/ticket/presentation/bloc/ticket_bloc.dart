@@ -50,7 +50,7 @@ class TicketBloc extends Bloc<TicketEvent, TicketState> {
     final result = await scanTicket(event.qrCode);
     result.fold(
       (failure) {
-        print('Scan failed: ${failure}');
+        print('Scan failed: $failure');
       },
       (ticket) {
         print('Scan successful, ticket: $ticket');

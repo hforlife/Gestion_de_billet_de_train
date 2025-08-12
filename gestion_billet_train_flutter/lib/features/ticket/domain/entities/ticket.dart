@@ -4,7 +4,9 @@ class Ticket extends Equatable {
   final String id;
   final String departure;
   final String destination;
+  final String? clientName;
   final double price;
+  final int? quantity;
   final bool isValidated;
   final bool hasPenalty;
   final DateTime createdAt;
@@ -19,6 +21,8 @@ class Ticket extends Equatable {
     required this.id,
     required this.departure,
     required this.destination,
+    required this.clientName,
+    required this.quantity,
     required this.price,
     required this.isValidated,
     required this.hasPenalty,
@@ -36,6 +40,8 @@ class Ticket extends Equatable {
     id,
     departure,
     destination,
+    clientName,
+    quantity,
     price,
     isValidated,
     hasPenalty,
