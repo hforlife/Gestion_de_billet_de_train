@@ -1,11 +1,9 @@
-// lib/features/ticket/data/datasources/ticket_local_datasource_impl.dart
 import 'package:gestion_billet_train_flutter/core/errors/exceptions.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/data/datasources/ticket_local_datasource.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/data/models/ticket_model.dart';
 import 'package:hive/hive.dart';
 
 class TicketLocalDataSourceImpl implements TicketLocalDataSource {
-  // Supprimé le paramètre hive: HiveInterface, utilisé Hive directement
   TicketLocalDataSourceImpl();
 
   @override
@@ -22,7 +20,10 @@ class TicketLocalDataSourceImpl implements TicketLocalDataSource {
   Future<void> saveTicket(TicketModel ticket) async {
     try {
       final box = await Hive.openBox<TicketModel>('tickets');
-      await box.put(ticket.id, ticket);
+      await box.put(
+        ticket.reference ?? ticket.id,
+        ticket,
+      ); // Use reference as key
     } catch (e) {
       throw CacheException();
     }
@@ -33,7 +34,7 @@ class TicketLocalDataSourceImpl implements TicketLocalDataSource {
     try {
       final box = await Hive.openBox<TicketModel>('tickets');
       final tickets = box.values
-          .where((ticket) => ticket.id == qrCode)
+          .where((ticket) => ticket.reference == qrCode)
           .toList();
       return tickets.isNotEmpty ? tickets.first : null;
     } catch (e) {

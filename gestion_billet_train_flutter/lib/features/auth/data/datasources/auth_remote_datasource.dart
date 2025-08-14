@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:gestion_billet_train_flutter/core/constants/api_constants.dart';
 import 'package:gestion_billet_train_flutter/features/auth/data/models/user_model.dart';
 import 'package:http/http.dart' as http;
 
@@ -9,8 +10,9 @@ abstract class AuthRemoteDataSource {
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  static const String _baseUrl =
-      'http://192.168.137.221:8000/api'; // Remplacez par votre URL
+  static String _baseUrl = ApiConstants.baseUrl; // Remplacez par votre URL
+  static String _baseUrlLocal =
+      ApiConstants.baseUrlLocal; // Remplacez par votre URL
 
   // Instance de flutter_secure_storage
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();

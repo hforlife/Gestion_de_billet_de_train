@@ -8,13 +8,13 @@ class TicketModel extends HiveObject {
   @HiveField(0)
   final String id;
   @HiveField(1)
-  final String departure;
+  final String? departure;
   @HiveField(2)
-  final String destination;
+  final String? destination;
   @HiveField(3)
   final double price;
   @HiveField(4)
-  bool isValidated; // Non-final to allow updates
+  bool isValidated;
   @HiveField(5)
   final bool hasPenalty;
   @HiveField(6)
@@ -30,16 +30,86 @@ class TicketModel extends HiveObject {
   @HiveField(11)
   final DateTime? travelDate;
   @HiveField(12)
-  bool isSynced = false;
-  @HiveField(13) // New field
   final String? clientName;
-  @HiveField(14) // New field
+  @HiveField(13)
   final int? quantity;
+  @HiveField(14)
+  final double? baggageWeight;
+  @HiveField(15)
+  final String? reference;
+  @HiveField(16)
+  final String? voyageId;
+  @HiveField(17)
+  final String? voyageName;
+  @HiveField(18)
+  final String? modePaiementType;
+  @HiveField(19)
+  final String? pointVenteType;
+  @HiveField(20)
+  final String? creatorName;
+  @HiveField(21)
+  final String? statut;
+  @HiveField(22)
+  bool isSynced;
+  @HiveField(23)
+  final int? modePaiementId;
+  @HiveField(24)
+  final int? pointVenteId;
+  @HiveField(25)
+  final int? classeWagonId;
+  @HiveField(26)
+  final bool? demiTarif;
+  @HiveField(27)
+  final bool? bagage;
+  @HiveField(28)
+  final int? placeId;
+  @HiveField(29)
+  final String? qrcode;
+  @HiveField(30)
+  final String? qrcodeUrl;
+  @HiveField(31)
+  final int? createdBy;
+  @HiveField(32)
+  final int? updatedBy;
+  @HiveField(33)
+  final DateTime? updatedAt;
+  @HiveField(34)
+  final DateTime? deletedAt;
+  @HiveField(35)
+  final double? total;
+  @HiveField(36)
+  final bool? isDemiTarif;
+  @HiveField(37)
+  final bool? hasBagage;
+  @HiveField(38)
+  final String? numeroVoyage;
+  @HiveField(39)
+  final int? ligneId;
+  @HiveField(40)
+  final DateTime? dateArrivee;
+  @HiveField(41)
+  final int? gareId;
+  @HiveField(42)
+  final int? actif;
+  @HiveField(43)
+  final int? nombreSieges;
+  @HiveField(44)
+  final int? siegesDisponibles;
+  @HiveField(45)
+  final String? prixMultiplier;
+  @HiveField(46)
+  final String? creatorUsername;
+  @HiveField(47)
+  final String? creatorEmail;
+  @HiveField(48)
+  final DateTime? creatorEmailVerifiedAt;
+  @HiveField(49)
+  final String? qrCodeUrl;
 
   TicketModel({
     required this.id,
-    required this.departure,
-    required this.destination,
+    this.departure,
+    this.destination,
     required this.price,
     required this.isValidated,
     required this.hasPenalty,
@@ -49,9 +119,44 @@ class TicketModel extends HiveObject {
     this.wagon,
     this.seatNumber,
     this.travelDate,
-    this.isSynced = false,
     this.clientName,
     this.quantity,
+    this.baggageWeight,
+    this.reference,
+    this.voyageId,
+    this.voyageName,
+    this.modePaiementType,
+    this.pointVenteType,
+    this.creatorName,
+    this.statut,
+    this.isSynced = false,
+    this.modePaiementId,
+    this.pointVenteId,
+    this.classeWagonId,
+    this.demiTarif,
+    this.bagage,
+    this.placeId,
+    this.qrcode,
+    this.qrcodeUrl,
+    this.createdBy,
+    this.updatedBy,
+    this.updatedAt,
+    this.deletedAt,
+    this.total,
+    this.isDemiTarif,
+    this.hasBagage,
+    this.numeroVoyage,
+    this.ligneId,
+    this.dateArrivee,
+    this.gareId,
+    this.actif,
+    this.nombreSieges,
+    this.siegesDisponibles,
+    this.prixMultiplier,
+    this.creatorUsername,
+    this.creatorEmail,
+    this.creatorEmailVerifiedAt,
+    this.qrCodeUrl,
   });
 
   factory TicketModel.fromEntity(Ticket ticket) {
@@ -68,9 +173,44 @@ class TicketModel extends HiveObject {
       wagon: ticket.wagon,
       seatNumber: ticket.seatNumber,
       travelDate: ticket.travelDate,
-      isSynced: ticket.isSynced ?? false,
-      clientName: ticket.clientName, // New field
-      quantity: ticket.quantity, // New field
+      clientName: ticket.clientName,
+      quantity: ticket.quantity,
+      baggageWeight: ticket.baggageWeight,
+      reference: ticket.reference,
+      voyageId: ticket.voyageId,
+      voyageName: ticket.voyageName,
+      modePaiementType: ticket.modePaiementType,
+      pointVenteType: ticket.pointVenteType,
+      creatorName: ticket.creatorName,
+      statut: ticket.statut,
+      isSynced: ticket.isSynced,
+      modePaiementId: ticket.modePaiementId,
+      pointVenteId: ticket.pointVenteId,
+      classeWagonId: ticket.classeWagonId,
+      demiTarif: ticket.demiTarif,
+      bagage: ticket.bagage,
+      placeId: ticket.placeId,
+      qrcode: ticket.qrcode,
+      qrcodeUrl: ticket.qrcodeUrl,
+      createdBy: ticket.createdBy,
+      updatedBy: ticket.updatedBy,
+      updatedAt: ticket.updatedAt,
+      deletedAt: ticket.deletedAt,
+      total: ticket.total,
+      isDemiTarif: ticket.isDemiTarif,
+      hasBagage: ticket.hasBagage,
+      numeroVoyage: ticket.numeroVoyage,
+      ligneId: ticket.ligneId,
+      dateArrivee: ticket.dateArrivee,
+      gareId: ticket.gareId,
+      actif: ticket.actif,
+      nombreSieges: ticket.nombreSieges,
+      siegesDisponibles: ticket.siegesDisponibles,
+      prixMultiplier: ticket.prixMultiplier,
+      creatorUsername: ticket.creatorUsername,
+      creatorEmail: ticket.creatorEmail,
+      creatorEmailVerifiedAt: ticket.creatorEmailVerifiedAt,
+      qrCodeUrl: ticket.qrCodeUrl,
     );
   }
 
@@ -78,8 +218,6 @@ class TicketModel extends HiveObject {
     id: id,
     departure: departure,
     destination: destination,
-    clientName: clientName,
-    quantity: quantity,
     price: price,
     isValidated: isValidated,
     hasPenalty: hasPenalty,
@@ -89,10 +227,46 @@ class TicketModel extends HiveObject {
     wagon: wagon,
     seatNumber: seatNumber,
     travelDate: travelDate,
+    clientName: clientName,
+    quantity: quantity,
+    baggageWeight: baggageWeight,
+    reference: reference,
+    voyageId: voyageId,
+    voyageName: voyageName,
+    modePaiementType: modePaiementType,
+    pointVenteType: pointVenteType,
+    creatorName: creatorName,
+    statut: statut,
     isSynced: isSynced,
+    modePaiementId: modePaiementId,
+    pointVenteId: pointVenteId,
+    classeWagonId: classeWagonId,
+    demiTarif: demiTarif,
+    bagage: bagage,
+    placeId: placeId,
+    qrcode: qrcode,
+    qrcodeUrl: qrcodeUrl,
+    createdBy: createdBy,
+    updatedBy: updatedBy,
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+    total: total,
+    isDemiTarif: isDemiTarif,
+    hasBagage: hasBagage,
+    numeroVoyage: numeroVoyage,
+    ligneId: ligneId,
+    dateArrivee: dateArrivee,
+    gareId: gareId,
+    actif: actif,
+    nombreSieges: nombreSieges,
+    siegesDisponibles: siegesDisponibles,
+    prixMultiplier: prixMultiplier,
+    creatorUsername: creatorUsername,
+    creatorEmail: creatorEmail,
+    creatorEmailVerifiedAt: creatorEmailVerifiedAt,
+    qrCodeUrl: qrCodeUrl,
   );
 
-  // Add toJson method
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -107,32 +281,111 @@ class TicketModel extends HiveObject {
       'wagon': wagon,
       'seatNumber': seatNumber,
       'travelDate': travelDate?.toIso8601String(),
-      'isSynced': isSynced,
       'clientName': clientName,
       'quantity': quantity,
+      'baggageWeight': baggageWeight,
+      'reference': reference,
+      'voyageId': voyageId,
+      'voyageName': voyageName,
+      'modePaiementType': modePaiementType,
+      'pointVenteType': pointVenteType,
+      'creatorName': creatorName,
+      'statut': statut,
+      'isSynced': isSynced,
+      'modePaiementId': modePaiementId,
+      'pointVenteId': pointVenteId,
+      'classeWagonId': classeWagonId,
+      'demiTarif': demiTarif,
+      'bagage': bagage,
+      'placeId': placeId,
+      'qrcode': qrcode,
+      'qrcodeUrl': qrcodeUrl,
+      'createdBy': createdBy,
+      'updatedBy': updatedBy,
+      'updatedAt': updatedAt?.toIso8601String(),
+      'deletedAt': deletedAt?.toIso8601String(),
+      'total': total,
+      'isDemiTarif': isDemiTarif,
+      'hasBagage': hasBagage,
+      'numeroVoyage': numeroVoyage,
+      'ligneId': ligneId,
+      'dateArrivee': dateArrivee?.toIso8601String(),
+      'gareId': gareId,
+      'actif': actif,
+      'nombreSieges': nombreSieges,
+      'siegesDisponibles': siegesDisponibles,
+      'prixMultiplier': prixMultiplier,
+      'creatorUsername': creatorUsername,
+      'creatorEmail': creatorEmail,
+      'creatorEmailVerifiedAt': creatorEmailVerifiedAt?.toIso8601String(),
+      'qrCodeUrl': qrCodeUrl,
     };
   }
 
-  // Add fromJson factory method
   factory TicketModel.fromJson(Map<String, dynamic> json) {
     return TicketModel(
-      id: json['id'] as String,
-      departure: json['departure'] as String,
-      destination: json['destination'] as String,
-      price: (json['price'] as num).toDouble(),
-      isValidated: json['isValidated'] as bool,
-      hasPenalty: json['hasPenalty'] as bool,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      trainNumber: json['trainNumber'] as String?,
-      classType: json['classType'] as String?,
-      wagon: json['wagon'] as String?,
-      seatNumber: json['seatNumber'] as String?,
+      id: json['id']?.toString() ?? '',
+      departure: json['departure']?.toString(),
+      destination: json['destination']?.toString(),
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      isValidated: json['isValidated'] as bool? ?? false,
+      hasPenalty: json['hasPenalty'] as bool? ?? false,
+      createdAt:
+          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      trainNumber: json['trainNumber']?.toString(),
+      classType: json['classType']?.toString(),
+      wagon: json['wagon']?.toString(),
+      seatNumber: json['seatNumber']?.toString(),
       travelDate: json['travelDate'] != null
-          ? DateTime.parse(json['travelDate'] as String)
+          ? DateTime.tryParse(json['travelDate'] as String)
           : null,
-      isSynced: json['isSynced'] as bool? ?? false,
-      clientName: json['clientName'] as String?,
+      clientName: json['clientName']?.toString(),
       quantity: json['quantity'] as int?,
+      baggageWeight: (json['baggageWeight'] as num?)?.toDouble(),
+      reference: json['reference']?.toString(),
+      voyageId: json['voyageId']?.toString(),
+      voyageName: json['voyageName']?.toString(),
+      modePaiementType: json['modePaiementType']?.toString(),
+      pointVenteType: json['pointVenteType']?.toString(),
+      creatorName: json['creatorName']?.toString(),
+      statut: json['statut']?.toString(),
+      isSynced: json['isSynced'] as bool? ?? false,
+      modePaiementId: json['modePaiementId'] as int?,
+      pointVenteId: json['pointVenteId'] as int?,
+      classeWagonId: json['classeWagonId'] as int?,
+      demiTarif: json['demiTarif'] as bool?,
+      bagage: json['bagage'] as bool?,
+      placeId: json['placeId'] as int?,
+      qrcode: json['qrcode']?.toString(),
+      qrcodeUrl: json['qrcodeUrl']?.toString(),
+      createdBy: json['createdBy'] as int?,
+      updatedBy: json['updatedBy'] as int?,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'] as String)
+          : null,
+      deletedAt: json['deletedAt'] != null
+          ? DateTime.tryParse(json['deletedAt'] as String)
+          : null,
+      total: (json['total'] as num?)?.toDouble(),
+      isDemiTarif: json['isDemiTarif'] as bool?,
+      hasBagage: json['hasBagage'] as bool?,
+      numeroVoyage: json['numeroVoyage']?.toString(),
+      ligneId: json['ligneId'] as int?,
+      dateArrivee: json['dateArrivee'] != null
+          ? DateTime.tryParse(json['dateArrivee'] as String)
+          : null,
+      gareId: json['gareId'] as int?,
+      actif: json['actif'] as int?,
+      nombreSieges: json['nombreSieges'] as int?,
+      siegesDisponibles: json['siegesDisponibles'] as int?,
+      prixMultiplier: json['prixMultiplier']?.toString(),
+      creatorUsername: json['creatorUsername']?.toString(),
+      creatorEmail: json['creatorEmail']?.toString(),
+      creatorEmailVerifiedAt: json['creatorEmailVerifiedAt'] != null
+          ? DateTime.tryParse(json['creatorEmailVerifiedAt'] as String)
+          : null,
+      qrCodeUrl: json['qrCodeUrl']?.toString(),
     );
   }
 }

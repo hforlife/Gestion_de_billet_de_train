@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:gestion_billet_train_flutter/core/constants/api_constants.dart';
 import 'package:gestion_billet_train_flutter/core/constants/app_colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
@@ -13,6 +15,7 @@ import 'package:gestion_billet_train_flutter/features/ticket/data/datasources/ti
 import 'package:gestion_billet_train_flutter/features/ticket/data/models/setting_model.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/data/models/ticket_model.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/bloc/ticket_bloc.dart';
+import 'package:gestion_billet_train_flutter/features/ticket/presentation/widgets/ticket_recu_datails.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
@@ -34,6 +37,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
   String? voyageId;
   String? clientName;
   String? seatNumber;
+  double baggageWeight = 0;
   String? quantity;
   String? bearerToken;
 
@@ -46,18 +50,21 @@ class _SellTicketPageState extends State<SellTicketPage> {
   bool isCalculating = false;
   bool showReceipt = false;
   bool loading = false;
+  String baseUrl = ApiConstants.baseUrl;
+  String baseUrlLocal = ApiConstants.baseUrlLocal;
 
   Map<String, dynamic>? soldTicket;
 
   List<Map<String, dynamic>> locations = [];
   List<Map<String, dynamic>> voyages = [];
   List<Map<String, dynamic>> paiement = [];
+  List<Map<String, dynamic>> tarifs = [];
   List<Map<String, dynamic>> classse = [];
 
   SettingModel? setting;
 
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
-  late Box _dataBox; // Will be initialized eagerly
+  late Box _dataBox;
   final TicketLocalDataSource _localDataSource =
       GetIt.instance<TicketLocalDataSource>();
   final TicketRemoteDataSource _remoteDataSource =
@@ -68,14 +75,16 @@ class _SellTicketPageState extends State<SellTicketPage> {
   @override
   void initState() {
     super.initState();
-    _openHiveBox(); // Eager initialization
-    fetchInitialData();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _openHiveBox();
+    await fetchInitialData();
   }
 
   Future<void> _openHiveBox() async {
-    _dataBox = await Hive.openBox(
-      'initialData',
-    ); // Synchronous for this context
+    _dataBox = await Hive.openBox('initialData');
   }
 
   Future<String?> getToken() async {
@@ -83,9 +92,10 @@ class _SellTicketPageState extends State<SellTicketPage> {
   }
 
   Future<void> fetchInitialData() async {
+    if (!mounted) return;
     setState(() => loading = true);
+
     try {
-      await _openHiveBox(); // Ensure _dataBox is initialized before proceeding
       final token = await getToken();
       if (token == null) throw Exception('Token non trouvé');
 
@@ -95,292 +105,518 @@ class _SellTicketPageState extends State<SellTicketPage> {
       };
 
       if (await _networkInfo.isConnected) {
-        // Fetch data online if connected
         final responseSettings = await http.get(
-          Uri.parse('http://192.168.137.221:8000/api/v1/setting'),
+          Uri.parse('$baseUrl/v1/setting'),
           headers: headers,
         );
+
+        if (!mounted) return;
+
         if (responseSettings.statusCode == 200) {
-          final jsonData = jsonDecode(responseSettings.body);
-          if (jsonData['status'] == true && jsonData['setting'] != null) {
-            setting = SettingModel.fromJson(
-              jsonData['setting'] as Map<String, dynamic>,
+          final responseBody = responseSettings.body;
+          try {
+            final jsonData = jsonDecode(responseBody) as Map<String, dynamic>;
+            print('API Response (Settings): $jsonData');
+            if (jsonData['status'] == true) {
+              final settingRaw = jsonData['setting'];
+              final SettingModel? newSetting = settingRaw != null
+                  ? SettingModel.fromJson(Map<String, dynamic>.from(settingRaw))
+                  : SettingModel(
+                      modeVente: "par_voyage",
+                    ); // Default to par_voyage
+              print('New Setting: $newSetting');
+              await _dataBox.put('setting', newSetting?.toJson());
+              if (!mounted) return;
+              setState(() {
+                setting = newSetting;
+                print('Current Setting in State: $setting');
+              });
+            } else {
+              await _dataBox.put(
+                'setting',
+                SettingModel(modeVente: "par_voyage").toJson(),
+              );
+              if (!mounted) return;
+              setState(() => setting = SettingModel(modeVente: "par_voyage"));
+            }
+          } catch (e) {
+            print('JSON Decode Error: $e, Response: $responseBody');
+            await _dataBox.put(
+              'setting',
+              SettingModel(modeVente: "par_voyage").toJson(),
             );
-            await _dataBox.put('setting', setting!.toJson());
+            if (!mounted) return;
+            setState(() => setting = SettingModel(modeVente: "par_voyage"));
+          }
+        } else {
+          print(
+            'Non-200 Status Code: ${responseSettings.statusCode}, Body: ${responseSettings.body}',
+          );
+          await _dataBox.put(
+            'setting',
+            SettingModel(modeVente: "par_voyage").toJson(),
+          );
+          if (!mounted) return;
+          setState(() => setting = SettingModel(modeVente: "par_voyage"));
+        }
+
+        final responseVoyages = await http.get(
+          Uri.parse('$baseUrl/v1/voyages'),
+          headers: headers,
+        );
+        if (responseVoyages.statusCode == 200) {
+          final jsonData = jsonDecode(responseVoyages.body);
+          if (jsonData['status'] == true && jsonData['voyages'] != null) {
+            voyages = (jsonData['voyages'] as List)
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList();
+            await _dataBox.put('voyages', voyages);
           }
         }
 
         final responseLocations = await http.get(
-          Uri.parse('http://192.168.137.221:8000/api/v1/gares'),
+          Uri.parse('$baseUrl/v1/gares'),
           headers: headers,
         );
         if (responseLocations.statusCode == 200) {
           final jsonData = jsonDecode(responseLocations.body);
           if (jsonData['status'] == true && jsonData['gares'] != null) {
             locations = (jsonData['gares'] as List)
-                .map((item) => item as Map<String, dynamic>)
+                .map((item) => Map<String, dynamic>.from(item))
                 .toList();
             await _dataBox.put('locations', locations);
           }
         }
 
-        final responseVoyages = await http.get(
-          Uri.parse('http://192.168.137.221:8000/api/v1/voyages'),
+        final responseTarifs = await http.get(
+          Uri.parse('$baseUrl/v1/tarifGare'),
           headers: headers,
         );
-        if (responseVoyages.statusCode == 200) {
-          final jsonData = jsonDecode(responseVoyages.body);
-          voyages = (jsonData['voyages'] as List)
-              .map((item) => item as Map<String, dynamic>)
-              .toList();
-          await _dataBox.put('voyages', voyages);
+        if (responseTarifs.statusCode == 200) {
+          final jsonData = jsonDecode(responseTarifs.body);
+          if (jsonData['status'] == true && jsonData['tarifs'] != null) {
+            tarifs = (jsonData['tarifs'] as List)
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList();
+            await _dataBox.put('tarifs', tarifs);
+          }
         }
 
         final responsePaiement = await http.get(
-          Uri.parse('http://192.168.137.221:8000/api/v1/paiements'),
+          Uri.parse('$baseUrl/v1/paiements'),
           headers: headers,
         );
         if (responsePaiement.statusCode == 200) {
           final jsonData = jsonDecode(responsePaiement.body);
-          paiement = (jsonData['paiements'] as List)
-              .map((item) => item as Map<String, dynamic>)
-              .toList();
-          await _dataBox.put('paiement', paiement);
+          if (jsonData['paiements'] != null) {
+            paiement = (jsonData['paiements'] as List)
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList();
+            await _dataBox.put('paiement', paiement);
+          }
         }
 
         final responseClasse = await http.get(
-          Uri.parse('http://192.168.137.221:8000/api/v1/classes'),
+          Uri.parse('$baseUrl/v1/classes'),
           headers: headers,
         );
         if (responseClasse.statusCode == 200) {
           final jsonData = jsonDecode(responseClasse.body);
-          classse = (jsonData['classes'] as List)
-              .map((item) => item as Map<String, dynamic>)
-              .toList();
-          await _dataBox.put('classse', classse);
+          if (jsonData['classes'] != null) {
+            classse = (jsonData['classes'] as List)
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList();
+            await _dataBox.put('classse', classse);
+          }
         }
-      }
+      } else {
+        final storedSetting = _dataBox.get('setting');
+        if (!mounted) return;
+        setState(() {
+          setting = storedSetting != null
+              ? SettingModel.fromJson(Map<String, dynamic>.from(storedSetting))
+              : SettingModel(modeVente: "par_voyage");
+        });
 
-      // Always load from Hive as fallback or primary source if offline
-      final storedSetting = _dataBox.get('setting');
-      setting = storedSetting != null
-          ? SettingModel.fromJson(
-              Map<String, dynamic>.from(storedSetting as Map),
-            )
-          : SettingModel(
-              id: 1,
-              modeVente: 'par_kilometrage',
-              tarifKilometrique: 100.0,
-              tarifMinimum: 5000.0,
-              coefficientsClasses: {'1': 1.0, '2': 0.8},
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            );
-      locations =
-          (_dataBox.get('locations') as List?)
-              ?.map((item) => Map<String, dynamic>.from(item as Map))
-              .toList() ??
-          [];
-      voyages =
-          (_dataBox.get('voyages') as List?)
-              ?.map((item) => Map<String, dynamic>.from(item as Map))
-              .toList() ??
-          [];
-      paiement =
-          (_dataBox.get('paiement') as List?)
-              ?.map((item) => Map<String, dynamic>.from(item as Map))
-              .toList() ??
-          [];
-      classse =
-          (_dataBox.get('classse') as List?)
-              ?.map((item) => Map<String, dynamic>.from(item as Map))
-              .toList() ??
-          [];
+        voyages =
+            (_dataBox.get('voyages') as List?)
+                ?.map((item) => Map<String, dynamic>.from(item))
+                .toList() ??
+            [];
+        locations =
+            (_dataBox.get('locations') as List?)
+                ?.map((item) => Map<String, dynamic>.from(item))
+                .toList() ??
+            [];
+        tarifs =
+            (_dataBox.get('tarifs') as List?)
+                ?.map((item) => Map<String, dynamic>.from(item))
+                .toList() ??
+            [];
+        paiement =
+            (_dataBox.get('paiement') as List?)
+                ?.map((item) => Map<String, dynamic>.from(item))
+                .toList() ??
+            [];
+        classse =
+            (_dataBox.get('classse') as List?)
+                ?.map((item) => Map<String, dynamic>.from(item))
+                .toList() ??
+            [];
+      }
+      print(
+        'Data loaded: Voyages: ${voyages.length}, Locations: ${locations.length}, Tarifs: ${tarifs.length}, Paiement: ${paiement.length}, Classse: ${classse.length}',
+      );
     } catch (e) {
       print('Erreur fetch data: $e');
-      // Fallback to Hive data in case of any error
       final storedSetting = _dataBox.get('setting');
-      setting = storedSetting != null
-          ? SettingModel.fromJson(
-              Map<String, dynamic>.from(storedSetting as Map),
-            )
-          : SettingModel(
-              id: 1,
-              modeVente: 'par_kilometrage',
-              tarifKilometrique: 100.0,
-              tarifMinimum: 5000.0,
-              coefficientsClasses: {'1': 1.0, '2': 0.8},
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            );
-      locations =
-          (_dataBox.get('locations') as List?)
-              ?.map((item) => Map<String, dynamic>.from(item as Map))
-              .toList() ??
-          [];
+      if (!mounted) return;
+      setState(() {
+        setting = storedSetting != null
+            ? SettingModel.fromJson(Map<String, dynamic>.from(storedSetting))
+            : SettingModel(modeVente: "par_voyage");
+      });
       voyages =
           (_dataBox.get('voyages') as List?)
-              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              ?.map((item) => Map<String, dynamic>.from(item))
+              .toList() ??
+          [];
+      locations =
+          (_dataBox.get('locations') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item))
+              .toList() ??
+          [];
+      tarifs =
+          (_dataBox.get('tarifs') as List?)
+              ?.map((item) => Map<String, dynamic>.from(item))
               .toList() ??
           [];
       paiement =
           (_dataBox.get('paiement') as List?)
-              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              ?.map((item) => Map<String, dynamic>.from(item))
               .toList() ??
           [];
       classse =
           (_dataBox.get('classse') as List?)
-              ?.map((item) => Map<String, dynamic>.from(item as Map))
+              ?.map((item) => Map<String, dynamic>.from(item))
               .toList() ??
           [];
+      print(
+        'Data loaded (offline): Voyages: ${voyages.length}, Locations: ${locations.length}, Tarifs: ${tarifs.length}, Paiement: ${paiement.length}, Classse: ${classse.length}',
+      );
     } finally {
-      setState(() => loading = false); // Ensure loading is always turned off
+      if (!mounted) return;
+      setState(() => loading = false);
     }
   }
 
   double calculateDistanceFromGares(String? departureId, String? arrivalId) {
-    if (departureId == null || arrivalId == null) return 0.0;
+    if (departureId == null || arrivalId == null || locations.isEmpty) {
+      print('Invalid departureId, arrivalId, or empty locations');
+      return 0.0;
+    }
     final depart = locations.firstWhere(
       (loc) => loc['id'].toString() == departureId,
-      orElse: () => {},
+      orElse: () => {'distance_km': '0'},
     );
     final arrivee = locations.firstWhere(
       (loc) => loc['id'].toString() == arrivalId,
-      orElse: () => {},
+      orElse: () => {'distance_km': '0'},
     );
-    if (depart.isEmpty || arrivee.isEmpty) return 0.0;
     final double distDepart =
         double.tryParse(depart['distance_km']?.toString() ?? '0') ?? 0;
     final double distArrivee =
         double.tryParse(arrivee['distance_km']?.toString() ?? '0') ?? 0;
-    return (distDepart - distArrivee).abs();
+    final dist = (distDepart - distArrivee).abs();
+    print(
+      'Calculated distance: $dist km, depart: $distDepart, arrivee: $distArrivee',
+    );
+    return dist;
   }
 
   double calculatePrice() {
-    if (setting == null || classeId == null) return 0.0;
-    final double tarifKm = setting!.tarifKilometrique;
-    final double tarifMin = setting!.tarifMinimum;
-    final double coefClasse = setting!.coefficientsClasses[classeId!] ?? 1.0;
-    double basePrice = distance * tarifKm * coefClasse;
-    if (basePrice < tarifMin) basePrice = tarifMin;
-    if (hasPenalty) basePrice *= 1.2;
-    return basePrice;
+    double basePrice = 0.0;
+    double qty = double.tryParse(quantity ?? '1') ?? 1.0;
+    double baggageCost = 0.0;
+
+    print(
+      'Calculating price: modeVente=${setting?.modeVente}, voyageId=$voyageId, classeId=$classeId, departureId=$departureId, arrivalId=$arrivalId, quantity=$qty, hasPenalty=$hasPenalty, hasBaguage=$hasBaguage, baggageWeight=$baggageWeight',
+    );
+
+    if (setting!.modeVente == "par_voyage") {
+      if (voyageId != null && classeId != null && tarifs.isNotEmpty) {
+        final now = DateTime.now();
+        final selectedTarif = tarifs.firstWhere((tarif) {
+          final dateEffet = DateTime.tryParse(
+            tarif['date_effet']?.toString() ?? '',
+          );
+          final dateExpiration =
+              DateTime.tryParse(tarif['date_expiration']?.toString() ?? '') ??
+              DateTime(9999);
+          return tarif['voyage_id'].toString() == voyageId &&
+              tarif['classe_wagon_id'].toString() == classeId &&
+              (dateEffet == null || dateEffet.isBefore(now)) &&
+              dateExpiration.isAfter(now);
+        }, orElse: () => {'prix': '0.0'});
+        basePrice =
+            double.tryParse(selectedTarif['prix']?.toString() ?? '0.0') ?? 0.0;
+        print(
+          'par_voyage: Selected tarif=$selectedTarif, basePrice=$basePrice',
+        );
+        if (basePrice == 0.0) {
+          print(
+            'No valid tariff found for voyageId=$voyageId, classeId=$classeId',
+          );
+        }
+      } else {
+        print('par_voyage: Missing voyageId, classeId, or tariffs empty');
+      }
+    } else if (setting!.modeVente == "par_kilometrage") {
+      if (departureId != null &&
+          arrivalId != null &&
+          classeId != null &&
+          setting!.coefficientsClasses != null) {
+        final double tarifKm = setting!.tarifKilometrique ?? 0.0;
+        final double tarifMin = setting!.tarifMinimum ?? 0.0;
+        final double coefClasse =
+            setting!.coefficientsClasses![classeId!] ?? 1.0;
+        distance = calculateDistanceFromGares(departureId, arrivalId);
+        basePrice = distance * tarifKm * coefClasse;
+        if (basePrice < tarifMin) basePrice = tarifMin;
+        print(
+          'par_kilometrage: distance=$distance, tarifKm=$tarifKm, coefClasse=$coefClasse, tarifMin=$tarifMin, basePrice=$basePrice',
+        );
+      } else {
+        print(
+          'par_kilometrage: Missing departureId, arrivalId, classeId, or coefficientsClasses',
+        );
+      }
+    } else {
+      print('Unknown modeVente: ${setting!.modeVente}');
+    }
+
+    if (hasPenalty) {
+      basePrice *= 1.2;
+      print('Applied penalty: basePrice=$basePrice');
+    }
+
+    if (hasBaguage && baggageWeight > 10) {
+      double baguageTarif = setting!.baguageTarif ?? 500.0;
+      baggageCost = baggageWeight * baguageTarif;
+      print('Baggage cost: $baggageCost, baguageTarif=$baguageTarif');
+    }
+
+    final finalPrice = (basePrice + baggageCost) * qty;
+    print('Final price: $finalPrice');
+    return finalPrice;
   }
 
-  void handleSellTicket() {
-    if (departureId == null ||
-        arrivalId == null ||
-        departureId == arrivalId ||
-        setting == null ||
-        clientName == null ||
-        seatNumber == null ||
-        quantity == null) {
+  Timer? _debounce;
+
+  void debounceSetState(VoidCallback callback) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 100), () {
+      if (mounted) setState(callback);
+    });
+  }
+
+  void handleSellTicket() async {
+    if (!isFormValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez remplir tous les champs requis'),
+        ),
+      );
       return;
     }
 
     setState(() => isCalculating = true);
-    final calculatedDistance = calculateDistanceFromGares(
-      departureId,
-      arrivalId,
-    );
-    final calculatedPrice = calculatePrice();
-    setState(() {
-      distance = calculatedDistance;
-      price = calculatedPrice;
-      isCalculating = false;
-      showReceipt = true;
-      soldTicket = {
-        'departure':
-            locations.firstWhere(
-              (loc) => loc['id'].toString() == departureId!,
-            )['nom'] ??
-            '',
-        'arrival':
-            locations.firstWhere(
-              (loc) => loc['id'].toString() == arrivalId!,
-            )['nom'] ??
-            '',
-        'voyage':
-            voyages.firstWhere(
-              (voy) => voy['id'].toString() == voyageId!,
-            )['name'] ??
-            '',
-        'paiement':
-            paiement.firstWhere(
-              (pay) => pay['id'].toString() == paymentId!,
-            )['name'] ??
-            '',
-        'classse':
-            classse.firstWhere(
-              (clas) => clas['id'].toString() == classeId!,
-            )['classe'] ??
-            '',
-        'distance': distance,
-        'price': price,
-        'hasPenalty': hasPenalty,
-        'trainNumber':
-            voyages.firstWhere(
-              (voy) => voy['id'].toString() == voyageId!,
-            )['trainNumber'] ??
-            'T123',
-        'wagonClass':
-            classse.firstWhere(
-              (clas) => clas['id'].toString() == classeId!,
-            )['type'] ??
-            '1ère',
-        'wagon': 'A',
-        'seat': seatNumber,
-        'tripNumber': 'TRP_${DateTime.now().millisecondsSinceEpoch}',
-        'saleDate': DateTime.now().toIso8601String(),
-        'qrCode': 'QR_${DateTime.now().millisecondsSinceEpoch}',
-        'clientName': clientName,
-        'quantity': quantity,
-      };
-    });
+    try {
+      final calculatedDistance = (departureId != null && arrivalId != null)
+          ? calculateDistanceFromGares(departureId, arrivalId)
+          : 0.0;
+      final calculatedPrice = calculatePrice();
+      setState(() {
+        distance = calculatedDistance;
+        price = calculatedPrice;
+        isCalculating = false;
+        showReceipt = true;
+        soldTicket = {
+          'departure': setting!.modeVente == "par_voyage" && voyageId != null
+              ? locations.firstWhere(
+                      (loc) =>
+                          loc['id'].toString() ==
+                          voyages
+                              .firstWhere(
+                                (voy) => voy['id'].toString() == voyageId,
+                                orElse: () => {'gare_depart_id': ''},
+                              )['gare_depart_id']
+                              .toString(),
+                      orElse: () => {'nom': ''},
+                    )['nom'] ??
+                    ''
+              : (departureId != null
+                    ? locations.firstWhere(
+                            (loc) => loc['id'].toString() == departureId,
+                            orElse: () => {'nom': ''},
+                          )['nom'] ??
+                          ''
+                    : ''),
+          'arrival': setting!.modeVente == "par_voyage" && voyageId != null
+              ? locations.firstWhere(
+                      (loc) =>
+                          loc['id'].toString() ==
+                          voyages
+                              .firstWhere(
+                                (voy) => voy['id'].toString() == voyageId,
+                                orElse: () => {'gare_arrivee_id': ''},
+                              )['gare_arrivee_id']
+                              .toString(),
+                      orElse: () => {'nom': ''},
+                    )['nom'] ??
+                    ''
+              : (arrivalId != null
+                    ? locations.firstWhere(
+                            (loc) => loc['id'].toString() == arrivalId,
+                            orElse: () => {'nom': ''},
+                          )['nom'] ??
+                          ''
+                    : ''),
+          'voyage': voyageId != null
+              ? voyages.firstWhere(
+                      (voy) => voy['id'].toString() == voyageId,
+                      orElse: () => {'nom': ''},
+                    )['nom'] ??
+                    ''
+              : '',
+          'paiement': paymentId != null
+              ? paiement.firstWhere(
+                      (pay) => pay['id'].toString() == paymentId,
+                      orElse: () => {'name': ''},
+                    )['name'] ??
+                    ''
+              : '',
+          'classse': classeId != null
+              ? classse.firstWhere(
+                      (clas) => clas['id'].toString() == classeId,
+                      orElse: () => {'classe': ''},
+                    )['classe'] ??
+                    ''
+              : '',
+          'distance': distance,
+          'price': price,
+          'hasPenalty': hasPenalty,
+          'trainNumber': voyageId != null
+              ? voyages.firstWhere(
+                      (voy) => voy['id'].toString() == voyageId,
+                      orElse: () => {'trainNumber': 'T123'},
+                    )['trainNumber'] ??
+                    'T123'
+              : 'T123',
+          'wagonClass': classeId != null
+              ? classse.firstWhere(
+                      (clas) => clas['id'].toString() == classeId,
+                      orElse: () => {'type': '1ère'},
+                    )['type'] ??
+                    '1ère'
+              : '1ère',
+          'wagon': 'A',
+          'seat': seatNumber,
+          'tripNumber': 'TRP_${DateTime.now().millisecondsSinceEpoch}',
+          'saleDate': DateTime.now().toIso8601String(),
+          'qrCode': 'QR_${DateTime.now().millisecondsSinceEpoch}',
+          'clientName': clientName,
+          'quantity': quantity,
+          'baggageWeight': baggageWeight,
+        };
+      });
 
-    final int? qty = int.tryParse(quantity ?? '1');
-    if (qty == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Quantité invalide')));
-      return;
+      final int? qty = int.tryParse(quantity ?? '1');
+      if (qty == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Quantité invalide')));
+        return;
+      }
+
+      final ticket = TicketModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        departure: setting!.modeVente == "par_voyage" && voyageId != null
+            ? locations.firstWhere(
+                    (loc) =>
+                        loc['id'].toString() ==
+                        voyages
+                            .firstWhere(
+                              (voy) => voy['id'].toString() == voyageId,
+                              orElse: () => {'gare_depart_id': ''},
+                            )['gare_depart_id']
+                            .toString(),
+                    orElse: () => {'nom': ''},
+                  )['nom'] ??
+                  ''
+            : (departureId != null
+                  ? locations.firstWhere(
+                          (loc) => loc['id'].toString() == departureId,
+                          orElse: () => {'nom': ''},
+                        )['nom'] ??
+                        ''
+                  : ''),
+        destination: setting!.modeVente == "par_voyage" && voyageId != null
+            ? locations.firstWhere(
+                    (loc) =>
+                        loc['id'].toString() ==
+                        voyages
+                            .firstWhere(
+                              (voy) => voy['id'].toString() == voyageId,
+                              orElse: () => {'gare_arrivee_id': ''},
+                            )['gare_arrivee_id']
+                            .toString(),
+                    orElse: () => {'nom': ''},
+                  )['nom'] ??
+                  ''
+            : (arrivalId != null
+                  ? locations.firstWhere(
+                          (loc) => loc['id'].toString() == arrivalId,
+                          orElse: () => {'nom': ''},
+                        )['nom'] ??
+                        ''
+                  : ''),
+        price: price,
+        isValidated: false,
+        hasPenalty: hasPenalty,
+        createdAt: DateTime.now(),
+        trainNumber: voyageId != null
+            ? voyages.firstWhere(
+                    (voy) => voy['id'].toString() == voyageId,
+                    orElse: () => {'trainNumber': 'T123'},
+                  )['trainNumber'] ??
+                  'T123'
+            : 'T123',
+        classType: classeId != null
+            ? classse.firstWhere(
+                    (clas) => clas['id'].toString() == classeId,
+                    orElse: () => {'classe': ''},
+                  )['classe'] ??
+                  ''
+            : '',
+        wagon: 'A',
+        seatNumber: seatNumber,
+        travelDate: DateTime.now(),
+        isSynced: false,
+        clientName: clientName,
+        quantity: qty,
+        baggageWeight: baggageWeight,
+      );
+
+      _ticketBloc.add(SellTicketEvent(ticket.toEntity()));
+    } catch (e) {
+      print('Error in handleSellTicket: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erreur lors de la vente du billet')),
+      );
+    } finally {
+      setState(() => isCalculating = false);
     }
-
-    final ticket = TicketModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      departure:
-          locations.firstWhere(
-            (loc) => loc['id'].toString() == departureId!,
-          )['nom'] ??
-          '',
-      destination:
-          locations.firstWhere(
-            (loc) => loc['id'].toString() == arrivalId!,
-          )['nom'] ??
-          '',
-      price: price * qty,
-      isValidated: false,
-      hasPenalty: hasPenalty,
-      createdAt: DateTime.now(),
-      trainNumber:
-          voyages.firstWhere(
-            (voy) => voy['id'].toString() == voyageId!,
-          )['trainNumber'] ??
-          '',
-      classType:
-          classse.firstWhere(
-            (clas) => clas['id'].toString() == classeId!,
-          )['classe'] ??
-          '',
-      wagon: 'A',
-      seatNumber: seatNumber,
-      travelDate: DateTime.now(),
-      isSynced: false,
-      clientName: clientName,
-      quantity: qty,
-    );
-
-    _ticketBloc.add(SellTicketEvent(ticket.toEntity()));
   }
 
   Future<void> syncTickets() async {
@@ -414,519 +650,37 @@ class _SellTicketPageState extends State<SellTicketPage> {
     });
   }
 
-  String formatDate(String dateString) {
-    final date = DateTime.parse(dateString);
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
   bool get isFormValid =>
-      departureId != null &&
-      arrivalId != null &&
-      departureId != arrivalId &&
+      clientName != null &&
+      clientName!.isNotEmpty &&
       voyageId != null &&
       classeId != null &&
-      paymentId != null &&
-      clientName != null &&
-      seatNumber != null &&
       quantity != null &&
-      setting != null;
+      int.tryParse(quantity!) != null &&
+      (setting?.modeVente == "par_kilometrage"
+          ? (departureId != null &&
+                arrivalId != null &&
+                departureId != arrivalId &&
+                departureId!.isNotEmpty &&
+                arrivalId!.isNotEmpty)
+          : true);
+
+  bool get canShowSummary =>
+      (setting?.modeVente == "par_voyage" &&
+          voyageId != null &&
+          classeId != null) ||
+      (setting?.modeVente == "par_kilometrage" &&
+          departureId != null &&
+          arrivalId != null &&
+          classeId != null &&
+          departureId != arrivalId);
+
   @override
   Widget build(BuildContext context) {
     if (showReceipt && soldTicket != null) {
-      return Scaffold(
-        backgroundColor: TColors.grey,
-        appBar: AppBar(title: const Text('Reçu de Vente')),
-        body: Padding(
-          padding: EdgeInsets.all(THelperFunctions.screenWidth() * 0.04),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-                SizedBox(
-                  width: THelperFunctions.screenWidth() * 2,
-                  child: Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(
-                        THelperFunctions.screenWidth() * 0.05,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "BILLET TRANSPORT",
-                                style: TextStyle(
-                                  fontSize: TSizes.md * 1.2,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Container(
-                                height: THelperFunctions.screenWidth() * 0.08,
-                                decoration: BoxDecoration(
-                                  color: TColors.secondary.withAlpha(200),
-                                  borderRadius: BorderRadius.circular(
-                                    THelperFunctions.screenWidth() * 0.5,
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(
-                                    THelperFunctions.screenWidth() * 0.015,
-                                  ),
-                                  child: Text(
-                                    "Vendu",
-                                    style: TextStyle(
-                                      fontSize: TSizes.md,
-                                      color: TColors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: THelperFunctions.screenHeight() * 0.015,
-                          ),
-                          SizedBox(
-                            height: THelperFunctions.screenHeight() * 0.24,
-                            width: THelperFunctions.screenWidth() * 0.9,
-                            child: Card(
-                              child: Padding(
-                                padding: EdgeInsets.all(
-                                  THelperFunctions.screenWidth() * 0.05,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Iconsax.cd),
-                                        SizedBox(
-                                          width:
-                                              THelperFunctions.screenHeight() *
-                                              0.015,
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "Départ",
-                                              style: TextStyle(
-                                                fontSize: TSizes.md,
-                                              ),
-                                            ),
-                                            Text(
-                                              soldTicket!['departure'],
-                                              style: TextStyle(
-                                                fontSize: TSizes.md * 1.2,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(
-                                      height:
-                                          THelperFunctions.screenHeight() *
-                                          0.015,
-                                    ),
-                                    Divider(
-                                      color: Colors.grey,
-                                      thickness: 0.5,
-                                      height:
-                                          THelperFunctions.screenHeight() *
-                                          0.02,
-                                    ),
-                                    SizedBox(
-                                      height:
-                                          THelperFunctions.screenHeight() *
-                                          0.015,
-                                    ),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Iconsax.location,
-                                          color: TColors.secondary,
-                                        ),
-                                        SizedBox(
-                                          width:
-                                              THelperFunctions.screenHeight() *
-                                              0.015,
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "Arrivée",
-                                              style: TextStyle(
-                                                fontSize: TSizes.md,
-                                              ),
-                                            ),
-                                            Text(
-                                              soldTicket!['arrival'],
-                                              style: TextStyle(
-                                                fontSize: TSizes.md * 1.2,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: THelperFunctions.screenHeight() * 0.08,
-                            width: THelperFunctions.screenWidth() * 0.9,
-                            child: Card(
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                children: [
-                                  Text(
-                                    'Prix Total',
-                                    style: TextStyle(
-                                      fontSize: TSizes.md,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${(soldTicket!['price'] * (int.tryParse(soldTicket!['quantity'] ?? '1') ?? 1)).toStringAsFixed(2)} FCFA',
-                                    style: TextStyle(
-                                      fontSize: TSizes.md * 1.3,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: THelperFunctions.screenHeight() * 0.025,
-                          ),
-                          ExpansionTile(
-                            title: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Détails supplémentaires',
-                                  style: TextStyle(fontSize: TSizes.md),
-                                ),
-                                Icon(Iconsax.arrow_down_1),
-                              ],
-                            ),
-                            showTrailingIcon: false,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Nom du client',
-                                    style: TextStyle(fontSize: TSizes.md),
-                                  ),
-                                  Text(
-                                    soldTicket!['clientName'],
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium!
-                                        .copyWith(
-                                          color: TColors.black,
-                                          fontSize: TSizes.md,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: THelperFunctions.screenHeight() * 0.025,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Prix unitaire',
-                                    style: TextStyle(fontSize: TSizes.md),
-                                  ),
-                                  Text(
-                                    '${soldTicket!['price'].toStringAsFixed(2)} FCFA',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium!
-                                        .copyWith(
-                                          color: TColors.black,
-                                          fontSize: TSizes.md,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: THelperFunctions.screenHeight() * 0.02,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Numéro du voyage',
-                                    style: TextStyle(fontSize: TSizes.md),
-                                  ),
-                                  Text(
-                                    soldTicket!['voyage'],
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium!
-                                        .copyWith(
-                                          color: TColors.black,
-                                          fontSize: TSizes.md,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: THelperFunctions.screenHeight() * 0.02,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Référence du ticket',
-                                    style: TextStyle(fontSize: TSizes.md),
-                                  ),
-                                  Text(
-                                    soldTicket!['tripNumber'],
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium!
-                                        .copyWith(
-                                          color: TColors.black,
-                                          fontSize: TSizes.md,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: THelperFunctions.screenHeight() * 0.02,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Distance',
-                                    style: TextStyle(fontSize: TSizes.md),
-                                  ),
-                                  Text(
-                                    '${soldTicket!['distance'].toStringAsFixed(1)} km',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium!
-                                        .copyWith(
-                                          color: TColors.black,
-                                          fontSize: TSizes.md,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: THelperFunctions.screenHeight() * 0.02,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Date vente/voyage',
-                                    style: TextStyle(fontSize: TSizes.md),
-                                  ),
-                                  Text(
-                                    formatDate(soldTicket!['saleDate']),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium!
-                                        .copyWith(
-                                          color: TColors.black,
-                                          fontSize: TSizes.md,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: THelperFunctions.screenHeight() * 0.02,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Quantité',
-                                    style: TextStyle(fontSize: TSizes.md),
-                                  ),
-                                  Text(
-                                    soldTicket!['quantity'],
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium!
-                                        .copyWith(
-                                          color: TColors.black,
-                                          fontSize: TSizes.md,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: THelperFunctions.screenHeight() * 0.02,
-                              ),
-                              if (soldTicket!['hasPenalty'])
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Pénalité',
-                                      style: TextStyle(fontSize: TSizes.md),
-                                    ),
-                                    Text(
-                                      'Appliquer',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium!
-                                          .copyWith(
-                                            color: TColors.error,
-                                            fontSize: TSizes.md,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              SizedBox(
-                                height: THelperFunctions.screenHeight() * 0.02,
-                              ),
-                              SizedBox(
-                                height: THelperFunctions.screenHeight() * 0.080,
-                                width: THelperFunctions.screenWidth() * 0.9,
-                                child: Card(
-                                  child: Row(
-                                    children: [
-                                      SizedBox(
-                                        width:
-                                            THelperFunctions.screenWidth() *
-                                            0.045,
-                                      ),
-                                      Icon(Iconsax.scan_barcode),
-                                      SizedBox(
-                                        width:
-                                            THelperFunctions.screenWidth() *
-                                            0.035,
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            "Code QR",
-                                            style: TextStyle(
-                                              fontSize: TSizes.md,
-                                            ),
-                                          ),
-                                          Text(
-                                            soldTicket!['qrCode'],
-                                            style: TextStyle(
-                                              fontSize: TSizes.md,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: THelperFunctions.screenHeight() * 0.01),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Impression en cours...'),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: TColors.buttonPrimary,
-                        minimumSize: Size(
-                          THelperFunctions.screenWidth() * 0.4,
-                          THelperFunctions.screenHeight() * 0.08,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Iconsax.printer, size: TSizes.iconMd),
-                          SizedBox(
-                            width: THelperFunctions.screenWidth() * 0.015,
-                          ),
-                          Text(
-                            'Imprimer',
-                            style: TextStyle(fontSize: TSizes.md * 1.2),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: handleBackToSell,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: TColors.buttonSecondary,
-                        minimumSize: Size(
-                          THelperFunctions.screenWidth() * 0.4,
-                          THelperFunctions.screenHeight() * 0.08,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Text(
-                        'Nouvelle Vente',
-                        style: TextStyle(fontSize: TSizes.md * 1.2),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
+      return TicketRecuDatails(
+        soldTicket: soldTicket!,
+        handleBackToSell: handleBackToSell,
       );
     }
 
@@ -975,7 +729,23 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           ),
                         ),
                       ),
-                      onChanged: (value) => setState(() => clientName = value),
+                      onChanged: (value) {
+                        try {
+                          setState(() {
+                            clientName = value;
+                            price = calculatePrice();
+                          });
+                        } catch (e) {
+                          print('Error in clientName input: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Erreur lors de la saisie du nom du client',
+                              ),
+                            ),
+                          );
+                        }
+                      },
                     ),
                     SizedBox(height: THelperFunctions.screenHeight() * 0.02),
                     Text(
@@ -1003,15 +773,38 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         ),
                       ),
                       icon: const Icon(Iconsax.arrow_down_1),
-                      items: voyages
-                          .map(
-                            (voy) => DropdownMenuItem<String>(
-                              value: voy['id'].toString(),
-                              child: Text(voy['name'] ?? "Pas de nom"),
+                      items: voyages.isNotEmpty
+                          ? voyages
+                                .map(
+                                  (voy) => DropdownMenuItem<String>(
+                                    value: voy['id'].toString(),
+                                    child: Text(voy['nom'] ?? "Pas de nom"),
+                                  ),
+                                )
+                                .toList()
+                          : [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('Aucun voyage disponible'),
+                              ),
+                            ],
+                      onChanged: (value) {
+                        try {
+                          setState(() {
+                            voyageId = value;
+                            price = calculatePrice();
+                          });
+                        } catch (e) {
+                          print('Error in voyage dropdown: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Erreur lors de la sélection du voyage',
+                              ),
                             ),
-                          )
-                          .toList(),
-                      onChanged: (value) => setState(() => voyageId = value),
+                          );
+                        }
+                      },
                     ),
                     if (setting?.modeVente == "par_kilometrage") ...[
                       SizedBox(height: THelperFunctions.screenHeight() * 0.02),
@@ -1041,16 +834,44 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           ),
                         ),
                         icon: const Icon(Iconsax.arrow_down_1),
-                        items: locations
-                            .map(
-                              (loc) => DropdownMenuItem<String>(
-                                value: loc['id'].toString(),
-                                child: Text(loc['nom'] ?? 'Gare sans nom'),
+                        items: locations.isNotEmpty
+                            ? locations
+                                  .map(
+                                    (loc) => DropdownMenuItem<String>(
+                                      value: loc['id'].toString(),
+                                      child: Text(
+                                        loc['nom'] ?? 'Gare sans nom',
+                                      ),
+                                    ),
+                                  )
+                                  .toList()
+                            : [
+                                const DropdownMenuItem<String>(
+                                  value: null,
+                                  child: Text('Aucune gare disponible'),
+                                ),
+                              ],
+                        onChanged: (value) {
+                          try {
+                            setState(() {
+                              departureId = value;
+                              distance = calculateDistanceFromGares(
+                                departureId,
+                                arrivalId,
+                              );
+                              price = calculatePrice();
+                            });
+                          } catch (e) {
+                            print('Error in departure dropdown: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Erreur lors de la sélection de la gare de départ',
+                                ),
                               ),
-                            )
-                            .toList(),
-                        onChanged: (value) =>
-                            setState(() => departureId = value),
+                            );
+                          }
+                        },
                       ),
                       SizedBox(height: THelperFunctions.screenHeight() * 0.02),
                       Text(
@@ -1079,17 +900,57 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           ),
                         ),
                         icon: const Icon(Iconsax.arrow_down_1),
-                        items: locations
-                            .map(
-                              (loc) => DropdownMenuItem<String>(
-                                value: loc['id'].toString(),
-                                child: Text(loc['nom'] ?? 'Gare sans nom'),
+                        items: locations.isNotEmpty
+                            ? locations
+                                  .map(
+                                    (loc) => DropdownMenuItem<String>(
+                                      value: loc['id'].toString(),
+                                      child: Text(
+                                        loc['nom'] ?? 'Gare sans nom',
+                                      ),
+                                    ),
+                                  )
+                                  .toList()
+                            : [
+                                const DropdownMenuItem<String>(
+                                  value: null,
+                                  child: Text('Aucune gare disponible'),
+                                ),
+                              ],
+                        onChanged: (value) {
+                          try {
+                            setState(() {
+                              arrivalId = value;
+                              distance = calculateDistanceFromGares(
+                                departureId,
+                                arrivalId,
+                              );
+                              price = calculatePrice();
+                            });
+                          } catch (e) {
+                            print('Error in arrival dropdown: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Erreur lors de la sélection de la gare d\'arrivée',
+                                ),
                               ),
-                            )
-                            .toList(),
-                        onChanged: (value) => setState(() => arrivalId = value),
+                            );
+                          }
+                        },
                       ),
-                      SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+
+                      if (departureId != null &&
+                          arrivalId != null &&
+                          departureId == arrivalId) ...[
+                        SizedBox(
+                          height: THelperFunctions.screenHeight() * 0.02,
+                        ),
+                        const Text(
+                          'Les gares ne peuvent pas être identiques',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
                     ],
                     SizedBox(height: THelperFunctions.screenHeight() * 0.02),
                     Text(
@@ -1117,24 +978,43 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         ),
                       ),
                       icon: const Icon(Iconsax.arrow_down_1),
-                      items: classse
-                          .map(
-                            (clas) => DropdownMenuItem<String>(
-                              value: clas['id'].toString(),
-                              child: Text(clas['classe'] ?? "Pas de classe"),
+                      items: classse.isNotEmpty
+                          ? classse
+                                .map(
+                                  (clas) => DropdownMenuItem<String>(
+                                    value: clas['id'].toString(),
+                                    child: Text(
+                                      clas['classe'] ?? "Pas de classe",
+                                    ),
+                                  ),
+                                )
+                                .toList()
+                          : [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('Aucune classe disponible'),
+                              ),
+                            ],
+                      onChanged: (value) {
+                        try {
+                          setState(() {
+                            classeId = value;
+                            price = calculatePrice();
+                          });
+                        } catch (e) {
+                          print('Error in classe dropdown: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Erreur lors de la sélection de la classe',
+                              ),
                             ),
-                          )
-                          .toList(),
-                      onChanged: (value) => setState(() => classeId = value),
+                          );
+                        }
+                      },
                     ),
                     SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-                    if (departureId != null &&
-                        arrivalId != null &&
-                        departureId == arrivalId)
-                      const Text(
-                        'Les gares ne peuvent pas être identiques',
-                        style: TextStyle(color: Colors.red),
-                      ),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -1172,8 +1052,23 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                   ),
                                 ),
                                 keyboardType: TextInputType.number,
-                                onChanged: (value) =>
-                                    setState(() => quantity = value),
+                                onChanged: (value) {
+                                  try {
+                                    setState(() {
+                                      quantity = value;
+                                      price = calculatePrice();
+                                    });
+                                  } catch (e) {
+                                    print('Error in quantity input: $e');
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Erreur lors de la saisie de la quantité',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                             ),
                           ],
@@ -1211,8 +1106,20 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                     ),
                                   ),
                                 ),
-                                onChanged: (value) =>
-                                    setState(() => seatNumber = value),
+                                onChanged: (value) {
+                                  try {
+                                    setState(() => seatNumber = value);
+                                  } catch (e) {
+                                    print('Error in seat number input: $e');
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Erreur lors de la saisie du numéro de place',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                             ),
                           ],
@@ -1221,7 +1128,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                     ),
                     SizedBox(height: THelperFunctions.screenHeight() * 0.03),
                     Text(
-                      'Méthode de paiment',
+                      'Méthode de paiement',
                       style: Theme.of(context).textTheme.labelMedium!.copyWith(
                         color: TColors.primary,
                         fontSize: TSizes.md,
@@ -1245,15 +1152,35 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         ),
                       ),
                       icon: const Icon(Iconsax.arrow_down_1),
-                      items: paiement
-                          .map(
-                            (pay) => DropdownMenuItem<String>(
-                              value: pay['id'].toString(),
-                              child: Text(pay['type'] ?? "Pas de type"),
+                      items: paiement.isNotEmpty
+                          ? paiement
+                                .map(
+                                  (pay) => DropdownMenuItem<String>(
+                                    value: pay['id'].toString(),
+                                    child: Text(pay['type'] ?? "Pas de type"),
+                                  ),
+                                )
+                                .toList()
+                          : [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('Aucune méthode disponible'),
+                              ),
+                            ],
+                      onChanged: (value) {
+                        try {
+                          setState(() => paymentId = value);
+                        } catch (e) {
+                          print('Error in payment dropdown: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Erreur lors de la sélection de la méthode de paiement',
+                              ),
                             ),
-                          )
-                          .toList(),
-                      onChanged: (value) => setState(() => paymentId = value),
+                          );
+                        }
+                      },
                     ),
                     SizedBox(height: THelperFunctions.screenHeight() * 0.03),
                     Container(
@@ -1276,8 +1203,23 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           ),
                           Switch(
                             value: hasPenalty,
-                            onChanged: (value) =>
-                                setState(() => hasPenalty = value),
+                            onChanged: (value) {
+                              try {
+                                setState(() {
+                                  hasPenalty = value;
+                                  price = calculatePrice();
+                                });
+                              } catch (e) {
+                                print('Error in penalty switch: $e');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Erreur lors de l\'application de la pénalité',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
                             activeColor: AppColors.primary,
                           ),
                         ],
@@ -1303,7 +1245,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                               ),
                               Icon(Iconsax.bag_25),
                               Text(
-                                "Baguage",
+                                "Bagage",
                                 style: GoogleFonts.roboto(
                                   fontSize: TSizes.fontSizeMd,
                                 ),
@@ -1312,8 +1254,23 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           ),
                           Switch(
                             value: hasBaguage,
-                            onChanged: (value) =>
-                                setState(() => hasBaguage = value),
+                            onChanged: (value) {
+                              try {
+                                setState(() {
+                                  hasBaguage = value;
+                                  price = calculatePrice();
+                                });
+                              } catch (e) {
+                                print('Error in baggage switch: $e');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Erreur lors de la sélection du bagage',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
                             activeColor: AppColors.primary,
                           ),
                         ],
@@ -1321,10 +1278,19 @@ class _SellTicketPageState extends State<SellTicketPage> {
                     ),
                     if (hasBaguage) ...[
                       SizedBox(height: THelperFunctions.screenHeight() * 0.01),
+                      Text(
+                        'Poids des bagages (kg)',
+                        style: Theme.of(context).textTheme.labelMedium!
+                            .copyWith(
+                              color: TColors.primary,
+                              fontSize: TSizes.md,
+                            ),
+                      ),
+                      SizedBox(height: THelperFunctions.screenHeight() * 0.01),
                       TextFormField(
                         decoration: InputDecoration(
                           prefixIcon: Icon(Iconsax.weight),
-                          labelText: TTexts.baguage,
+                          labelText: 'Poids',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: const BorderSide(
@@ -1340,10 +1306,27 @@ class _SellTicketPageState extends State<SellTicketPage> {
                           ),
                         ),
                         keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          try {
+                            setState(() {
+                              baggageWeight = double.tryParse(value) ?? 0.0;
+                              price = calculatePrice();
+                            });
+                          } catch (e) {
+                            print('Error in baggage weight input: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Erreur lors de la saisie du poids des bagages',
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                     ],
                     SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-                    if (isFormValid) ...[
+                    if (canShowSummary) ...[
                       SizedBox(
                         height: THelperFunctions.screenHeight() * 0.36,
                         width: THelperFunctions.screenWidth() * 0.9,
@@ -1365,33 +1348,37 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                       THelperFunctions.screenHeight() * 0.03,
                                 ),
                                 if (isCalculating)
-                                  const CircularProgressIndicator(),
-                                if (!isCalculating) ...[
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Distance',
-                                        style: TextStyle(fontSize: TSizes.md),
-                                      ),
-                                      Text(
-                                        "$distance km",
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium!
-                                            .copyWith(
-                                              color: TColors.black,
-                                              fontSize: TSizes.md * 1.2,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(
-                                    height:
-                                        THelperFunctions.screenHeight() * 0.01,
-                                  ),
-                                  if (hasPenalty)
+                                  const CircularProgressIndicator()
+                                else ...[
+                                  if (setting!.modeVente == "par_kilometrage" &&
+                                      distance > 0) ...[
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Distance',
+                                          style: TextStyle(fontSize: TSizes.md),
+                                        ),
+                                        Text(
+                                          '${distance.toStringAsFixed(1)} km',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelMedium!
+                                              .copyWith(
+                                                color: TColors.black,
+                                                fontSize: TSizes.md * 1.2,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          THelperFunctions.screenHeight() *
+                                          0.01,
+                                    ),
+                                  ],
+                                  if (hasPenalty) ...[
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -1401,7 +1388,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                           style: TextStyle(fontSize: TSizes.md),
                                         ),
                                         Text(
-                                          "20%",
+                                          '20%',
                                           style: Theme.of(context)
                                               .textTheme
                                               .labelMedium!
@@ -1412,10 +1399,12 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                         ),
                                       ],
                                     ),
-                                  SizedBox(
-                                    height:
-                                        THelperFunctions.screenHeight() * 0.01,
-                                  ),
+                                    SizedBox(
+                                      height:
+                                          THelperFunctions.screenHeight() *
+                                          0.01,
+                                    ),
+                                  ],
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -1425,13 +1414,14 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                         style: TextStyle(fontSize: TSizes.md),
                                       ),
                                       Text(
-                                        "$price FCFA",
+                                        '${price.toStringAsFixed(2)} FCFA',
                                         style: Theme.of(context)
                                             .textTheme
                                             .labelMedium!
                                             .copyWith(
                                               color: TColors.black,
                                               fontSize: TSizes.md * 1.2,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                       ),
                                     ],

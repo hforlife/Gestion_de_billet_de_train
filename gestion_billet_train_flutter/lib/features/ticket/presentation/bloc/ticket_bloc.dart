@@ -1,4 +1,3 @@
-// lib/features/ticket/presentation/bloc/ticket_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/domain/entities/ticket.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/domain/usecases/scan_ticket.dart';
@@ -27,7 +26,10 @@ class TicketScanned extends TicketState {
   TicketScanned({required this.ticket});
 }
 
-class TicketSold extends TicketState {}
+class TicketSold extends TicketState {
+  final Ticket ticket; // Include ticket for isSynced update
+  TicketSold({required this.ticket});
+}
 
 class TicketError extends TicketState {
   final String message;
@@ -50,7 +52,8 @@ class TicketBloc extends Bloc<TicketEvent, TicketState> {
     final result = await scanTicket(event.qrCode);
     result.fold(
       (failure) {
-        print('Scan failed: $failure');
+        print('Scan failed: ${failure.message}');
+        emit(TicketError(message: failure.message));
       },
       (ticket) {
         print('Scan successful, ticket: $ticket');
@@ -60,7 +63,7 @@ class TicketBloc extends Bloc<TicketEvent, TicketState> {
   }
 
   void _onSellTicket(SellTicketEvent event, Emitter<TicketState> emit) async {
-    print('Starting sell for ticket: ${event.ticket}');
+    print('Starting sell for ticket: ${event.ticket.reference}');
     emit(TicketLoading());
     final result = await sellTicket(event.ticket);
     result.fold(
@@ -70,7 +73,7 @@ class TicketBloc extends Bloc<TicketEvent, TicketState> {
       },
       (_) {
         print('Sell successful');
-        emit(TicketSold());
+        emit(TicketSold(ticket: event.ticket.copyWith(isSynced: true)));
       },
     );
   }

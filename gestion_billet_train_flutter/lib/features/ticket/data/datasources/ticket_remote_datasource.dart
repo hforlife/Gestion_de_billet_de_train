@@ -36,6 +36,7 @@ class TicketRemoteDataSourceImpl implements TicketRemoteDataSource {
       departure: 'Bamako',
       destination: 'Koulikoro',
       price: 15500,
+      baggageWeight: 10,
       isValidated: false,
       hasPenalty: false,
       createdAt: DateTime.now(),

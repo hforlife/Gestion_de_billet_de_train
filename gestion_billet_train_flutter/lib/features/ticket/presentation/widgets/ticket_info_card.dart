@@ -81,7 +81,7 @@ class TicketInfoCard extends StatelessWidget {
                                   style: TextStyle(fontSize: TSizes.md),
                                 ),
                                 Text(
-                                  ticket.departure,
+                                  ticket.departure ?? "non trouver",
                                   style: TextStyle(
                                     fontSize: TSizes.md * 1.2,
                                     fontWeight: FontWeight.bold,
@@ -116,7 +116,7 @@ class TicketInfoCard extends StatelessWidget {
                                   style: TextStyle(fontSize: TSizes.md),
                                 ),
                                 Text(
-                                  ticket.destination,
+                                  ticket.destination ?? "non trouver",
                                   style: TextStyle(
                                     fontSize: TSizes.md * 1.2,
                                     fontWeight: FontWeight.bold,
@@ -274,11 +274,11 @@ class TicketInfoCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Numéro du voyage',
+                        'Nom & Prénom',
                         style: TextStyle(fontSize: TSizes.md),
                       ),
                       Text(
-                        "TR-2024-0001234",
+                        ticket.clientName ?? "pas de nom",
                         style: Theme.of(context).textTheme.labelMedium!
                             .copyWith(
                               color: TColors.black,
@@ -289,13 +289,15 @@ class TicketInfoCard extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: THelperFunctions.screenHeight() * 0.025),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Diastance', style: TextStyle(fontSize: TSizes.md)),
                       Text(
-                        "462.2 km",
+                        'Numéro du voyage',
+                        style: TextStyle(fontSize: TSizes.md),
+                      ),
+                      Text(
+                        ticket.numeroVoyage ?? "pas de numéro",
                         style: Theme.of(context).textTheme.labelMedium!
                             .copyWith(
                               color: TColors.black,
@@ -305,7 +307,7 @@ class TicketInfoCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: THelperFunctions.screenHeight() * 0.02),
+                  SizedBox(height: THelperFunctions.screenHeight() * 0.025),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -365,7 +367,7 @@ class TicketInfoCard extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "Code QR",
+                                ticket.reference ?? "pas de reference",
                                 style: TextStyle(fontSize: TSizes.md),
                               ),
                               Text(
