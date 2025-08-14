@@ -72,7 +72,7 @@ const deleteArret = (id) => {
             <div class="header-content">
                 <div class="header-title-wrapper">
                     <h1 class="page-title">Gestion des Arrêts</h1>
-                    <Link :href="route('create')" class="btn-create">
+                    <Link :href="route('arret.create')" class="btn-create">
                         <Plus size="16" class="me-1" />
                         Nouveaux Arrêts
                     </Link>
@@ -141,7 +141,7 @@ const deleteArret = (id) => {
                 <div class="table-header">
                     <h3 class="table-title">Liste des Arrêts</h3>
                     <Link
-                        :href="route('create')"
+                        :href="route('arret.create')"
                         class="btn-create-sm"
                         aria-label="Créer une nouvelle vente"
                     >

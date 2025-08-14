@@ -124,6 +124,8 @@ return new class extends Migration {
             $table->string('numero_voyage')->unique();
             $table->foreignId('train_id')->constrained('trains');
             $table->foreignId('ligne_id')->constrained('lignes');
+            $table->foreignId('gare_depart_id')->constrained('gares');
+            $table->foreignId('gare_arrivee_id')->constrained('gares');
             $table->dateTime('date_depart');
             $table->dateTime('date_arrivee');
             $table->enum('statut', ['programme', 'en_cours', 'termine', 'annule'])->default('programme');
@@ -189,6 +191,10 @@ return new class extends Migration {
         DB::statement('ALTER TABLE ventes ADD CONSTRAINT prix_non_negatif CHECK (prix >= 0)');
         DB::statement('ALTER TABLE ventes ADD CONSTRAINT quantite_positive CHECK (quantite >= 1)');
         DB::statement('ALTER TABLE ventes ADD CONSTRAINT poids_bagage_non_negatif CHECK (poids_bagage IS NULL OR poids_bagage >= 0)');
+
+        Schema::table('ventes', function (Blueprint $table) {
+            $table->index(['voyage_id', 'place_id']);
+        });
 
 
         // 5. Nouvelle structure pour les jours de circulation

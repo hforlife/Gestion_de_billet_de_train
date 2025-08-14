@@ -46,6 +46,7 @@ class Vente extends Model
         'total',
         'is_demi_tarif',
         'has_bagage',
+        'qrcode_url',
     ];
 
     public function scopeFiltrer($query, $search = null, $voyageId = null)
@@ -66,6 +67,13 @@ class Vente extends Model
             'voyage_id', // Local key on the ventes table
             'system_settings_id' // Local key on the voyages table
         );
+    }
+
+
+
+    public function getQrcodeUrlAttribute()
+    {
+        return $this->qrcode ? asset('storage/' . $this->qrcode) : null;
     }
 
     public function creator(): BelongsTo
@@ -118,7 +126,7 @@ class Vente extends Model
         return $this->belongsTo(ClassesWagon::class, 'classe_wagon_id');
     }
 
-    public function arrets (): HasMany
+    public function arrets(): HasMany
     {
         return $this->hasMany(ArretsLigne::class);
     }
@@ -138,49 +146,49 @@ class Vente extends Model
         return $this->bagage && $this->poids_bagage > 0;
     }
 
-//     public function calculatePrice(SystemSetting $setting): float
-// {
-//     $basePrice = 0;
+    //     public function calculatePrice(SystemSetting $setting): float
+    // {
+    //     $basePrice = 0;
 
-//     if ($setting->mode_vente === 'par_kilometrage') {
-//         $basePrice = ServicesSalePriceCalculator::computePriceByKilometrage(
-//             $this->gare_depart_id,
-//             $this->gare_arrivee_id,
-//             $this->classe_wagon_id,
-//             $setting
-//         );
-//     } else {
-//         $tarif = $this->voyage->tarifs()
-//             ->where('classe_wagon_id', $this->classe_wagon_id)
-//             ->first();
+    //     if ($setting->mode_vente === 'par_kilometrage') {
+    //         $basePrice = ServicesSalePriceCalculator::computePriceByKilometrage(
+    //             $this->gare_depart_id,
+    //             $this->gare_arrivee_id,
+    //             $this->classe_wagon_id,
+    //             $setting
+    //         );
+    //     } else {
+    //         $tarif = $this->voyage->tarifs()
+    //             ->where('classe_wagon_id', $this->classe_wagon_id)
+    //             ->first();
 
-//         $basePrice = $tarif ? $tarif->prix : 0;
-//     }
+    //         $basePrice = $tarif ? $tarif->prix : 0;
+    //     }
 
-//     // Appliquer demi-tarif
-//     if ($this->demi_tarif) {
-//         $basePrice = $basePrice / 2;
-//     }
+    //     // Appliquer demi-tarif
+    //     if ($this->demi_tarif) {
+    //         $basePrice = $basePrice / 2;
+    //     }
 
-//     // Ajouter le prix des bagages
-//     if ($this->bagage && $this->poids_bagage > 0) {
-//         $basePrice += $this->calculateBaggagePrice();
-//     }
+    //     // Ajouter le prix des bagages
+    //     if ($this->bagage && $this->poids_bagage > 0) {
+    //         $basePrice += $this->calculateBaggagePrice();
+    //     }
 
-//     return $basePrice * $this->quantite;
-// }
+    //     return $basePrice * $this->quantite;
+    // }
 
-public function calculateBaggagePrice(): float
-{
-    // Même logique que dans le contrôleur
-    $poidsGratuit = 10;
-    if ($this->poids_bagage <= $poidsGratuit) {
-        return 0;
+    public function calculateBaggagePrice(): float
+    {
+        // Même logique que dans le contrôleur
+        $poidsGratuit = 10;
+        if ($this->poids_bagage <= $poidsGratuit) {
+            return 0;
+        }
+
+        return ($this->poids_bagage - $poidsGratuit) * 500;
     }
-
-    return ($this->poids_bagage - $poidsGratuit) * 500;
-}
-public function getPrixForClasse($classeWagonId)
+    public function getPrixForClasse($classeWagonId)
     {
         return $this->tarif->where('classe_wagon_id', $classeWagonId)
             ->where('date_effet', '<=', now())

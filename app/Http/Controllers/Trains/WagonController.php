@@ -75,8 +75,7 @@ class WagonController
     public function edit(int $id): Response
     {
         $this->authorize('update wagon');
-        $wagon = Wagon::with('train', 'classeWagon')->findOrFail($id);
-
+        $wagon = Wagon::findOrFail($id);
         return Inertia::render('Trains/Wagons/Edit', [
             'wagon' => $wagon,
             'trains' => Train::where('etat', 'actif')->get(),
@@ -100,7 +99,7 @@ class WagonController
         $oldCount = $wagon->nombre_sieges;
         $newCount = $validated['nombre_sieges'];
 
-        $validated['sieges_disponibles'] = $newCount; // Reset
+        $validated['sieges_disponibles'] = $newCount -2; // Reset
 
         $wagon->update($validated);
 

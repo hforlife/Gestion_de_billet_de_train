@@ -8,7 +8,8 @@ const props = defineProps({
     voyage: Object,
     trains: Array,
     lignes: Array,
-    tarifs: Array,
+    // tarifs: Array,
+    gares: Array,
 });
 
 const form = useForm({

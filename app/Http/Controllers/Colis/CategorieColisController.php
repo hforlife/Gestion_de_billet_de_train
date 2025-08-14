@@ -55,7 +55,7 @@ class CategorieColisController
     }
 
     // Formulaire de modification
-    public function edit($id): Response
+    public function edit(int $id): Response
     {
         $this->authorize('update categorie_colis');
         $categorie = CategorieColis::find($id);
@@ -72,8 +72,8 @@ class CategorieColisController
             'nom' => 'required|string',
             'description' => 'nullable|string',
         ]);
-
         $categorie->update($validated);
+        // dd($categorie);
 
         return redirect()->route('categories-colis.index')->with('success', 'Catégorie modifiée avec succès.');
     }
@@ -82,9 +82,9 @@ class CategorieColisController
     public function destroy(CategorieColis $categorie)
     {
         $this->authorize('delete categorie_colis');
-        if ($categorie->colis()->count() > 0) {
-            return redirect()->back()->with('error', 'Cette catégorie ne peut pas être supprimée car elle est liée à des colis.');
-        }
+        // if ($categorie->colis()->count() > 0) {
+        //     return redirect()->back()->with('error', 'Cette catégorie ne peut pas être supprimée car elle est liée à des colis.');
+        // }
         $categorie->delete();
 
         return redirect()->route('categories-colis.index')->with('success', 'Catégorie supprimée avec succès.');
