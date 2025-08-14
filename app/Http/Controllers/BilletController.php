@@ -56,18 +56,18 @@ class BilletController extends Controller
         $pdf->Cell(0, 5, mb_strtoupper($vente->client_nom), 0, 1);
 
         // Section Trajet
-        // $this->drawInfoBox($pdf, 'DÉPART', $vente->voyage->gareDepart->nom, 3, 18, 38);
-        // $this->drawInfoBox($pdf, 'ARRIVÉE', $vente->voyage->gareArrivee->nom, 43, 18, 38);
+        $this->drawInfoBox($pdf, 'DÉPART', $vente->voyage->gareDepart->nom, 3, 18, 38);
+        $this->drawInfoBox($pdf, 'ARRIVÉE', $vente->voyage->gareArrivee->nom, 43, 18, 38);
 
         // Section Horaires
-        // $this->drawInfoBox($pdf, 'DATE', $vente->voyage->date_depart->format('d/m/Y'), 3, 26, 25);
-        $this->drawInfoBox($pdf, 'HEURE', $vente->voyage->heure_depart, 30, 26, 25);
-        $this->drawInfoBox($pdf, 'CLASSE', $vente->classeWagon->nom, 57, 26, 25);
+        $this->drawInfoBox($pdf, 'DATE', $vente->voyage->date_depart, 3, 26, 25);
+        $this->drawInfoBox($pdf, 'CLASSE', $vente->classeWagon->classe, 30, 26, 25);
+        // $this->drawInfoBox($pdf, 'CLASSE', $vente->classeWagon->classe, 57, 26, 25);
 
         // Section Place
         // $this->drawInfoBox($pdf, 'TRAIN', $vente->train->numero, 3, 34, 25);
-        $this->drawInfoBox($pdf, 'WAGON', $vente->place->wagon->nom, 30, 34, 25);
-        $this->drawInfoBox($pdf, 'PLACE', $vente->place->numero, 57, 34, 25);
+        $this->drawInfoBox($pdf, 'WAGON', $vente->place->wagon->numero_wagon, 3, 34, 25);
+        $this->drawInfoBox($pdf, 'PLACE', $vente->place->numero, 30, 34, 25);
 
         // QR Code (20x20mm)
         $qrcode = new TCPDF2DBarcode($vente->reference, 'QRCODE,M');

@@ -1,25 +1,27 @@
 <?php
 
-use App\Http\Controllers\Ventes\VenteController;
-use App\Http\Controllers\Voyages\VoyageController;
 use Illuminate\Http\Request;
-use App\Http\Api\V1\LoginController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\DashboardController;
 use App\Http\Api\V1\GareController;
 use App\Http\Api\V1\ClassController;
+use App\Http\Api\V1\LoginController;
 use App\Http\Api\V1\TarifController;
+use App\Http\Api\V1\VoyageController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Api\V1\SettingController;
 use App\Http\Api\V1\PaiementController;
 use App\Http\Api\V1\PointVenteController;
+use App\Http\Controllers\Ventes\VenteController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Api\V1\VenteController as V1VenteController;
-
 
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+
+// Route::get('/voyages/{voyage}/tarifs', [VoyageController::class, 'tarifs']);
+// Route::get('/api/tarifs/disponibles', [VenteController::class, 'getTarifsDisponibles']);
 
 
 Route::post('/login', [LoginController::class, 'login']);
@@ -35,6 +37,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::apiResource('/setting', SettingController::class);
         Route::apiResource('/tarifGare', TarifController::class);
         Route::apiResource('/ventes', V1VenteController::class);
+        Route::get('/ventesRef/{reference}', [V1VenteController::class, 'showByReference']);
         // Route::post('/carts/sync', [CartItemController::class, 'syncCart']);
     });
 });

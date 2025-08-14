@@ -64,7 +64,7 @@ class Voyage extends Model
     {
         return $this->hasMany(TarifVoyage::class);
     }
-    
+
     public function placesDisponibles()
     {
         return $this->train->capacite_totale - $this->ventes()->count();
