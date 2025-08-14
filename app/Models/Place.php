@@ -17,9 +17,10 @@ class Place extends Model
         return $this->belongsTo(Wagon::class);
     }
 
-    public function vente()
+     public function ventes()
     {
-        return $this->hasOne(Vente::class); // une place peut être liée à une seule vente
+        return $this->hasMany(Vente::class);
     }
+
 
 }

@@ -59,7 +59,11 @@ class PermissionSeeder extends Seeder
 
             // Rapports
             'view reports',
-            'generate reports'
+            'generate reports',
+
+            // Rôles
+            'view roles',
+            'manage roles'
         ];
 
         // Création des permissions
@@ -70,30 +74,55 @@ class PermissionSeeder extends Seeder
         // Attribution des permissions aux rôles
         $admin = Role::findByName('admin');
         $admin->givePermissionTo(
+            // Dashboard
             'view dashboard',
+
+            // Ventes
             'view ventes',
             'create ventes',
             'edit ventes',
             'delete ventes',
             'export ventes',
+
+            // Gares
             'view gares',
             'manage gares',
+
+            // Arrêts
             'view arrets',
             'manage arrets',
+
+            // Trains
             'view trains',
             'manage trains',
+
+            // Wagons
             'view wagons',
             'manage wagons',
+
+            // Colis
             'view colis',
             'manage colis',
+
+            // Voyages
             'view voyages',
             'manage voyages',
             'planifier voyages',
+
+            // Utilisateurs
             'view users',
             'manage users',
+
+            // Paramètres
             'manage settings',
+
+            // Rapports
             'view reports',
-            'generate reports'
+            'generate reports',
+
+            // Rôles
+            'view roles',
+            'manage roles'
         );
 
         $chef = Role::findByName('chef');

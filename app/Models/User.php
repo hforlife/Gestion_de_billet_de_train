@@ -20,6 +20,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
     ];
@@ -50,7 +51,7 @@ class User extends Authenticatable
     public function scopeFilter($query, array $filters)
 {
     $query->when($filters['search'] ?? null, function ($query, $search) {
-        $query->where('name', 'like', "%{$search}%")
+        $query->where('username', 'like', "%{$search}%")
               ->orWhere('email', 'like', "%{$search}%");
     });
 }

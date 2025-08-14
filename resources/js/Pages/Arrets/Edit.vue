@@ -2,31 +2,34 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
-import { defineProps } from "vue";
 
-// Props depuis le contrôleur
 const props = defineProps({
   arret: Object,
-  voyages: Array,
+  lignes: Array,
   gares: Array,
 });
 
-// Initialisation du formulaire avec les données de l’arrêt
+// Initialisation du formulaire avec les données existantes
 const form = useForm({
-  voyage_id: props.arret.voyage_id,
+  ligne_id: props.arret.ligne_id,
   gare_id: props.arret.gare_id,
-  heure_arrivee: props.arret.heure_arrivee,
-  heure_depart: props.arret.heure_depart,
+  distance_depart: props.arret.distance_depart,
+  vente_chef_train: props.arret.vente_chef_train,
+  ordre: props.arret.ordre,
 });
 
 // Fonction de mise à jour
-const submit = () => {
+const update = () => {
   form.put(route("arret.update", props.arret.id), {
     onSuccess: () => {
       Swal.fire("Succès", "Arrêt modifié avec succès.", "success");
     },
     onError: () => {
-      Swal.fire("Erreur", "Merci de vérifier les champs du formulaire.", "error");
+      Swal.fire(
+        "Erreur",
+        "Merci de vérifier les champs du formulaire.",
+        "error"
+      );
     },
   });
 };
@@ -34,54 +37,58 @@ const submit = () => {
 
 <template>
   <AppLayout>
+    <!-- En-tête -->
     <div class="row page-title-header">
       <div class="col-12">
         <div class="page-header">
-          <h4 class="page-title">Modifier un Arrêt</h4>
+          <h4 class="page-title">Modifier Arrêt</h4>
         </div>
       </div>
     </div>
 
+    <!-- Formulaire -->
     <div class="row flex-grow">
       <div class="col-12">
         <div class="card">
           <div class="card-body">
-            <h4 class="card-title">Formulaire Arrêt</h4>
+            <h4 class="card-title">Formulaire de modification</h4>
 
-            <form class="forms-sample" @submit.prevent="submit">
-              <!-- Voyage -->
+            <form class="forms-sample" @submit.prevent="update">
+              <!-- Ligne -->
               <div class="form-group">
-                <label for="voyage">Voyage</label>
+                <label>Ligne</label>
                 <select
-                  v-model="form.voyage_id"
+                  v-model="form.ligne_id"
                   class="form-control"
+                  required
                 >
-                  <option value="" disabled>-- Sélectionner un voyage --</option>
                   <option
-                    v-for="voyage in voyages"
-                    :key="voyage.id"
-                    :value="voyage.id"
+                    v-for="ligne in lignes"
+                    :key="ligne.id"
+                    :value="ligne.id"
+                    :selected="ligne.id === arret.ligne_id"
                   >
-                    {{ voyage.name }}
+                    {{ ligne.nom }}
                   </option>
                 </select>
-                <span v-if="form.errors.voyage_id" class="text-danger">
-                  {{ form.errors.voyage_id }}
+                <span v-if="form.errors.ligne_id" class="text-danger">
+                  {{ form.errors.ligne_id }}
                 </span>
               </div>
 
               <!-- Gare -->
               <div class="form-group">
-                <label for="gare">Gare</label>
+                <label>Gare</label>
                 <select
                   v-model="form.gare_id"
                   class="form-control"
+                  required
                 >
-                  <option value="" disabled>-- Sélectionner une gare --</option>
                   <option
                     v-for="gare in gares"
                     :key="gare.id"
                     :value="gare.id"
+                    :selected="gare.id === arret.gare_id"
                   >
                     {{ gare.nom }}
                   </option>
@@ -91,41 +98,63 @@ const submit = () => {
                 </span>
               </div>
 
-              <!-- Heure d'arrivée -->
+              <!-- Distance départ -->
               <div class="form-group">
-                <label for="heure_arrivee">Heure d’arrivée</label>
+                <label>Distance Départ (km)</label>
                 <input
-                  type="time"
+                  type="number"
+                  step="0.01"
+                  min="0"
                   class="form-control"
-                  v-model="form.heure_arrivee"
+                  v-model="form.distance_depart"
+                  required
                 />
-                <span v-if="form.errors.heure_arrivee" class="text-danger">
-                  {{ form.errors.heure_arrivee }}
+                <span v-if="form.errors.distance_depart" class="text-danger">
+                  {{ form.errors.distance_depart }}
                 </span>
               </div>
 
-              <!-- Heure de départ -->
+              <!-- Vente chef de train -->
               <div class="form-group">
-                <label for="heure_depart">Heure de départ</label>
+                <div class="form-check">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    v-model="form.vente_chef_train"
+                    id="venteChefTrain"
+                  />
+                  <label class="form-check-label" for="venteChefTrain">
+                    Vente par le chef de train
+                  </label>
+                </div>
+                <span v-if="form.errors.vente_chef_train" class="text-danger">
+                  {{ form.errors.vente_chef_train }}
+                </span>
+              </div>
+
+              <!-- Ordre -->
+              <div class="form-group">
+                <label>Ordre</label>
                 <input
-                  type="time"
+                  type="number"
+                  min="1"
                   class="form-control"
-                  v-model="form.heure_depart"
+                  v-model="form.ordre"
+                  required
                 />
-                <span v-if="form.errors.heure_depart" class="text-danger">
-                  {{ form.errors.heure_depart }}
+                <span v-if="form.errors.ordre" class="text-danger">
+                  {{ form.errors.ordre }}
                 </span>
               </div>
 
               <!-- Boutons -->
               <div class="d-flex justify-content-end mt-4">
-                <button
-                  type="reset"
+                <a
+                  :href="route('arret.index')"
                   class="btn btn-light mr-2"
-                  @click="form.reset()"
                 >
-                  Annuler
-                </button>
+                  Retour
+                </a>
                 <button
                   type="submit"
                   class="btn btn-primary"
@@ -137,11 +166,10 @@ const submit = () => {
                     role="status"
                     aria-hidden="true"
                   ></span>
-                  {{ form.processing ? "En cours..." : "Valider" }}
+                  {{ form.processing ? "Enregistrement..." : "Mettre à jour" }}
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       </div>

@@ -1,0 +1,119 @@
+<?php
+
+namespace App\Http\Api\V1;
+
+use App\Models\Train;
+use App\Models\Ligne;
+use App\Models\TarifsGare;
+use App\Models\Voyage;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\JsonResponse;
+
+class VoyageController
+{
+    public function index()
+    {
+        return response()->json([
+            'status' => true,
+            'message' => 'Liste des voyages récupérée avec succès.',
+            'voyages' => Voyage::all(),
+        ], 200); 
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Voyages/Create', [
+            'trains' => Train::select('id', 'numero')->get(),
+            'lignes' => Ligne::with(['arrets.gare'])->get(),
+            // 'tarifs' => TarifsGare::with(['classeWagon', 'gareDepart', 'gareArrivee'])->active()->get(),
+        ]);
+    }
+
+    public function nextNumber()
+    {
+        // Exemple : on conserve le format VOY-950-<sequence 6 chiffres>
+        $prefix = 'VOY';
+        $code = '950';
+
+        // Récupérer le dernier numéro existant pour ce pattern
+        $last = Voyage::where('numero_voyage', 'like', "{$prefix}-{$code}-%")
+            ->orderByDesc('id')
+            ->first();
+
+        $nextSeq = 1;
+        if ($last && preg_match('/' . preg_quote("{$prefix}-{$code}-", '/') . '(\d+)$/', $last->numero_voyage, $m)) {
+            $nextSeq = intval($m[1]) + 1;
+        }
+
+        // Pad à 6 chiffres par exemple
+        $seqFormatted = str_pad($nextSeq, 6, '0', STR_PAD_LEFT);
+        $numero = "{$prefix}-{$code}-{$seqFormatted}";
+
+        return response()->json(['numero' => $numero]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'nom' => 'required|string|max:255',
+            'numero_voyage' => 'required|string|unique:voyages,numero_voyage',
+            'train_id' => 'required|exists:trains,id',
+            'ligne_id' => 'required|exists:lignes,id',
+            'date_depart' => 'required|date',
+            'date_arrivee' => 'required|date|after:date_depart',
+            'statut' => 'required|in:programme,en_cours,terminé,annulé',
+        ]);
+
+        $voyage = Voyage::create([
+            'nom' => $data['nom'],
+            'numero_voyage' => $data['numero_voyage'],
+            'train_id' => $data['train_id'],
+            'ligne_id' => $data['ligne_id'],
+            'date_depart' => $data['date_depart'],
+            'date_arrivee' => $data['date_arrivee'],
+            'statut' => $data['statut'],
+        ]);
+
+        return redirect()->route('voyage.index')->with('success', 'Voyage créé avec succès');
+    }
+
+
+    public function edit(Voyage $voyage): Response
+    {
+        return Inertia::render('Voyages/Edit', [
+            'voyage' => $voyage->load([
+                'ligne.arrets.gare',
+                'train',
+            ]),
+            'trains' => Train::select('id', 'numero')->get(),
+            'lignes' => Ligne::with(['arrets.gare'])->get(),
+            'tarifs' => TarifsGare::with(['classeWagon', 'gareDepart', 'gareArrivee'])->active()->get(),
+        ]);
+    }
+
+    public function update(Request $request, Voyage $voyage)
+    {
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'numero_voyage' => 'required|string|unique:voyages,numero_voyage',
+            'train_id' => 'required|exists:trains,id',
+            'ligne_id' => 'required|exists:lignes,id',
+            'date_depart' => 'required|date',
+            'date_arrivee' => 'required|date|after:date_depart',
+            'statut' => 'required|in:programme,en_cours,terminé,annulé',
+        ]);
+
+        $voyage->update($validated);
+
+        return redirect()->route('voyage.index')->with('success', 'Voyage mis à jour avec succès');
+    }
+
+    public function destroy(Voyage $voyage)
+    {
+        $voyage->delete();
+
+        return redirect()->route('voyage.index')->with('success', 'Voyage supprimé avec succès');
+    }
+}
