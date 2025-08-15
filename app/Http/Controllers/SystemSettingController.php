@@ -14,7 +14,7 @@ class SystemSettingController extends Controller
     //
     public function store(Request $request)
     {
-        $this->authorize('update system_setting');
+        $this->authorize('create system_setting');
 
         $validatedData = $request->validate([
             'mode_vente' => 'required|string|in:par_voyage,par_kilometrage',

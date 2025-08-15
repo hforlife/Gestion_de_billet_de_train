@@ -47,12 +47,14 @@ class TrainController
     // Enregistrement d'un train
     public function store(Request $request)
     {
+        $this->authorize('create train');
         $validated = $request->validate([
             'numero' => ['required', 'string', 'max:255', 'unique:trains,numero'],
             'sens' => ['required', 'in:Bamako-Kayes,Kayes-Bamako'],
             'etat' => ['required', 'in:actif,en_maintenance'],
-            'nombre_agents' => ['required', 'string', 'max:255', 'regex:/^\d+$/'], // Assure que c'est un nombre entier
+            'nombre_agents' => ['required', 'max:255', 'regex:/^\d+$/'], // Assure que c'est un nombre entier
         ]);
+        // dd($validated);
 
         Train::create($validated);
 

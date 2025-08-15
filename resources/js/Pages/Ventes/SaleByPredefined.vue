@@ -12,13 +12,14 @@ const props = defineProps({
 });
 
 const form = useForm({
-    voyage_id: null,
-    classe_wagon_id: null,
+    voyage_id: "",
+    classe_wagon_id: "",
     client_nom: "",
     mode_paiement_id: props.modesPaiement[0]?.id || null,
     point_vente_id: props.pointsVente[0]?.id || null,
     quantite: 1,
-    prix: 0,
+    prix: 0, // Ceci représente le prix UNITAIRE seulement
+    prix_total: 0, // Nouveau champ pour le total
     demi_tarif: false,
     bagage: false,
     poids_bagage: null,
@@ -38,19 +39,58 @@ const selectedClass = computed(() =>
     )
 );
 
-const calculatePrice = () => {
-    if (!selectedClass.value) {
-        form.prix = 0;
-        return;
+// const calculatePrice = () => {
+//     if (!selectedClass.value) {
+//         form.prix = 0;
+//         return;
+//     }
+
+//     const unitPrice = parseFloat(selectedClass.value.prix || 0);
+//     const quantity = parseInt(form.quantite) || 1;
+
+//     form.prix = form.demi_tarif
+//         ? Math.round((unitPrice * quantity) / 2)
+//         : unitPrice * quantity;
+// };
+const bagageExtra = computed(() => {
+    if (!form.bagage || !form.poids_bagage) return 0;
+    const freeWeight = 10;
+    const pricePerKg = 500;
+    return form.poids_bagage > freeWeight
+        ? (form.poids_bagage - freeWeight) * pricePerKg
+        : 0;
+});
+// Calcul du prix total final (incluant quantité, demi-tarif et bagage)
+const totalPrice = computed(() => {
+    if (!selectedClass.value) return 0;
+
+    let unitPrice = parseFloat(form.prix) || 0;
+    let quantity = parseInt(form.quantite) || 1;
+
+    // Appliquer demi-tarif
+    if (form.demi_tarif) {
+        unitPrice = unitPrice / 2;
     }
 
-    const unitPrice = parseFloat(selectedClass.value.prix || 0);
-    const quantity = parseInt(form.quantite) || 1;
+    // Calculer le total
+    return unitPrice * quantity + bagageExtra.value;
+});
 
-    form.prix = form.demi_tarif
-        ? Math.round((unitPrice * quantity) / 2)
-        : unitPrice * quantity;
+// Met à jour le prix unitaire
+const updateUnitPrice = () => {
+    form.prix = selectedClass.value?.prix || 0;
+    form.prix_total = totalPrice.value; // Mise à jour du total
 };
+
+// const calculateUnitPrice = () => {
+//     if (!selectedClass.value) {
+//         form.prix = 0;
+//         return;
+//     }
+
+//     // Toujours prendre le prix unitaire du tarif
+//     form.prix = parseFloat(selectedClass.value.prix || 0);
+// };
 
 const getSelectedTrainInfo = () => {
     const voyage = props.voyages.find((v) => v.id === form.voyage_id);
@@ -58,17 +98,41 @@ const getSelectedTrainInfo = () => {
     return `${voyage.train.numero}`;
 };
 
+// const quantityAdjustedPrice = computed(() => {
+//     let price = form.prix * form.quantite;
+//     if (form.demi_tarif) price = price / 2;
+//     return price;
+// });
+
+// Mise à jour du prix total
+
 const formatNumber = (value) => new Intl.NumberFormat("fr-FR").format(value);
 
-watch(() => form.classe_wagon_id, calculatePrice);
-watch(() => form.quantite, calculatePrice);
-watch(() => form.demi_tarif, calculatePrice);
+// watch(() => form.classe_wagon_id, calculatePrice);
+// watch(() => form.quantite, calculatePrice);
+// watch(() => form.demi_tarif, calculatePrice);
+// watch(
+//     () => form.voyage_id,
+//     () => {
+//         form.classe_wagon_id = null;
+//         form.prix = 0;
+//     }
+// );
+// watch(
+//     () => [bagageExtra.value],
+//     () => {
+//         form.prix =  bagageExtra.value + form.prix;
+//     },
+//     { immediate: true }
+// );
+// Watchers
+watch(() => form.classe_wagon_id, updateUnitPrice);
 watch(
-    () => form.voyage_id,
+    () => [form.quantite, form.demi_tarif, form.bagage, form.poids_bagage],
     () => {
-        form.classe_wagon_id = null;
-        form.prix = 0;
-    }
+        form.prix_total = totalPrice.value; // Mise à jour du total quand qqch change
+    },
+    { deep: true }
 );
 
 const resetPOS = () => {
@@ -79,8 +143,10 @@ const resetPOS = () => {
 };
 
 const submit = () => {
-    calculatePrice();
-    form.post(route("vente.store"), {
+    form.transform((data) => ({
+        ...data,
+        prix: totalPrice.value, // Envoie le prix total final
+    })).post(route("vente.store"), {
         onSuccess: () => {
             Swal.fire({
                 title: "Succès!",
@@ -98,13 +164,33 @@ const submit = () => {
         onError: (errors) => {
             let errorMessage = errors.message || "Une erreur est survenue";
 
-            if (errors.place || errors.voyage_id) {
-                errorMessage = "Aucune place disponible dans ce train";
+            // Gestion spécifique des places indisponibles
+            if (errors.place) {
+                errorMessage = `Aucune place disponible pour le voyage #${
+                    errors.voyage_id || form.voyage_id
+                }`;
             }
 
             Swal.fire({
                 title: "Erreur",
-                text: errorMessage,
+                html: `
+                    <div class="text-left">
+                        <p>${errorMessage}</p>
+                        ${
+                            errors.voyage_id
+                                ? `
+                        <div class="mt-4 p-2 bg-red-50 rounded">
+                            <p class="font-semibold">Détails du voyage :</p>
+                            <p>Train: ${getSelectedTrainInfo()}</p>
+                            <p>Départ: ${
+                                selectedVoyage.value?.ligne?.gareDepart?.nom
+                            }</p>
+                        </div>
+                        `
+                                : ""
+                        }
+                    </div>
+                `,
                 icon: "error",
                 confirmButtonText: "OK",
             });
@@ -306,9 +392,7 @@ const submit = () => {
                                                 :key="tarif.id"
                                                 :value="tarif.classe_wagon_id"
                                             >
-                                                {{
-                                                    tarif.classe_wagon.classe
-                                                }}
+                                                {{ tarif.classe_wagon.classe }}
                                                 -
                                                 {{ formatNumber(tarif.prix) }}
                                                 FCFA
@@ -320,6 +404,21 @@ const submit = () => {
                                             v-text="form.errors.classe_wagon_id"
                                             class="text-danger"
                                         ></div>
+                                    </div>
+                                    <div
+                                        v-for="tarif in availableClasses"
+                                        :key="tarif.id"
+                                    >
+                                        <div
+                                            :class="{
+                                                'text-red-500':
+                                                    tarif.places_disponibles <=
+                                                    0,
+                                            }"
+                                        >
+                                            Places Disponibles:
+                                            {{ tarif.places_disponibles }}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -432,7 +531,7 @@ const submit = () => {
                                             min="0"
                                             step="0.1"
                                             class="pos-input floating-input"
-                                            placeholder=" "
+                                            placeholder="Ex: 12.5"
                                         />
                                         <span class="floating-label"
                                             >Poids en kg</span
@@ -441,7 +540,7 @@ const submit = () => {
                                 </transition>
 
                                 <!-- Total avec animation -->
-                                <div
+                                <!-- <div
                                     class="pos-cart-summary"
                                     v-if="form.prix > 0"
                                 >
@@ -451,7 +550,7 @@ const submit = () => {
                                             {{ formatNumber(form.prix) }} FCFA
                                         </span>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                             <div
                                 v-else
@@ -504,6 +603,54 @@ const submit = () => {
                             </div>
                         </div>
 
+                        <div class="pos-cart-summary">
+                            <!-- Prix unitaire -->
+                            <div class="pos-summary-row">
+                                <span>Prix unitaire:</span>
+                                <span>{{ formatNumber(form.prix) }} FCFA</span>
+                            </div>
+
+                            <!-- Détail demi-tarif -->
+                            <div class="pos-summary-row" v-if="form.demi_tarif">
+                                <span>Demi-tarif appliqué:</span>
+                                <span
+                                    >{{
+                                        formatNumber(form.prix / 2)
+                                    }}
+                                    FCFA/u</span
+                                >
+                            </div>
+
+                            <!-- Quantité -->
+                            <div class="pos-summary-row">
+                                <span>Quantité:</span>
+                                <span>{{ form.quantite }}</span>
+                            </div>
+
+                            <!-- Sous-total avant bagage -->
+                            <div class="pos-summary-row">
+                                <span>Sous-total:</span>
+                                <span>
+                                    {{ formatNumber(totalPrice - bagageExtra) }}
+                                    FCFA
+                                </span>
+                            </div>
+
+                            <!-- Supplément bagage -->
+                            <div class="pos-summary-row" v-if="bagageExtra > 0">
+                                <span>Supplément bagage:</span>
+                                <span
+                                    >{{ formatNumber(bagageExtra) }} FCFA</span
+                                >
+                            </div>
+
+                            <!-- Total final -->
+                            <div class="pos-summary-row total-row">
+                                <span>Total:</span>
+                                <span>{{ formatNumber(totalPrice) }} FCFA</span>
+                            </div>
+                        </div>
+
                         <!-- Actions -->
                         <div class="pos-cart-actions" v-if="form.voyage_id">
                             <button
@@ -545,6 +692,19 @@ const submit = () => {
 </template>
 
 <style scoped>
+.pos-summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.total-row {
+    font-weight: 700;
+    font-size: 1.2em;
+    border-top: 1px dashed #ccc;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+}
 /* Base Styles */
 .pos-system {
     display: flex;

@@ -8,8 +8,11 @@ import Swal from "sweetalert2";
 const props = defineProps({
     voyages: Object,
     filters: Object,
+    flash: Object,
+    sort: String,
 });
 
+// Filtres réactifs
 const filters = reactive({
     search: props.filters.search || "",
 });
@@ -24,6 +27,13 @@ watch(
         );
     }
 );
+
+// Tri
+const changeSort = () => {
+    router.get(route("voyage.index"), {
+        sort: props.sort === "asc" ? "desc" : "asc",
+    });
+};
 
 const editVoyage = (id) => {
     router.visit(route("voyage.edit", id));
@@ -129,6 +139,11 @@ const formatStatus = (statut) => {
 
                 <!-- Tableau amélioré -->
                 <div class="table-responsive">
+                    <button @click="changeSort" class="btn btn-create">
+                           Départ
+                           <span v-if="sort === 'asc'">⬆️</span>
+                           <span v-else>⬇️</span>
+                    </button>
                     <table class="voyage-table">
                         <thead>
                             <tr>
@@ -139,7 +154,7 @@ const formatStatus = (statut) => {
                                 <th>Départ</th>
                                 <th>Arrivée</th>
                                 <th>Statut</th>
-                                <th>Actions</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>

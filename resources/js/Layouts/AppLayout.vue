@@ -9,25 +9,6 @@ const user = computed(() => page.props.auth.user);
 const sidebarActive = ref(false);
 const userDropdownOpen = ref(false);
 
-const userRoles = computed(() => {
-    if (Array.isArray(page.props.auth?.user?.roles)) {
-        return page.props.auth.user.roles;
-    } else if (page.props.auth?.user?.roles?.every((role) => role?.name)) {
-        return page.props.auth.user.roles.map((role) => role.name);
-    }
-    return [];
-});
-
-const hasAdminAccess = computed(() => userRoles.value.includes("admin"));
-const hasChefAccess = computed(() => userRoles.value.includes("chef"));
-const hasCaissierAccess = computed(() => userRoles.value.includes("caissier"));
-const hasAdminOrChefAccess = computed(
-    () => hasAdminAccess.value || hasChefAccess.value
-);
-const hasAdminOrChefOrCaissierAccess = computed(
-    () => hasAdminAccess.value || hasChefAccess.value || hasCaissierAccess.value
-);
-
 const toggleSidebar = () => {
     sidebarActive.value = !sidebarActive.value;
 };

@@ -7,10 +7,8 @@ import { Pencil, Trash, File, ArrowLeft } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
-    vente: {
-        type: Object,
-        required: true,
-    },
+    vente: Object,
+    qrcode_url: String,
 });
 
 const generateVente = (id) => {
@@ -19,17 +17,18 @@ const generateVente = (id) => {
 
 const form = computed(() => ({
     client_nom: props.vente.client_nom || "Non spécifié",
-    voyage: props.vente.voyage?.name || `Voyage #${props.vente.voyage_id}`,
+    voyage: props.vente.voyage?.nom || `Voyage #${props.vente.voyage_id}`,
     gare_depart: props.vente.voyage?.gare_depart?.nom || "Non spécifié",
     gare_arrivee: props.vente.voyage?.gare_arrivee?.nom || "Non spécifié",
+    qrcode: props.qrcode_url || "Aucun QR code généré",
     train:
         props.vente.voyage?.train?.numero ||
         `Train #${props.vente.voyage?.train_id}`,
     place: props.vente.place?.numero || "Non attribuée",
-    wagon: props.vente.place?.wagon?.nom || "Inconnu",
+    wagon: props.vente.place?.wagon?.numero_wagon || "Inconnu",
     type_wagon: props.vente.place?.wagon?.type || "Standard",
     train_place: props.vente.place?.wagon?.train?.numero || "Inconnu",
-    prix: `${props.vente.prix.toLocaleString()} FCFA`,
+    prix: `${props.vente.prix} FCFA`,
     quantite: props.vente.quantite || 1,
     bagage: props.vente.bagage ? "Oui" : "Non",
     poids: props.vente.poids_bagage ? `${props.vente.poids_bagage} kg` : "0 kg",
@@ -40,8 +39,20 @@ const form = computed(() => ({
         hour: "2-digit",
         minute: "2-digit",
     }),
-    mode_paiement: props.vente.mode_paiement?.type || "Inconnu",
-    point_vente: props.vente.point_vente?.gare?.nom || "Inconnu",
+    mode_paiement:
+        props.vente.mode_paiement?.type ||
+        props.vente.modePaiement?.type ||
+        "Inconnu",
+
+    point_vente:
+        props.vente.point_vente?.nom ||
+        props.vente.pointVente?.nom ||
+        props.vente.pointVente?.gare?.nom ||
+        "Inconnu",
+    classe_wagon:
+        props.vente.classeWagon?.nom ||
+        props.vente.place?.wagon?.classeWagon?.nom ||
+        "Non spécifiée",
 }));
 
 const confirmDelete = () => {
@@ -55,8 +66,10 @@ const confirmDelete = () => {
         confirmButtonText: "Supprimer",
         cancelButtonText: "Annuler",
         customClass: {
-            confirmButton: "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mx-2",
-            cancelButton: "bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded mx-2",
+            confirmButton:
+                "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mx-2",
+            cancelButton:
+                "bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded mx-2",
         },
         buttonsStyling: false,
     }).then((result) => {
@@ -89,7 +102,9 @@ const confirmDelete = () => {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="pos-form-group">
                                 <label>Nom du client</label>
-                                <div class="pos-input">{{ form.client_nom }}</div>
+                                <div class="pos-input">
+                                    {{ form.client_nom }}
+                                </div>
                             </div>
                             <div class="pos-form-group">
                                 <label>Date d'émission</label>
@@ -108,11 +123,15 @@ const confirmDelete = () => {
                             </div>
                             <div class="pos-form-group">
                                 <label>Départ</label>
-                                <div class="pos-input">{{ form.gare_depart }}</div>
+                                <div class="pos-input">
+                                    {{ form.gare_depart }}
+                                </div>
                             </div>
                             <div class="pos-form-group">
                                 <label>Arrivée</label>
-                                <div class="pos-input">{{ form.gare_arrivee }}</div>
+                                <div class="pos-input">
+                                    {{ form.gare_arrivee }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -127,11 +146,19 @@ const confirmDelete = () => {
                             </div>
                             <div class="pos-form-group">
                                 <label>Wagon</label>
-                                <div class="pos-input">{{ form.wagon }} ({{ form.type_wagon }})</div>
+                                <div class="pos-input">
+                                    {{ form.wagon }}
+                                </div>
                             </div>
                             <div class="pos-form-group">
                                 <label>Place attribuée</label>
                                 <div class="pos-input">N°{{ form.place }}</div>
+                            </div>
+                            <div class="pos-form-group">
+                                <label>Classe</label>
+                                <div class="pos-input">
+                                    {{ form.classe_wagon }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -143,10 +170,10 @@ const confirmDelete = () => {
                     <div class="pos-section">
                         <h2 class="section-title">💰 Détails de paiement</h2>
                         <div class="grid grid-cols-1 gap-4">
-                            <div class="pos-form-group">
+                            <!-- <div class="pos-form-group">
                                 <label>Prix unitaire</label>
-                                <div class="pos-input">{{ form.prix }}</div>
-                            </div>
+                                <div class="pos-input">{{ vente.prix * vente.quantite }}</div>
+                            </div> -->
                             <div class="pos-form-group">
                                 <label>Quantité</label>
                                 <div class="pos-input">{{ form.quantite }}</div>
@@ -154,16 +181,26 @@ const confirmDelete = () => {
                             <div class="pos-form-group">
                                 <label>Total</label>
                                 <div class="pos-input highlight">
-                                    {{ (vente.prix * vente.quantite).toLocaleString() }} FCFA
+                                    {{ vente.prix }} FCFA
                                 </div>
                             </div>
                             <div class="pos-form-group">
                                 <label>Mode de paiement</label>
-                                <div class="pos-input">{{ form.mode_paiement }}</div>
+                                <div class="pos-input">
+                                    {{ form.mode_paiement }}
+                                </div>
                             </div>
                             <div class="pos-form-group">
                                 <label>Point de vente</label>
-                                <div class="pos-input">{{ form.point_vente }}</div>
+                                <div class="pos-input">
+                                    {{ form.point_vente }}
+                                    <span
+                                        v-if="!props.vente.pointVente"
+                                        class="text-xs text-yellow-600"
+                                    >
+                                        (Non spécifié)
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -181,17 +218,31 @@ const confirmDelete = () => {
                                 <div class="pos-input">{{ form.poids }}</div>
                             </div>
                         </div>
+                        <div v-if="form.qrcode" class="mt-4">
+                            <label>QR Code du billet</label>
+                            <img
+                                :src="form.qrcode"
+                                alt="QR Code"
+                                class="h-32 w-32 mx-auto"
+                            />
+                            <p class="text-xs text-center mt-2">
+                                Référence: {{ vente.reference }}
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Actions -->
                     <div class="pos-cart-actions">
-                        <button @click="generateVente(vente.id)" class="pos-pay-btn">
+                        <button
+                            @click="generateVente(vente.id)"
+                            class="pos-pay-btn"
+                        >
                             <File class="icon" /> Imprimer le billet
                         </button>
-                        <Link :href="route('vente.edit', vente.id)" class="pos-pay-btn edit-btn">
-                            <Pencil class="icon" /> Modifier
-                        </Link>
-                        <button @click="confirmDelete" class="pos-cancel-btn delete-btn">
+                        <button
+                            @click="confirmDelete"
+                            class="pos-cancel-btn delete-btn"
+                        >
                             <Trash class="icon" /> Supprimer
                         </button>
                     </div>

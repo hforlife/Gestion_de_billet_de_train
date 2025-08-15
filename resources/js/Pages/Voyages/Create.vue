@@ -2,18 +2,21 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm, router } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
-import {ArrowLeft} from 'lucide-vue-next';
+import { ArrowLeft } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
     trains: Array,
     lignes: Array,
-    tarifs: Array,
+    // tarifs: Array,
+    gares: Array,
 });
 
 const form = useForm({
     nom: "",
     train_id: "",
+    gare_depart_id: "",
+    gare_arrivee_id: "",
     ligne_id: "",
     numero_voyage: "",
     date_depart: "",
@@ -22,13 +25,13 @@ const form = useForm({
 });
 
 const generateNum = async () => {
-  try {
-    const res = await fetch(route('voyage.next-number')); // tu as besoin d'un helper route ou URL complète
-    const data = await res.json();
-    form.numero_voyage = data.numero;
-  } catch (e) {
-    Swal.fire('Erreur', 'Impossible de générer le numéro', 'error');
-  }
+    try {
+        const res = await fetch(route("voyage.next-number")); // tu as besoin d'un helper route ou URL complète
+        const data = await res.json();
+        form.numero_voyage = data.numero;
+    } catch (e) {
+        Swal.fire("Erreur", "Impossible de générer le numéro", "error");
+    }
 };
 
 // const tarifsDisponibles = computed(() => {
@@ -39,7 +42,6 @@ const generateNum = async () => {
 // watch(() => form.ligne_id, () => {
 //     form.tarif_ids = [];
 // });
-
 
 const submit = () => {
     form.post(route("voyage.store"), {
@@ -69,7 +71,9 @@ const submit = () => {
                 <div class="breadcrumb-wrapper">
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <Link :href="route('dashboard')">Tableau de bord</Link>
+                            <Link :href="route('dashboard')"
+                                >Tableau de bord</Link
+                            >
                             <span class="breadcrumb-divider">/</span>
                         </li>
                         <li class="breadcrumb-item">
@@ -96,7 +100,9 @@ const submit = () => {
                         <div class="form-grid">
                             <!-- Nom du voyage -->
                             <div class="form-group">
-                                <label class="form-label required">Nom du voyage</label>
+                                <label class="form-label required"
+                                    >Nom du voyage</label
+                                >
                                 <input
                                     v-model="form.nom"
                                     type="text"
@@ -111,18 +117,30 @@ const submit = () => {
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label required">Numero du voyage</label>
+                                <label class="form-label required"
+                                    >Numero du voyage</label
+                                >
                                 <input
                                     v-model="form.numero_voyage"
                                     type="text"
                                     class="form-input"
-                                    :class="{ 'is-invalid': form.errors.numero_voyage }"
+                                    :class="{
+                                        'is-invalid': form.errors.numero_voyage,
+                                    }"
                                     placeholder="Ex: VOY????"
                                     disabled
                                     required
                                 />
-                                <button class="btn btn-primary mt-2" @click="generateNum">Générer Numero</button>
-                                <div v-if="form.errors.numero_voyage" class="form-error">
+                                <button
+                                    class="btn btn-primary mt-2"
+                                    @click="generateNum"
+                                >
+                                    Générer Numero
+                                </button>
+                                <div
+                                    v-if="form.errors.numero_voyage"
+                                    class="form-error"
+                                >
                                     {{ form.errors.numero_voyage }}
                                 </div>
                             </div>
@@ -133,10 +151,14 @@ const submit = () => {
                                 <select
                                     v-model="form.train_id"
                                     class="form-select"
-                                    :class="{ 'is-invalid': form.errors.train_id }"
+                                    :class="{
+                                        'is-invalid': form.errors.train_id,
+                                    }"
                                     required
                                 >
-                                    <option value="" disabled selected>Sélectionnez un train</option>
+                                    <option value="" disabled selected>
+                                        Sélectionnez un train
+                                    </option>
                                     <option
                                         v-for="train in trains"
                                         :key="train.id"
@@ -145,7 +167,10 @@ const submit = () => {
                                         Train {{ train.numero }}
                                     </option>
                                 </select>
-                                <div v-if="form.errors.train_id" class="form-error">
+                                <div
+                                    v-if="form.errors.train_id"
+                                    class="form-error"
+                                >
                                     {{ form.errors.train_id }}
                                 </div>
                             </div>
@@ -156,10 +181,14 @@ const submit = () => {
                                 <select
                                     v-model="form.ligne_id"
                                     class="form-select"
-                                    :class="{ 'is-invalid': form.errors.ligne_id }"
+                                    :class="{
+                                        'is-invalid': form.errors.ligne_id,
+                                    }"
                                     required
                                 >
-                                    <option value="" disabled selected>Sélectionnez une ligne</option>
+                                    <option value="" disabled selected>
+                                        Sélectionnez une ligne
+                                    </option>
                                     <option
                                         v-for="ligne in lignes"
                                         :key="ligne.id"
@@ -168,18 +197,91 @@ const submit = () => {
                                         {{ ligne.nom }}
                                     </option>
                                 </select>
-                                <div v-if="form.errors.ligne_id" class="form-error">
+                                <div
+                                    v-if="form.errors.ligne_id"
+                                    class="form-error"
+                                >
                                     {{ form.errors.ligne_id }}
+                                </div>
+                            </div>
+
+                            <!-- Gare de Depart -->
+                            <div class="form-group">
+                                <label class="form-label required"
+                                    >Gare de Depart</label
+                                >
+                                <select
+                                    v-model="form.gare_depart_id"
+                                    class="form-select"
+                                    :class="{
+                                        'is-invalid':
+                                            form.errors.gare_depart_id,
+                                    }"
+                                    required
+                                >
+                                    <option value="" disabled selected>
+                                        Sélectionnez une gare
+                                    </option>
+                                    <option
+                                        v-for="gare in gares"
+                                        :key="gare.id"
+                                        :value="gare.id"
+                                    >
+                                        {{ gare.nom }}
+                                    </option>
+                                </select>
+                                <div
+                                    v-if="form.errors.gare_depart_id"
+                                    class="form-error"
+                                >
+                                    {{ form.errors.gare_depart_id }}
+                                </div>
+                            </div>
+
+                            <!-- Gare d'arrivée -->
+                            <div class="form-group">
+                                <label class="form-label required"
+                                    >Gare d'Arrivée</label
+                                >
+                                <select
+                                    v-model="form.gare_arrivee_id"
+                                    class="form-select"
+                                    :class="{
+                                        'is-invalid':
+                                            form.errors.gare_arrivee_id,
+                                    }"
+                                    required
+                                >
+                                    <option value="" disabled selected>
+                                        Sélectionnez une gare
+                                    </option>
+                                    <option
+                                        v-for="gare in gares"
+                                        :key="gare.id"
+                                        :value="gare.id"
+                                    >
+                                        {{ gare.nom }}
+                                    </option>
+                                </select>
+                                <div
+                                    v-if="form.errors.gare_arrivee_id"
+                                    class="form-error"
+                                >
+                                    {{ form.errors.gare_arrivee_id }}
                                 </div>
                             </div>
 
                             <!-- Statut -->
                             <div class="form-group">
-                                <label class="form-label required">Statut</label>
+                                <label class="form-label required"
+                                    >Statut</label
+                                >
                                 <select
                                     v-model="form.statut"
                                     class="form-select"
-                                    :class="{ 'is-invalid': form.errors.statut }"
+                                    :class="{
+                                        'is-invalid': form.errors.statut,
+                                    }"
                                     required
                                 >
                                     <option value="programme">Programmé</option>
@@ -187,7 +289,10 @@ const submit = () => {
                                     <option value="terminé">Terminé</option>
                                     <option value="annulé">Annulé</option>
                                 </select>
-                                <div v-if="form.errors.statut" class="form-error">
+                                <div
+                                    v-if="form.errors.statut"
+                                    class="form-error"
+                                >
                                     {{ form.errors.statut }}
                                 </div>
                             </div>
@@ -204,36 +309,52 @@ const submit = () => {
                         <div class="form-grid">
                             <!-- Date de départ -->
                             <div class="form-group">
-                                <label class="form-label required">Date de départ</label>
+                                <label class="form-label required"
+                                    >Date de départ</label
+                                >
                                 <div class="datetime-input">
                                     <input
                                         v-model="form.date_depart"
                                         type="datetime-local"
                                         class="form-input"
-                                        :class="{ 'is-invalid': form.errors.date_depart }"
+                                        :class="{
+                                            'is-invalid':
+                                                form.errors.date_depart,
+                                        }"
                                         required
                                     />
                                     <i class="mdi mdi-calendar"></i>
                                 </div>
-                                <div v-if="form.errors.date_depart" class="form-error">
+                                <div
+                                    v-if="form.errors.date_depart"
+                                    class="form-error"
+                                >
                                     {{ form.errors.date_depart }}
                                 </div>
                             </div>
 
                             <!-- Date d'arrivée -->
                             <div class="form-group">
-                                <label class="form-label required">Date d'arrivée</label>
+                                <label class="form-label required"
+                                    >Date d'arrivée</label
+                                >
                                 <div class="datetime-input">
                                     <input
                                         v-model="form.date_arrivee"
                                         type="datetime-local"
                                         class="form-input"
-                                        :class="{ 'is-invalid': form.errors.date_arrivee }"
+                                        :class="{
+                                            'is-invalid':
+                                                form.errors.date_arrivee,
+                                        }"
                                         required
                                     />
                                     <i class="mdi mdi-calendar"></i>
                                 </div>
-                                <div v-if="form.errors.date_arrivee" class="form-error">
+                                <div
+                                    v-if="form.errors.date_arrivee"
+                                    class="form-error"
+                                >
                                     {{ form.errors.date_arrivee }}
                                 </div>
                             </div>
@@ -242,10 +363,7 @@ const submit = () => {
 
                     <!-- Boutons d'action -->
                     <div class="form-actions">
-                        <Link
-                            :href="route('voyage.index')"
-                            class="btn-cancel"
-                        >
+                        <Link :href="route('voyage.index')" class="btn-cancel">
                             Annuler
                         </Link>
                         <button
@@ -253,11 +371,12 @@ const submit = () => {
                             class="btn-submit"
                             :disabled="form.processing"
                         >
-                            <span
-                                v-if="form.processing"
-                                class="spinner"
-                            ></span>
-                            {{ form.processing ? 'Création en cours...' : 'Créer le voyage' }}
+                            <span v-if="form.processing" class="spinner"></span>
+                            {{
+                                form.processing
+                                    ? "Création en cours..."
+                                    : "Créer le voyage"
+                            }}
                         </button>
                     </div>
                 </form>
@@ -560,7 +679,9 @@ const submit = () => {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive */
@@ -575,7 +696,8 @@ const submit = () => {
         flex-direction: column;
     }
 
-    .btn-cancel, .btn-submit {
+    .btn-cancel,
+    .btn-submit {
         width: 100%;
     }
 

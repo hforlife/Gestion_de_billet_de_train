@@ -17,7 +17,7 @@ Route::post('logout', [AuthController::class, 'destroy'])
     ->name('logout');
 
 Route::get('/profile', [ProfileController::class, 'profile'])
-        ->name('user.profile')->middleware('can:profile user');
+        ->name('user.profile')->middleware('can:profile profile');
 
 Route::put('/profile', [ProfileController::class, 'update'])
-    ->name('profile.update')->middleware('can:profile user');
+    ->name('profile.update')->middleware('can:update profile');

@@ -58,7 +58,7 @@ class GareController
             'nombre_guichets' => ['required', 'integer', 'min:0'],
             'controle_bagage' => ['required', 'in:physique,electronique,aucun'],
         ]);
-        // dd($validated);
+        // dd($validated);Bko
 
         Gare::create($validated);
 
@@ -105,9 +105,9 @@ class GareController
     public function destroy(Gare $gare)
     {
         $this->authorize('delete gare');
-        if ($gare->pointsVente()->exists() || $gare->arretsLigne()->exists()) {
-            return Redirect::back()->with('error', 'Impossible de supprimer : la gare est utilisée dans le système.');
-        }
+        // if ($gare->pointsVente()->exists() || $gare->arretsLigne()->exists()) {
+        //     return Redirect::back()->with('error', 'Impossible de supprimer : la gare est utilisée dans le système.');
+        // }
 
         $gare->delete();
 

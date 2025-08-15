@@ -3,98 +3,99 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vente;
-use Illuminate\Http\Request;
-use FPDF;
+use TCPDF;
+use TCPDF2DBarcode;
 
 class BilletController extends Controller
 {
     public function generateBillet($id)
     {
-        $vente = Vente::with(['voyage', 'train', 'place.wagon'])->findOrFail($id);
+        $vente = Vente::with([
+            'voyage.gareDepart',
+            'voyage.gareArrivee',
+            'train',
+            'place.wagon',
+            'classeWagon'
+        ])->findOrFail($id);
 
-        // Création du PDF en format paysage (150x100mm)
-        $pdf = new FPDF('L', 'mm', [150, 100]);
+        // Création du PDF en format portrait (85x54mm)
+        $pdf = new TCPDF('L', 'mm', [85, 54], true, 'UTF-8', false);
+
+        // Configuration du document
+        $pdf->SetCreator(config('app.name'));
+        $pdf->SetAuthor('SOPAFER');
+        $pdf->SetTitle('Billet de train #'.$vente->reference);
+        $pdf->SetMargins(3, 3, 3); // Marge de 3mm sur tous les côtés
+        $pdf->SetAutoPageBreak(false);
         $pdf->AddPage();
-        $pdf->SetMargins(8, 8, 8);
 
-        // Couleurs personnalisées
+        // Couleurs personnalisées (RGB)
         $primaryColor = [0, 60, 110]; // Bleu SOPAFER
         $secondaryColor = [220, 230, 240]; // Fond clair
+        $textColor = [50, 50, 50];
 
-        // Logo avec taille ajustée
-        $pdf->Image(public_path('assets/images/icon_white.png'), 10, 8, 25);
+        // Style de base
+        $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+        $pdf->SetDrawColor($primaryColor[0], $primaryColor[1], $primaryColor[2]);
+        $pdf->SetLineWidth(0.2);
 
-        // En-tête
-        $pdf->SetY(10);
-        $pdf->SetFont('Helvetica', 'B', 14);
-        $pdf->SetTextColor($primaryColor[0], $primaryColor[1], $primaryColor[2]);
-        $pdf->Cell(0, 8, 'TRAIN TICKET', 0, 1, 'R');
-        $pdf->SetLineWidth(0.3);
-        $pdf->Line(8, 20, 142, 20);
+        // En-tête avec logo
+        $pdf->Image(public_path('assets/images/icon_white.png'), 3, 3, 15, '', 'PNG');
+        $pdf->SetFont('helvetica', 'B', 8);
+        $pdf->SetXY(20, 3);
+        $pdf->Cell(0, 5, 'Billet de Train - SOPAFER', 0, 1);
 
-        // Section Passager - Méthode FPDF standard
-        $pdf->SetY(25);
-        $pdf->SetFillColor($secondaryColor[0], $secondaryColor[1], $secondaryColor[2]); // Correction ici
-        $pdf->Rect(8, 25, 134, 8, 'F');
-        $pdf->SetFont('Helvetica', 'B', 10);
-        $pdf->Cell(40, 8, 'NOM DU PASSAGER', 0, 0);
-        $pdf->SetFont('Helvetica', '', 10);
-        $pdf->Cell(0, 8, iconv('UTF-8', 'windows-1252', mb_strtoupper($vente->client_nom)), 0, 1);
+        // Ligne de séparation
+        $pdf->Line(3, 10, 82, 10);
 
-        // Séparateur
-        $this->drawDashedLine($pdf, 35);
+        // Section Passager
+        $pdf->SetFont('helvetica', 'B', 7);
+        $pdf->SetXY(3, 12);
+        $pdf->Cell(20, 5, 'PASSAGER:', 0, 0);
+        $pdf->SetFont('helvetica', '', 8);
+        $pdf->Cell(0, 5, mb_strtoupper($vente->client_nom), 0, 1);
 
-        // Trajet
-        $pdf->SetY(38);
-        $this->drawCompactInfoBox($pdf, 'DE:', $vente->voyage->gare_depart->nom, 8, 38, 60);
-        $this->drawCompactInfoBox($pdf, 'A:', $vente->voyage->gare_arrivee->nom, 78, 38, 60);
+        // Section Trajet
+        $this->drawInfoBox($pdf, 'DÉPART', $vente->voyage->gareDepart->nom, 3, 18, 38);
+        $this->drawInfoBox($pdf, 'ARRIVÉE', $vente->voyage->gareArrivee->nom, 43, 18, 38);
 
-        // Séparateur
-        $this->drawDashedLine($pdf, 48);
+        // Section Horaires
+        $this->drawInfoBox($pdf, 'DATE', $vente->voyage->date_depart, 3, 26, 25);
+        $this->drawInfoBox($pdf, 'CLASSE', $vente->classeWagon->classe, 30, 26, 25);
+        // $this->drawInfoBox($pdf, 'CLASSE', $vente->classeWagon->classe, 57, 26, 25);
 
-        // Date/Heure
-        $pdf->SetY(53);
-        $this->drawCompactInfoBox($pdf, 'DATE', $vente->voyage->date_depart->format('d/m/Y'), 8, 53, 40);
-        $this->drawCompactInfoBox($pdf, 'DEPART', $vente->voyage->heure_depart, 58, 53, 40);
-        $this->drawCompactInfoBox($pdf, 'ARRIVEE', $vente->voyage->heure_arrivee, 108, 53, 34);
+        // Section Place
+        // $this->drawInfoBox($pdf, 'TRAIN', $vente->train->numero, 3, 34, 25);
+        $this->drawInfoBox($pdf, 'WAGON', $vente->place->wagon->numero_wagon, 3, 34, 25);
+        $this->drawInfoBox($pdf, 'PLACE', $vente->place->numero, 30, 34, 25);
 
-        // Séparateur
-        $this->drawDashedLine($pdf, 65);
-
-        // Détails train
-        $pdf->SetY(70);
-        $this->drawCompactInfoBox($pdf, 'TRAIN', $vente->train->numero, 8, 70, 40);
-        $this->drawCompactInfoBox($pdf, 'WAGON', $vente->place->wagon->nom, 58, 70, 40);
-        $this->drawCompactInfoBox($pdf, 'PLACE', $vente->place->numero, 108, 70, 34);
-
-        // Code-barres
-        $pdf->SetFillColor(0, 0, 0);
-        $pdf->Rect(8, 83, 134, 1, 'F');
+        // QR Code (20x20mm)
+        $qrcode = new TCPDF2DBarcode($vente->reference, 'QRCODE,M');
+        $pdf->SetXY(60, 18);
+        $pdf->Image('@'.$qrcode->getBarcodePngData(), '', '', 20, 20, 'PNG');
 
         // Pied de page
-        // $pdf->SetY(90);
-        // $pdf->SetFont('Helvetica', 'I', 5);
-        // $pdf->Cell(0, 4, iconv('UTF-8', 'windows-1252', 'SOPAFER - Voyages sécurisés et Confortables'), 0, 0, 'C');
+        $pdf->SetFont('helvetica', 'I', 5);
+        $pdf->SetXY(3, 50);
+        $pdf->Cell(0, 3, 'Réf: '.$vente->reference.' | Édité le '.now()->format('d/m/Y H:i'), 0, 0);
 
-        $pdf->Output('I', 'billet_sopafer_' . $vente->id . '.pdf');
+        // Barre de sécurité
+        $pdf->SetLineWidth(0.5);
+        $pdf->Line(3, 47, 82, 47);
+
+        // Sortie du PDF
+        $pdf->Output('billet_'.$vente->reference.'.pdf', 'I');
         exit;
     }
 
-    private function drawDashedLine($pdf, $y) {
-        $pdf->SetDrawColor(200, 200, 200);
-        for($i=8; $i<142; $i+=4) {
-            $pdf->Line($i, $y, $i+2, $y);
-        }
-        $pdf->SetDrawColor(0, 0, 0);
-    }
-
-    private function drawCompactInfoBox($pdf, $label, $value, $x, $y, $width) {
+    private function drawInfoBox($pdf, $label, $value, $x, $y, $width)
+    {
+        $pdf->SetFont('helvetica', 'B', 6);
         $pdf->SetXY($x, $y);
-        $pdf->SetFont('Helvetica', 'B', 8);
-        $pdf->Cell($width, 4, iconv('UTF-8', 'windows-1252', $label), 0, 1);
+        $pdf->Cell($width, 3, $label, 0, 1);
 
-        $pdf->SetXY($x, $y+4);
-        $pdf->SetFont('Helvetica', '', 9);
-        $pdf->Cell($width, 5, iconv('UTF-8', 'windows-1252', mb_strtoupper($value)), 0, 1);
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->SetXY($x, $y + 3);
+        $pdf->Cell($width, 4, mb_strtoupper($value), 0, 1);
     }
 }

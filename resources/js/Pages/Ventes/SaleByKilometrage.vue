@@ -136,7 +136,7 @@ const floatOrZero = (v) => {
     return isNaN(f) ? 0 : f;
 };
 
-console.log(props.systemSettings);
+// console.log(props.systemSettings);
 
 // Calcul du prix kilométrique
 const unitKilometragePrice = computed(() => {
@@ -238,18 +238,32 @@ const submit = () => {
 
     form.post(route("vente.store"), {
         onSuccess: () => {
-            Swal.fire(
-                "Succès",
-                "Vente enregistrée avec succès",
-                "success"
-            ).then(() => resetPOS());
+            Swal.fire({
+                title: "Succès!",
+                text: "La vente a été enregistrée",
+                icon: "success",
+                confirmButtonText: "OK",
+                customClass: {
+                    confirmButton:
+                        "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded",
+                },
+            }).then(() => {
+                resetPOS();
+            });
         },
         onError: (errors) => {
-            Swal.fire(
-                "Erreur",
-                errors.message || "Erreur lors de l'enregistrement",
-                "error"
-            );
+            let errorMessage = errors.message || "Une erreur est survenue";
+
+            if (errors.place || errors.voyage_id) {
+                errorMessage = "Aucune place disponible dans ce train";
+            }
+
+            Swal.fire({
+                title: "Erreur",
+                text: errorMessage,
+                icon: "error",
+                confirmButtonText: "OK",
+            });
         },
     });
 };
@@ -656,7 +670,7 @@ const submit = () => {
                             <!-- Total -->
                             <div class="pos-cart-summary">
                                 <div class="pos-summary-row">
-                                    <span>Prix kilométrique unitaire:</span>
+                                    <span>Prix unitaire:</span>
                                     <span
                                         >{{
                                             formatNumber(unitKilometragePrice)

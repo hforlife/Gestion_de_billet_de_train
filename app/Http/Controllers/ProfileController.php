@@ -14,7 +14,7 @@ class ProfileController extends Controller
     use AuthorizesRequests;
     public function profile(): Response
     {
-        $this->authorize('profile user');
+        $this->authorize('profile profile');
         $user = Auth::user();
 
         return Inertia::render('Setting/Profile/Index', [
@@ -29,7 +29,8 @@ class ProfileController extends Controller
     }
     public function update(Request $request)
     {
-        $this->authorize('profile user');
+        $this->authorize('profile profile');
+        $this->authorize('update profile');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',

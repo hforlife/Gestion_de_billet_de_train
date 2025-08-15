@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Voyages;
 
+use App\Models\Gare;
 use App\Models\Train;
 use App\Models\Ligne;
 use App\Models\TarifsGare;
@@ -9,7 +10,6 @@ use App\Models\Voyage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class VoyageController
@@ -19,12 +19,13 @@ class VoyageController
     {
         $this->authorize('viewAny voyage');
         $filters = $request->only('search');
+        $sortOrder = $request->get('sort', 'asc');
 
         $voyages = Voyage::with([
             'train',
             'ligne',
-            'gareDepart.nom',
-            'gareArrivee.nom',
+            // 'gareDepart:id,nom',
+            // 'gareArrivee:id,nom',
         ])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -33,7 +34,7 @@ class VoyageController
                         ->orWhereHas('ligne', fn($q) => $q->where('nom', 'like', "%{$search}%"));
                 });
             })
-            ->orderByDesc('date_depart')
+            ->orderBy('date_depart', $sortOrder)
             ->paginate(10)
             ->withQueryString();
 
@@ -42,6 +43,7 @@ class VoyageController
             'lignes' => Ligne::with(['arrets.gare'])->get(),
             'filters' => $filters,
             'voyages' => $voyages,
+            'sort' => $sortOrder,
         ]);
     }
 
@@ -51,7 +53,8 @@ class VoyageController
         return Inertia::render('Voyages/Create', [
             'trains' => Train::select('id', 'numero')->get(),
             'lignes' => Ligne::with(['arrets.gare'])->get(),
-            ]);
+            'gares' => Gare::select('id', 'nom')->where('type', '!=', ['fermee', 'halte'])->get(),
+        ]);
     }
 
     public function nextNumber()
@@ -84,6 +87,8 @@ class VoyageController
             'nom' => 'required|string|max:255',
             'numero_voyage' => 'required|string|unique:voyages,numero_voyage',
             'train_id' => 'required|exists:trains,id',
+            'gare_depart_id' => 'required|exists:gares,id',
+            'gare_arrivee_id' => 'required|exists:gares,id',
             'ligne_id' => 'required|exists:lignes,id',
             'date_depart' => 'required|date',
             'date_arrivee' => 'required|date|after:date_depart',
@@ -94,6 +99,8 @@ class VoyageController
             'nom' => $data['nom'],
             'numero_voyage' => $data['numero_voyage'],
             'train_id' => $data['train_id'],
+            'gare_depart_id' => $data['gare_depart_id'],
+            'gare_arrivee_id' => $data['gare_arrivee_id'],
             'ligne_id' => $data['ligne_id'],
             'date_depart' => $data['date_depart'],
             'date_arrivee' => $data['date_arrivee'],
@@ -114,7 +121,8 @@ class VoyageController
             ]),
             'trains' => Train::select('id', 'numero')->get(),
             'lignes' => Ligne::with(['arrets.gare'])->get(),
-            'tarifs' => TarifsGare::with(['classeWagon', 'gareDepart', 'gareArrivee'])->active()->get(),
+            // 'tarifs' => TarifsGare::with(['classeWagon', 'gareDepart', 'gareArrivee'])->active()->get(),
+            'gares' => Gare::select('id', 'nom')->where('type', '!=', ['fermee', 'halte'])->get(),
         ]);
     }
 
@@ -125,6 +133,8 @@ class VoyageController
             'nom' => 'required|string|max:255',
             'numero_voyage' => 'required|string|unique:voyages,numero_voyage',
             'train_id' => 'required|exists:trains,id',
+            'gare_depart_id' => 'required|exists:gares,id',
+            'gare_arrivee_id' => 'required|exists:gares,id',
             'ligne_id' => 'required|exists:lignes,id',
             'date_depart' => 'required|date',
             'date_arrivee' => 'required|date|after:date_depart',

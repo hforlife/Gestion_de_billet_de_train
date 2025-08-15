@@ -47,6 +47,24 @@ class VenteController
         ]);
     }
 
+    protected function calculateAvailableSeats(Voyage $voyage)
+    {
+        $placesOccupees = $voyage->ventes->pluck('place_id')->filter();
+
+        return $voyage->train->wagons->groupBy('classe_id')
+            ->map(function ($wagons, $classeId) use ($placesOccupees) {
+                $totalPlaces = $wagons->sum(function ($wagon) {
+                    return $wagon->places->count();
+                });
+
+                $placesOccupeesClasse = $placesOccupees->filter(function ($placeId) use ($wagons) {
+                    return $wagons->pluck('places.*.id')->flatten()->contains($placeId);
+                })->count();
+
+                return $totalPlaces - $placesOccupeesClasse;
+            });
+    }
+
     public function create()
     {
         $this->authorize('create vente');
@@ -61,31 +79,44 @@ class VenteController
     {
         $this->authorize('create vente');
         $this->authorize('createPredefined vente');
+
         $voyages = Voyage::with([
             'ligne.arrets.gare',
-            'train.wagons.classeWagon', // Correction du nom de la relation
+            'train.wagons.classeWagon',
+            'train.wagons.places', // Charger les places
             'ligne.gareDepart',
             'ligne.gareArrivee',
-            'tarifs.classeWagon' // Chargement explicite des tarifs
-        ])->get();
+            'tarifs.classeWagon',
+            'ventes.place' // Charger les ventes avec leurs places
+        ])
+            ->whereNotIn('statut', ['terminé', 'annulé'])
+            ->get()
+            ->map(function ($voyage) {
+                // Calcul des places disponibles par classe
+                $placesParClasse = $this->calculateAvailableSeats($voyage);
+
+                return [
+                    ...$voyage->toArray(),
+                    'places_par_classe' => $placesParClasse,
+                    'tarifs' => $voyage->tarifs->map(function ($tarif) use ($placesParClasse) {
+                        $disponibles = $placesParClasse[$tarif->classe_wagon_id] ?? 0;
+
+                        return [
+                            'id' => $tarif->id,
+                            'prix' => $tarif->prix,
+                            'classe_wagon_id' => $tarif->classe_wagon_id,
+                            'classe_wagon' => $tarif->classeWagon,
+                            'places_disponibles' => $disponibles
+                        ];
+                    })
+                ];
+            });
 
         $modesPaiement = ModesPaiement::all();
         $pointsVente = PointsVente::with('gare')->get();
 
         return Inertia::render('Ventes/SaleByPredefined', [
-            'voyages' => $voyages->map(function ($voyage) {
-                return [
-                    ...$voyage->toArray(),
-                    'tarifs' => $voyage->tarifs->map(function ($tarif) {
-                        return [
-                            'id' => $tarif->id,
-                            'prix' => $tarif->prix,
-                            'classe_wagon_id' => $tarif->classe_wagon_id,
-                            'classe_wagon' => $tarif->classeWagon
-                        ];
-                    })
-                ];
-            }),
+            'voyages' => $voyages,
             'modesPaiement' => $modesPaiement,
             'pointsVente' => $pointsVente,
         ]);
@@ -122,6 +153,7 @@ class VenteController
     public function store(Request $request)
     {
         $this->authorize('create vente');
+
         // Validation des données
         $validated = $request->validate([
             'client_nom' => 'required|string|max:255',
@@ -137,52 +169,50 @@ class VenteController
             'statut' => 'required|in:payé,réservé',
         ]);
 
-        $user = Auth::user();
-        $validated['created_by'] = $user->id;
-
         DB::beginTransaction();
 
         try {
-            // Log de début de transaction
-            Log::info('Début de la création de vente', [
-                'user_id' => $user->id,
-                'input_data' => $validated
-            ]);
+            $user = Auth::user();
+            $voyage = Voyage::with(['train.wagons' => function ($query) use ($validated) {
+                $query->where('classe_id', $validated['classe_wagon_id']);
+            }])->findOrFail($validated['voyage_id']);
 
-            $voyage = Voyage::with('train.wagons.places')->findOrFail($validated['voyage_id']);
-            $train = $voyage->train;
-
-            $placeLibre = Place::whereIn('id', function ($query) use ($train) {
-                $query->select('places.id')
-                    ->from('places')
-                    ->join('wagons', 'places.wagon_id', '=', 'wagons.id')
-                    ->whereIn('wagons.id', $train->wagons->pluck('id'))
-                    ->whereNotIn('places.id', function ($sub) {
-                        $sub->select('place_id')->from('ventes')->whereNotNull('place_id');
-                    });
-            })->first();
+            // Vérification des places disponibles
+            $placeLibre = Place::whereHas('wagon', function ($query) use ($voyage, $validated) {
+                $query->where('train_id', $voyage->train_id)
+                    ->where('classe_id', $validated['classe_wagon_id']);
+            })
+                ->whereDoesntHave('ventes', function ($query) use ($voyage) {
+                    $query->where('voyage_id', $voyage->id);
+                })
+                ->first();
 
             if (!$placeLibre) {
-                Log::warning('Aucune place disponible', ['voyage_id' => $validated['voyage_id']]);
-                return back()->withErrors(['place' => 'Aucune place disponible dans ce train.']);
+                Log::warning('Aucune place disponible', [
+                    'voyage_id' => $validated['voyage_id'],
+                    'classe_id' => $validated['classe_wagon_id']
+                ]);
+                return back()
+                    ->withErrors(['place' => 'Aucune place disponible pour cette classe.'])
+                    ->withInput();
             }
 
-            // Génération de référence
-            do {
-                $reference = 'TICKET_' . strtoupper(string: uniqid()) . '_' . rand(100, 999);
-            } while (Vente::where('reference', operator: $reference)->exists());
+            // Génération de référence unique
+            $reference = 'TICKET_' . strtoupper(uniqid()) . '_' . rand(100, 999);
+            while (Vente::where('reference', $reference)->exists()) {
+                $reference = 'TICKET_' . strtoupper(uniqid()) . '_' . rand(100, 999);
+            }
 
-            // Tentative de génération du QR code
+            // Génération QR Code
+            $qrPath = null;
             try {
                 $qrData = [
                     'reference' => $reference,
-                    // 'client' => $validated['client_nom'],
-                    // 'voyage_id' => $validated['voyage_id'],
-                    // 'place_id' => $placeLibre->id,
-                    // 'date' => now()->toDateTimeString()
+                    'voyage_id' => $voyage->id,
+                    'client' => $validated['client_nom']
                 ];
 
-                $qrCode = QrCode::format('svg') // Utilisation de SVG comme fallback
+                $qrCode = QrCode::format('svg')
                     ->size(200)
                     ->generate(json_encode($qrData));
 
@@ -191,10 +221,8 @@ class VenteController
             } catch (\Exception $e) {
                 Log::error('Erreur génération QR Code', [
                     'error' => $e->getMessage(),
-                    'reference' => $reference,
-                    'qr_data' => $qrData ?? null
+                    'reference' => $reference
                 ]);
-                $qrPath = null;
             }
 
             // Création de la vente
@@ -207,64 +235,61 @@ class VenteController
                 'prix' => $validated['prix'],
                 'quantite' => $validated['quantite'],
                 'bagage' => $validated['bagage'],
-                'poids_bagage' => $validated['bagage'] ? $validated['poids_bagage'] : 0,
+                'poids_bagage' => $validated['bagage'] ? $validated['poids_bagage'] : null,
                 'classe_wagon_id' => $validated['classe_wagon_id'],
                 'demi_tarif' => $validated['demi_tarif'],
                 'statut' => $validated['statut'],
                 'reference' => $reference,
-                'qrcode' => $qrPath ?? null,
+                'qrcode' => $qrPath,
                 'date_vente' => now(),
                 'created_by' => $user->id,
             ]);
 
             DB::commit();
 
-            Log::info('Vente créée avec succès', ['vente_id' => $vente->id]);
-
-            return Redirect::route('vente.index')
-                ->with('success', 'Billet vendu avec succès !')
-                ->with('vente_id', $vente->id);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            Log::error('Erreur de validation', ['errors' => $e->errors()]);
-            return back()->withErrors($e->errors())->withInput();
-        } catch (\Illuminate\Database\QueryException $e) {
-            DB::rollBack();
-            Log::error('Erreur base de données', [
-                'error' => $e->getMessage(),
-                'sql' => $e->getSql(),
-                'bindings' => $e->getBindings()
+            Log::info('Vente créée avec succès', [
+                'vente_id' => $vente->id,
+                'reference' => $reference
             ]);
-            return back()->withInput()->withErrors(['error' => 'Erreur base de données']);
-        } catch (Exception $e) {
+
+            return redirect()->route('vente.show', $vente->id)
+                ->with('success', 'Billet vendu avec succès !');
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Erreur inattendue', [
+            Log::error('Erreur lors de la création de vente', [
                 'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return back()->withInput()->withErrors(['error' => 'Une erreur inattendue est survenue']);
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Une erreur est survenue lors de la création.']);
         }
     }
 
-    public function show(Vente $vente)
+    public function show($id)
     {
-        $this->authorize('view vente');
-
-        $vente->load([
-            'voyage.ligne.gareDepart',
-            'voyage.ligne.gareArrivee',
+        $vente = Vente::with([
+            'voyage.gareDepart',
+            'voyage.gareArrivee',
             'voyage.train',
             'place.wagon.classeWagon',
             'modePaiement',
             'pointVente.gare',
-            'classeWagon',
-            'createdBy'
+            'classeWagon', 
+            'creator'
+        ])->findOrFail($id);
+
+        // Debug: Vérifiez les données chargées
+        logger('Vente data:', [
+            'mode_paiement' => $vente->modePaiement,
+            'point_vente' => $vente->pointVente,
+            'gare' => $vente->pointVente->gare ?? null
         ]);
 
         return Inertia::render('Ventes/Show', [
             'vente' => $vente,
+            'qrcode_url' => $vente->qrcode ? asset('storage/' . $vente->qrcode) : null,
         ]);
     }
 

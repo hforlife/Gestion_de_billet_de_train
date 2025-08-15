@@ -11,6 +11,8 @@ class Voyage extends Model
         'nom',
         'numero_voyage',
         'train_id',
+        'gare_depart_id',
+        'gare_arrivee_id',
         'ligne_id',
         'date_depart',
         'date_arrivee',
@@ -34,12 +36,12 @@ class Voyage extends Model
     }
     public function gareDepart()
     {
-        return $this->belongsTo(ArretsLigne::class, 'depart_id');
+        return $this->belongsTo(ArretsLigne::class, 'gare_depart_id');
     }
 
     public function gareArrivee()
     {
-        return $this->belongsTo(ArretsLigne::class, 'arrivee_id');
+        return $this->belongsTo(ArretsLigne::class, 'gare_arrivee_id');
     }
 
     public function train()
@@ -62,6 +64,12 @@ class Voyage extends Model
     {
         return $this->hasMany(TarifVoyage::class);
     }
+    
+    public function placesDisponibles()
+    {
+        return $this->train->capacite_totale - $this->ventes()->count();
+    }
+
 
     // public function classesWagon()
     // {

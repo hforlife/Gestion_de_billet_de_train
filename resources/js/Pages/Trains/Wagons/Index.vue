@@ -144,7 +144,7 @@ const deletewagon = (id) => {
                             >
                                 <td class="py-1">{{ index + 1 }}</td>
                                 <td>{{ wagon.train_numero }}</td>
-                                <td>{{ wagon.classe_nom }}</td>
+                                <td>{{ wagon.classe_id }}</td>
                                 <td>{{ wagon.numero_wagon }}</td>
                                 <td>{{ wagon.nombre_sieges }}</td>
                                 <td>{{ wagon.sieges_disponibles }}</td>

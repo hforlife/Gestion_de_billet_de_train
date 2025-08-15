@@ -295,6 +295,10 @@ const formatDate = (dateString) => {
                                     v-for="link in ventes.links"
                                     :key="link.label"
                                     class="page-item"
+                                    :class="{
+                                        active: link.active,
+                                        disabled: !link.url,
+                                    }"
                                 >
                                     <Link
                                         v-if="link.url"

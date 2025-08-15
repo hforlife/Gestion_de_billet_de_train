@@ -26,6 +26,7 @@ const submit = () => {
     });
 };
 </script>
+
 <template>
     <AppLayout>
         <!-- En-tête de page -->

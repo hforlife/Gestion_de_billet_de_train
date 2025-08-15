@@ -182,6 +182,10 @@ const deleteLigne = (id) => {
                                     v-for="link in lignes.links"
                                     :key="link.label"
                                     class="page-item"
+                                    :class="{
+                                        active: link.active,
+                                        disabled: !link.url,
+                                    }"
                                 >
                                     <Link
                                         v-if="link.url"
@@ -200,7 +204,7 @@ const deleteLigne = (id) => {
                     </div>
                 </div>
                 <!-- Fin pagination -->
-                 
+
             </div>
         </div>
     </AppLayout>

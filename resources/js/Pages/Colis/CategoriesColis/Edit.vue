@@ -14,6 +14,8 @@ const form = useForm({
   description: props.categorie?.description ?? '',
 });
 
+const { errors } = form;
+
 // Soumission du formulaire
 const submit = () => {
   form.put(route('categories-colis.update', props.categorie.id), {
