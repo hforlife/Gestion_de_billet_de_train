@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_billet_train_flutter/core/constants/app_colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
-import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart'; // Ajouté pour utiliser THelperFunctions
-import 'package:gestion_billet_train_flutter/core/constants/sizes.dart'; // Ajouté pour utiliser TSizes
+import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
+import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/domain/entities/ticket.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 
 class TicketInfoCard extends StatelessWidget {
   final Ticket ticket;
 
   const TicketInfoCard({super.key, required this.ticket});
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return "Non défini";
+    final formatter = DateFormat('dd MMMM yyyy à HH:mm', 'fr_FR');
+    return formatter.format(date);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,27 +39,26 @@ class TicketInfoCard extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Container(
-                    height: THelperFunctions.screenWidth() * 0.08,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withAlpha(200),
-                      borderRadius: BorderRadius.circular(
-                        THelperFunctions.screenWidth() * 0.5,
+                  if (ticket.statut != "termine" && ticket.statut != "annulle")
+                    Container(
+                      height: THelperFunctions.screenWidth() * 0.09,
+                      width: THelperFunctions.screenWidth() * 0.15,
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withAlpha(200),
+                        borderRadius: BorderRadius.circular(
+                          THelperFunctions.screenWidth() * 0.5,
+                        ),
                       ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(
-                        THelperFunctions.screenWidth() * 0.015,
-                      ),
-                      child: Text(
-                        "Validé",
-                        style: TextStyle(
-                          fontSize: TSizes.md,
-                          color: AppColors.white,
+                      child: Center(
+                        child: Text(
+                          "Valide",
+                          style: TextStyle(
+                            fontSize: TSizes.md,
+                            color: AppColors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
               SizedBox(height: THelperFunctions.screenHeight() * 0.015),
@@ -81,7 +87,7 @@ class TicketInfoCard extends StatelessWidget {
                                   style: TextStyle(fontSize: TSizes.md),
                                 ),
                                 Text(
-                                  ticket.departure ?? "non trouver",
+                                  ticket.departure ?? "non trouvé",
                                   style: TextStyle(
                                     fontSize: TSizes.md * 1.2,
                                     fontWeight: FontWeight.bold,
@@ -116,7 +122,7 @@ class TicketInfoCard extends StatelessWidget {
                                   style: TextStyle(fontSize: TSizes.md),
                                 ),
                                 Text(
-                                  ticket.destination ?? "non trouver",
+                                  ticket.destination ?? "non trouvé",
                                   style: TextStyle(
                                     fontSize: TSizes.md * 1.2,
                                     fontWeight: FontWeight.bold,
@@ -175,7 +181,7 @@ class TicketInfoCard extends StatelessWidget {
                               style: TextStyle(fontSize: TSizes.md),
                             ),
                             Text(
-                              "${ticket.trainNumber}",
+                              "N°${ticket.trainNumber}",
                               style: Theme.of(context).textTheme.labelMedium!
                                   .copyWith(
                                     color: TColors.black,
@@ -238,7 +244,7 @@ class TicketInfoCard extends StatelessWidget {
                               style: TextStyle(fontSize: TSizes.md),
                             ),
                             Text(
-                              "${ticket.seatNumber}",
+                              "N°${ticket.seatNumber}",
                               style: Theme.of(context).textTheme.labelMedium!
                                   .copyWith(
                                     color: TColors.black,
@@ -308,7 +314,6 @@ class TicketInfoCard extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: THelperFunctions.screenHeight() * 0.025),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -317,7 +322,7 @@ class TicketInfoCard extends StatelessWidget {
                         style: TextStyle(fontSize: TSizes.md),
                       ),
                       Text(
-                        "${ticket.createdAt}",
+                        _formatDate(ticket.createdAt),
                         style: Theme.of(context).textTheme.labelMedium!
                             .copyWith(
                               color: TColors.black,
@@ -328,7 +333,6 @@ class TicketInfoCard extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -337,7 +341,7 @@ class TicketInfoCard extends StatelessWidget {
                         style: TextStyle(fontSize: TSizes.md),
                       ),
                       Text(
-                        "${ticket.createdAt}",
+                        _formatDate(ticket.travelDate),
                         style: Theme.of(context).textTheme.labelMedium!
                             .copyWith(
                               color: TColors.black,
@@ -348,7 +352,6 @@ class TicketInfoCard extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: THelperFunctions.screenHeight() * 0.02),
-
                   SizedBox(
                     height: THelperFunctions.screenHeight() * 0.080,
                     width: THelperFunctions.screenWidth() * 0.9,
@@ -367,11 +370,11 @@ class TicketInfoCard extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                ticket.reference ?? "pas de reference",
+                                "QR Réference",
                                 style: TextStyle(fontSize: TSizes.md),
                               ),
                               Text(
-                                ticket.id,
+                                ticket.reference ?? "pas de référence",
                                 style: TextStyle(
                                   fontSize: TSizes.md,
                                   fontWeight: FontWeight.bold,

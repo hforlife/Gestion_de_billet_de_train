@@ -3,6 +3,7 @@ import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class TicketRecuDatails extends StatelessWidget {
   final Map<String, dynamic> soldTicket;
@@ -15,8 +16,12 @@ class TicketRecuDatails extends StatelessWidget {
   });
 
   String formatDate(String dateString) {
-    final date = DateTime.parse(dateString);
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dateString; // Fallback to original string if parsing fails
+    }
   }
 
   @override
@@ -32,7 +37,7 @@ class TicketRecuDatails extends StatelessWidget {
             children: [
               SizedBox(height: THelperFunctions.screenHeight() * 0.02),
               SizedBox(
-                width: THelperFunctions.screenWidth() * 0.9, // Fixed width
+                width: THelperFunctions.screenWidth() * 0.9,
                 child: Card(
                   child: Padding(
                     padding: EdgeInsets.all(
@@ -52,19 +57,17 @@ class TicketRecuDatails extends StatelessWidget {
                               ),
                             ),
                             Container(
-                              height: THelperFunctions.screenWidth() * 0.08,
+                              height: THelperFunctions.screenWidth() * 0.09,
+                              width: THelperFunctions.screenWidth() * 0.15,
                               decoration: BoxDecoration(
                                 color: TColors.secondary.withAlpha(200),
                                 borderRadius: BorderRadius.circular(
                                   THelperFunctions.screenWidth() * 0.5,
                                 ),
                               ),
-                              child: Padding(
-                                padding: EdgeInsets.all(
-                                  THelperFunctions.screenWidth() * 0.015,
-                                ),
+                              child: Center(
                                 child: Text(
-                                  "Vendu",
+                                  soldTicket['statut']?.toString() ?? "Vendu",
                                   style: TextStyle(
                                     fontSize: TSizes.md,
                                     color: TColors.white,
@@ -107,7 +110,7 @@ class TicketRecuDatails extends StatelessWidget {
                                             ),
                                           ),
                                           Text(
-                                            soldTicket['departure'],
+                                            soldTicket['departure'] ?? 'N/A',
                                             style: TextStyle(
                                               fontSize: TSizes.md * 1.2,
                                               fontWeight: FontWeight.bold,
@@ -153,7 +156,7 @@ class TicketRecuDatails extends StatelessWidget {
                                             ),
                                           ),
                                           Text(
-                                            soldTicket['arrival'],
+                                            soldTicket['arrival'] ?? 'N/A',
                                             style: TextStyle(
                                               fontSize: TSizes.md * 1.2,
                                               fontWeight: FontWeight.bold,
@@ -170,9 +173,6 @@ class TicketRecuDatails extends StatelessWidget {
                         ),
                         SizedBox(
                           height: THelperFunctions.screenHeight() * 0.08,
-                        ),
-                        SizedBox(
-                          height: THelperFunctions.screenHeight() * 0.08,
                           width: THelperFunctions.screenWidth() * 0.8,
                           child: Card(
                             child: Row(
@@ -186,7 +186,7 @@ class TicketRecuDatails extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '${(soldTicket['price'] * (int.tryParse(soldTicket['quantity'] ?? '1') ?? 1)).toStringAsFixed(2)} FCFA',
+                                  '${(double.tryParse(soldTicket['price']?.toString() ?? '0.0') ?? 0.0 * (int.tryParse(soldTicket['quantity'] ?? '1') ?? 1)).toStringAsFixed(2)} FCFA',
                                   style: TextStyle(
                                     fontSize: TSizes.md * 1.3,
                                     fontWeight: FontWeight.bold,
@@ -196,6 +196,16 @@ class TicketRecuDatails extends StatelessWidget {
                             ),
                           ),
                         ),
+                        if (soldTicket['qrCode'] != null)
+                          Center(
+                            child: QrImageView(
+                              data: soldTicket['qrCode'],
+                              version: QrVersions.auto,
+                              size: THelperFunctions.screenWidth() * 0.5,
+                            ),
+                          )
+                        else
+                          const Center(child: Text('QR Code non disponible')),
                         SizedBox(
                           height: THelperFunctions.screenHeight() * 0.025,
                         ),
@@ -210,7 +220,6 @@ class TicketRecuDatails extends StatelessWidget {
                               Icon(Iconsax.arrow_down_1),
                             ],
                           ),
-                          showTrailingIcon: false,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -220,30 +229,7 @@ class TicketRecuDatails extends StatelessWidget {
                                   style: TextStyle(fontSize: TSizes.md),
                                 ),
                                 Text(
-                                  soldTicket['clientName'],
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium!
-                                      .copyWith(
-                                        color: TColors.black,
-                                        fontSize: TSizes.md,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(
-                              height: THelperFunctions.screenHeight() * 0.025,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Prix unitaire',
-                                  style: TextStyle(fontSize: TSizes.md),
-                                ),
-                                Text(
-                                  '${soldTicket['price'].toStringAsFixed(2)} FCFA',
+                                  soldTicket['clientName'] ?? 'N/A',
                                   style: Theme.of(context)
                                       .textTheme
                                       .labelMedium!
@@ -262,11 +248,11 @@ class TicketRecuDatails extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Nom de voyage',
+                                  'Prix unitaire',
                                   style: TextStyle(fontSize: TSizes.md),
                                 ),
                                 Text(
-                                  soldTicket['voyage'],
+                                  '${(double.tryParse(soldTicket['price']?.toString() ?? '0.0') ?? 0.0).toStringAsFixed(2)} FCFA',
                                   style: Theme.of(context)
                                       .textTheme
                                       .labelMedium!
@@ -278,6 +264,32 @@ class TicketRecuDatails extends StatelessWidget {
                                 ),
                               ],
                             ),
+                            if (soldTicket['voyage']?.isNotEmpty ?? false) ...[
+                              SizedBox(
+                                height: THelperFunctions.screenHeight() * 0.02,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Nom de voyage',
+                                    style: TextStyle(fontSize: TSizes.md),
+                                  ),
+                                  Text(
+                                    soldTicket['voyage'],
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium!
+                                        .copyWith(
+                                          color: TColors.black,
+                                          fontSize: TSizes.md,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             if (soldTicket['distance'] != null &&
                                 soldTicket['distance'] > 0) ...[
                               SizedBox(
@@ -292,7 +304,7 @@ class TicketRecuDatails extends StatelessWidget {
                                     style: TextStyle(fontSize: TSizes.md),
                                   ),
                                   Text(
-                                    '${soldTicket['distance'].toStringAsFixed(1)} km',
+                                    '${(soldTicket['distance'] as num).toStringAsFixed(1)} km',
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium!
@@ -312,11 +324,11 @@ class TicketRecuDatails extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Référence du ticket',
+                                  'Référence',
                                   style: TextStyle(fontSize: TSizes.md),
                                 ),
                                 Text(
-                                  soldTicket['tripNumber'],
+                                  soldTicket['qrCode'] ?? 'N/A',
                                   style: Theme.of(context).textTheme.labelLarge!
                                       .copyWith(
                                         color: TColors.black,
@@ -333,11 +345,14 @@ class TicketRecuDatails extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Date vente/voyage',
+                                  'Date vente',
                                   style: TextStyle(fontSize: TSizes.md),
                                 ),
                                 Text(
-                                  formatDate(soldTicket['saleDate']),
+                                  formatDate(
+                                    soldTicket['saleDate'] ??
+                                        DateTime.now().toIso8601String(),
+                                  ),
                                   style: Theme.of(context)
                                       .textTheme
                                       .labelMedium!
@@ -360,7 +375,7 @@ class TicketRecuDatails extends StatelessWidget {
                                   style: TextStyle(fontSize: TSizes.md),
                                 ),
                                 Text(
-                                  soldTicket['quantity'],
+                                  soldTicket['quantity']?.toString() ?? '1',
                                   style: Theme.of(context)
                                       .textTheme
                                       .labelMedium!
@@ -372,10 +387,10 @@ class TicketRecuDatails extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            SizedBox(
-                              height: THelperFunctions.screenHeight() * 0.02,
-                            ),
-                            if (soldTicket['hasPenalty'])
+                            if (soldTicket['hasPenalty'] == true) ...[
+                              SizedBox(
+                                height: THelperFunctions.screenHeight() * 0.02,
+                              ),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -385,7 +400,7 @@ class TicketRecuDatails extends StatelessWidget {
                                     style: TextStyle(fontSize: TSizes.md),
                                   ),
                                   Text(
-                                    'Appliquer',
+                                    '+20%',
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium!
@@ -397,49 +412,192 @@ class TicketRecuDatails extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                            SizedBox(
-                              height: THelperFunctions.screenHeight() * 0.02,
-                            ),
-                            SizedBox(
-                              height: THelperFunctions.screenHeight() * 0.080,
-                              width: THelperFunctions.screenWidth() * 0.8,
-                              child: Card(
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      width:
-                                          THelperFunctions.screenWidth() *
-                                          0.045,
-                                    ),
-                                    Icon(Iconsax.scan_barcode),
-                                    SizedBox(
-                                      width:
-                                          THelperFunctions.screenWidth() *
-                                          0.035,
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          "Code QR",
-                                          style: TextStyle(fontSize: TSizes.md),
-                                        ),
-                                        Text(
-                                          soldTicket['qrCode'],
-                                          style: TextStyle(
-                                            fontSize: TSizes.md,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                            ],
+                            if (soldTicket['isDemiTarif'] == true) ...[
+                              SizedBox(
+                                height: THelperFunctions.screenHeight() * 0.02,
                               ),
-                            ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Demi-tarif',
+                                    style: TextStyle(fontSize: TSizes.md),
+                                  ),
+                                  Text(
+                                    '-50%',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium!
+                                        .copyWith(
+                                          color: TColors.success,
+                                          fontSize: TSizes.md,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (soldTicket['hasBagage'] == true &&
+                                (soldTicket['baggageWeight'] ?? 0) > 0) ...[
+                              SizedBox(
+                                height: THelperFunctions.screenHeight() * 0.02,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Poids des bagages',
+                                    style: TextStyle(fontSize: TSizes.md),
+                                  ),
+                                  Text(
+                                    '${(soldTicket['baggageWeight'] as num).toStringAsFixed(1)} kg',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium!
+                                        .copyWith(
+                                          color: TColors.black,
+                                          fontSize: TSizes.md,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (soldTicket['classse']?.isNotEmpty ?? false) ...[
+                              SizedBox(
+                                height: THelperFunctions.screenHeight() * 0.02,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Classe',
+                                    style: TextStyle(fontSize: TSizes.md),
+                                  ),
+                                  Text(
+                                    soldTicket['classse'],
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium!
+                                        .copyWith(
+                                          color: TColors.black,
+                                          fontSize: TSizes.md,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (soldTicket['seat']?.isNotEmpty ?? false) ...[
+                              SizedBox(
+                                height: THelperFunctions.screenHeight() * 0.02,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Place',
+                                    style: TextStyle(fontSize: TSizes.md),
+                                  ),
+                                  Text(
+                                    soldTicket['seat'],
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium!
+                                        .copyWith(
+                                          color: TColors.black,
+                                          fontSize: TSizes.md,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (soldTicket['trainNumber']?.isNotEmpty ??
+                                false) ...[
+                              SizedBox(
+                                height: THelperFunctions.screenHeight() * 0.02,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Numéro de train',
+                                    style: TextStyle(fontSize: TSizes.md),
+                                  ),
+                                  Text(
+                                    soldTicket['trainNumber'],
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium!
+                                        .copyWith(
+                                          color: TColors.black,
+                                          fontSize: TSizes.md,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (soldTicket['wagon']?.isNotEmpty ?? false) ...[
+                              SizedBox(
+                                height: THelperFunctions.screenHeight() * 0.02,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Wagon',
+                                    style: TextStyle(fontSize: TSizes.md),
+                                  ),
+                                  Text(
+                                    soldTicket['wagon'],
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium!
+                                        .copyWith(
+                                          color: TColors.black,
+                                          fontSize: TSizes.md,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (soldTicket['paiement']?.isNotEmpty ??
+                                false) ...[
+                              SizedBox(
+                                height: THelperFunctions.screenHeight() * 0.02,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Méthode de paiement',
+                                    style: TextStyle(fontSize: TSizes.md),
+                                  ),
+                                  Text(
+                                    soldTicket['paiement'],
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium!
+                                        .copyWith(
+                                          color: TColors.black,
+                                          fontSize: TSizes.md,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ],

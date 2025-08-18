@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class SettingModel {
   final int? id;
   final String? modeVente;
@@ -24,10 +26,21 @@ class SettingModel {
 
     Map<String, double>? coeffs;
     final coeffsRaw = json['coefficients_classes'];
-    if (coeffsRaw != null && coeffsRaw is Map) {
-      coeffs = coeffsRaw.map(
-        (k, v) => MapEntry(k.toString(), (v as num).toDouble()),
-      );
+    try {
+      if (coeffsRaw is String) {
+        // Decode JSON string to Map
+        final decoded = jsonDecode(coeffsRaw) as Map;
+        coeffs = decoded.map(
+          (k, v) => MapEntry(k.toString(), (v as num).toDouble()),
+        );
+      } else if (coeffsRaw is Map) {
+        coeffs = coeffsRaw.map(
+          (k, v) => MapEntry(k.toString(), (v as num).toDouble()),
+        );
+      }
+    } catch (e) {
+      print('Error decoding coefficients_classes: $e, coeffsRaw: $coeffsRaw');
+      coeffs = null;
     }
 
     return SettingModel(
@@ -41,6 +54,9 @@ class SettingModel {
       tarifMinimum: json['tarif_minimum'] != null
           ? double.tryParse(json['tarif_minimum'].toString())
           : null,
+      baguageTarif: json['penalite'] != null
+          ? double.tryParse(json['penalite']?.toString() ?? '')
+          : null, // Adjust if baguageTarif is a different field
       coefficientsClasses: coeffs,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
@@ -57,6 +73,7 @@ class SettingModel {
       'mode_vente': modeVente,
       'tarif_kilometrique': tarifKilometrique,
       'tarif_minimum': tarifMinimum,
+      'baguage_tarif': baguageTarif,
       'coefficients_classes': coefficientsClasses,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),

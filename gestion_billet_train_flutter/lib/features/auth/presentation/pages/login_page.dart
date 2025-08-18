@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_billet_train_flutter/core/constants/custom_shape/container/primary_header_container.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
 import 'package:gestion_billet_train_flutter/core/constants/text_strings.dart';
-import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_state.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/widgets/auth_form.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -91,20 +88,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Padding(
                 padding: EdgeInsets.all(TSizes.defaultSpace),
-                child: BlocConsumer<AuthBloc, AuthState>(
-                  listener: (context, state) {
-                    if (state is AuthAuthenticated) {
-                      Navigator.pushReplacementNamed(context, '/home');
-                    } else if (state is AuthError) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(state.message)));
-                    }
-                  },
-                  builder: (context, state) {
-                    return AuthForm(isLoading: state is AuthLoading);
-                  },
-                ),
+                child: AuthForm(),
               ),
             ],
           ),

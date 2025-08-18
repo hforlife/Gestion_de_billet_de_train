@@ -113,22 +113,13 @@ class Ticket {
     final pointVente = vente['point_vente'] ?? {};
     final place = vente['place'] ?? {};
     final wagon = place['wagon'] ?? {};
-    final classeWagon = vente['classe_wagon'] ?? wagon['classe_wagon'] ?? {};
-
-    final departureId = voyage['gare_depart_id']?.toString() ?? 'Inconnu';
-    final destinationId = voyage['gare_arrivee_id']?.toString() ?? 'Inconnu';
-    final departure = gareCache != null
-        ? gareCache[departureId] ?? departureId
-        : departureId;
-    final destination = gareCache != null
-        ? gareCache[destinationId] ?? destinationId
-        : destinationId;
+    final classeWagon = vente['classe_wagon'] ?? {};
 
     return Ticket(
       id: vente['id']?.toString() ?? '',
       clientName: vente['client_nom']?.toString(),
-      departure: departure,
-      destination: destination,
+      departure: voyage['gare_depart']?['nom']?.toString() ?? 'Inconnu',
+      destination: voyage['gare_arrivee']?['nom']?.toString() ?? 'Inconnu',
       price: double.tryParse(vente['prix']?.toString() ?? '0.0') ?? 0.0,
       isValidated: vente['statut'] == 'payé',
       hasPenalty:
@@ -153,7 +144,7 @@ class Ticket {
       pointVenteType: pointVente['type']?.toString(),
       creatorName: vente['creator']?['name']?.toString(),
       statut: vente['statut']?.toString(),
-      isSynced: false,
+      isSynced: true, // Assume synced since fetched from server
       modePaiementId: vente['mode_paiement_id'] as int?,
       pointVenteId: vente['point_vente_id'] as int?,
       classeWagonId: vente['classe_wagon_id'] as int?,
@@ -161,7 +152,8 @@ class Ticket {
       bagage: vente['bagage'] as bool?,
       placeId: vente['place_id'] as int?,
       qrcode: vente['qrcode']?.toString(),
-      qrcodeUrl: vente['qrcode_url']?.toString(),
+      qrcodeUrl:
+          vente['qrcode_url']?.toString() ?? json['qr_code_url']?.toString(),
       createdBy: vente['created_by'] as int?,
       updatedBy: vente['updated_by'] as int?,
       updatedAt: DateTime.tryParse(vente['updated_at']?.toString() ?? ''),

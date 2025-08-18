@@ -12,9 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
 class AuthForm extends StatefulWidget {
-  final bool isLoading;
-
-  const AuthForm({super.key, required this.isLoading});
+  const AuthForm({super.key});
 
   @override
   _AuthFormState createState() => _AuthFormState();
@@ -130,38 +128,63 @@ class _AuthFormState extends State<AuthForm> {
                       : null,
                 ),
               ),
-              SizedBox(height: TSizes.spaceBtwInputFields / 2),
+              SizedBox(height: TSizes.spaceBtwInputFields * 3),
               SizedBox(
                 height: THelperFunctions.screenHeight() * 0.07,
                 width: THelperFunctions.screenWidth() * 0.7,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: TColors.buttonSecondary,
-                    minimumSize: Size(THelperFunctions.screenWidth() * 0.4, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: widget.isLoading ? null : _handleLogin,
-                  child: widget.isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          'Se connecter',
-                          style: GoogleFonts.roboto(
-                            fontSize: TSizes.fontSizeMd,
-                          ),
+                child: BlocBuilder<AuthBloc, AuthState>(
+                  buildWhen: (previous, current) =>
+                      previous.runtimeType != current.runtimeType,
+                  builder: (context, state) {
+                    final isLoading = state is AuthLoading;
+                    return ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: TColors.buttonSecondary,
+                        minimumSize: Size(
+                          THelperFunctions.screenWidth() * 0.4,
+                          50,
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: isLoading ? null : _handleLogin,
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'Se connecter',
+                              style: GoogleFonts.roboto(
+                                fontSize: TSizes.fontSizeMd,
+                              ),
+                            ),
+                    );
+                  },
                 ),
               ),
-              if (_errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    _errorMessage!,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
+
+              BlocBuilder<AuthBloc, AuthState>(
+                buildWhen: (_, state) => state is AuthError,
+                builder: (context, state) {
+                  if (state is AuthError) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(
+                        state.message,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ],
           ),
         ),

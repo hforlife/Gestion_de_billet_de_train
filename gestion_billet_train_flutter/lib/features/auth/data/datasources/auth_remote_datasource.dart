@@ -12,7 +12,7 @@ abstract class AuthRemoteDataSource {
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   static String _baseUrl = ApiConstants.baseUrl; // Remplacez par votre URL
   static String _baseUrlLocal =
-      ApiConstants.baseUrlLocal; // Remplacez par votre URL
+      ApiConstants.baseUrlLocalWork; // Remplacez par votre URL
 
   // Instance de flutter_secure_storage
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();

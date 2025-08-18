@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
+import 'package:gestion_billet_train_flutter/di/injection_container.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/bloc/ticket_bloc.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/ticket_details_page.dart';
-import 'package:get_it/get_it.dart';
-import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
+import 'package:hive/hive.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -14,50 +15,75 @@ class ScanPage extends StatefulWidget {
 }
 
 class _ScanPageState extends State<ScanPage> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   final TextEditingController _qrController = TextEditingController();
-  QRViewController? controller;
   String? qrText;
-  final TicketBloc ticketBloc = GetIt.instance<TicketBloc>();
+  final TicketBloc ticketBloc = sl<TicketBloc>();
   DateTime? _lastScanTime;
+  late Box<String> _scannedTicketsBox;
+  static const MethodChannel _channel = MethodChannel(
+    'com.example.gestion_billet_train_flutter/datawedge',
+  );
 
   @override
-  void dispose() {
-    controller?.dispose();
-    _qrController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _scannedTicketsBox = sl<Box<String>>();
+    _channel.setMethodCallHandler(_handleScan);
   }
 
-  void _onQRCodeScanned(String scannedCode) {
-    final now = DateTime.now();
-    // Debounce scans (only process if 1 second has passed since last scan)
-    if (_lastScanTime == null ||
-        now.difference(_lastScanTime!).inMilliseconds > 1000) {
-      if (scannedCode != qrText) {
-        print('QR Code detected: $scannedCode');
-        setState(() {
-          qrText = scannedCode;
-          ticketBloc.add(ScanTicketEvent(scannedCode));
-          _lastScanTime = now;
-        });
+  Future<void> _handleScan(MethodCall call) async {
+    if (call.method == 'onScanResult' && mounted) {
+      final String? scannedCode = call.arguments as String?;
+      if (scannedCode != null) {
+        final now = DateTime.now();
+        if (_lastScanTime == null ||
+            now.difference(_lastScanTime!).inMilliseconds > 1000) {
+          if (!_scannedTicketsBox.containsKey(scannedCode)) {
+            print('QR Code detected: $scannedCode');
+            setState(() {
+              qrText = scannedCode;
+              ticketBloc.add(ScanTicketEvent(scannedCode));
+              _scannedTicketsBox.put(scannedCode, scannedCode);
+              _lastScanTime = now;
+            });
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Ce ticket a déjà été scanné')),
+            );
+          }
+        }
       }
     }
+    return null;
   }
 
   void _onManualSubmit() {
     final manualCode = _qrController.text.trim();
     if (manualCode.isNotEmpty) {
       print('Manual QR Code entered: $manualCode');
-      setState(() {
-        qrText = manualCode;
-        ticketBloc.add(ScanTicketEvent(manualCode));
-        _qrController.clear();
-      });
+      if (!_scannedTicketsBox.containsKey(manualCode)) {
+        setState(() {
+          qrText = manualCode;
+          ticketBloc.add(ScanTicketEvent(manualCode));
+          _scannedTicketsBox.put(manualCode, manualCode);
+          _qrController.clear();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ce ticket a déjà été scanné')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Veuillez entrer une référence valide')),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _qrController.dispose();
+    super.dispose();
   }
 
   @override
@@ -68,7 +94,6 @@ class _ScanPageState extends State<ScanPage> {
         listener: (context, state) {
           print('BlocListener state: $state');
           if (state is TicketScanned) {
-            controller?.pauseCamera();
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -78,7 +103,6 @@ class _ScanPageState extends State<ScanPage> {
               if (mounted) {
                 setState(() {
                   qrText = null;
-                  controller?.resumeCamera();
                 });
               }
             });
@@ -88,114 +112,62 @@ class _ScanPageState extends State<ScanPage> {
             ).showSnackBar(SnackBar(content: Text(state.message)));
             setState(() {
               qrText = null;
-              controller?.resumeCamera();
             });
           }
         },
         child: Scaffold(
-          body: Column(
-            children: [
-              Expanded(
-                flex: 5,
-                child: QRView(
-                  key: qrKey,
-                  onQRViewCreated: (controller) {
-                    this.controller = controller;
-                    controller.scannedDataStream.listen(
-                      (scanData) {
-                        if (!mounted) return;
-                        final scannedCode = scanData.code;
-                        if (scannedCode != null) {
-                          _onQRCodeScanned(scannedCode);
-                        }
-                      },
-                      onError: (error) {
-                        print('Error scanning QR code: $error');
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Erreur de scan: $error')),
-                          );
-                          setState(() {
-                            qrText = null;
-                            controller.resumeCamera();
-                          });
-                        }
-                      },
-                    );
-                    controller.resumeCamera();
-                  },
-                  overlay: QrScannerOverlayShape(
-                    borderColor: Colors.red,
-                    borderRadius: 10,
-                    borderLength: 30,
-                    borderWidth: 5,
-                    cutOutSize: 300,
+          appBar: AppBar(title: const Text('Scanner un ticket')),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Utilisez le scanner du Zebra pour scanner un ticket ou entrez la référence manuellement',
+                  style: TextStyle(fontSize: TSizes.md),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _qrController,
+                  decoration: InputDecoration(
+                    labelText: 'Entrer la référence du ticket',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: _onManualSubmit,
+                    ),
                   ),
-                  onPermissionSet: (controller, permission) {
-                    if (!permission && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Permission caméra refusée'),
-                        ),
+                  onSubmitted: (_) => _onManualSubmit(),
+                ),
+                const SizedBox(height: 10),
+                BlocBuilder<TicketBloc, TicketState>(
+                  builder: (context, state) {
+                    if (state is TicketLoading) {
+                      return const CircularProgressIndicator();
+                    }
+                    if (qrText != null) {
+                      return Text(
+                        'Ticket scanné : $qrText\nTraitement en cours...',
+                        style: TextStyle(fontSize: TSizes.md),
+                        textAlign: TextAlign.center,
                       );
                     }
+                    return const SizedBox.shrink();
                   },
                 ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _qrController,
-                        decoration: InputDecoration(
-                          labelText: 'Entrer la référence du ticket',
-                          border: OutlineInputBorder(),
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.send),
-                            onPressed: _onManualSubmit,
-                          ),
-                        ),
-                        onSubmitted: (_) => _onManualSubmit(),
-                      ),
-                      const SizedBox(height: 10),
-                      BlocBuilder<TicketBloc, TicketState>(
-                        builder: (context, state) {
-                          if (state is TicketLoading) {
-                            return const CircularProgressIndicator();
-                          }
-                          if (qrText != null) {
-                            return Text(
-                              'Ticket scanné : $qrText\nTraitement en cours...',
-                              style: TextStyle(fontSize: TSizes.md),
-                              textAlign: TextAlign.center,
-                            );
-                          }
-                          return Text(
-                            'Scannez un code QR ou entrez la référence manuellement',
-                            style: TextStyle(fontSize: TSizes.md),
-                            textAlign: TextAlign.center,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            qrText = null;
-                            _qrController.clear();
-                            controller?.resumeCamera();
-                          });
-                        },
-                        child: const Text('Réessayer'),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      qrText = null;
+                      _qrController.clear();
+                    });
+                  },
+                  child: const Text('Réessayer'),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
