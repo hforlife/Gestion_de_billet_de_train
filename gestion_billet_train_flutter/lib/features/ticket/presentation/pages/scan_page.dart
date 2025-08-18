@@ -29,29 +29,32 @@ class _ScanPageState extends State<ScanPage> {
     super.initState();
     _scannedTicketsBox = sl<Box<String>>();
     _channel.setMethodCallHandler(_handleScan);
+    print('ScanPage: Initialized, MethodChannel handler set');
   }
 
   Future<void> _handleScan(MethodCall call) async {
+    print(
+      'ScanPage: Received MethodChannel call: ${call.method}, Arguments: ${call.arguments}',
+    );
     if (call.method == 'onScanResult' && mounted) {
       final String? scannedCode = call.arguments as String?;
+      print('ScanPage: Scanned code: $scannedCode');
       if (scannedCode != null) {
         final now = DateTime.now();
         if (_lastScanTime == null ||
             now.difference(_lastScanTime!).inMilliseconds > 1000) {
-          if (!_scannedTicketsBox.containsKey(scannedCode)) {
-            print('QR Code detected: $scannedCode');
-            setState(() {
-              qrText = scannedCode;
-              ticketBloc.add(ScanTicketEvent(scannedCode));
-              _scannedTicketsBox.put(scannedCode, scannedCode);
-              _lastScanTime = now;
-            });
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Ce ticket a déjà été scanné')),
-            );
-          }
+          print('ScanPage: Processing scan: $scannedCode');
+          setState(() {
+            qrText = scannedCode;
+            ticketBloc.add(ScanTicketEvent(scannedCode));
+            _scannedTicketsBox.put(scannedCode, now.toIso8601String());
+            _lastScanTime = now;
+          });
+        } else {
+          print('ScanPage: Scan ignored (debounce): $scannedCode');
         }
+      } else {
+        print('ScanPage: No scan data received');
       }
     }
     return null;
@@ -59,20 +62,15 @@ class _ScanPageState extends State<ScanPage> {
 
   void _onManualSubmit() {
     final manualCode = _qrController.text.trim();
+    print('ScanPage: Manual code entered: $manualCode');
     if (manualCode.isNotEmpty) {
-      print('Manual QR Code entered: $manualCode');
-      if (!_scannedTicketsBox.containsKey(manualCode)) {
-        setState(() {
-          qrText = manualCode;
-          ticketBloc.add(ScanTicketEvent(manualCode));
-          _scannedTicketsBox.put(manualCode, manualCode);
-          _qrController.clear();
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ce ticket a déjà été scanné')),
-        );
-      }
+      print('ScanPage: Processing manual scan: $manualCode');
+      setState(() {
+        qrText = manualCode;
+        ticketBloc.add(ScanTicketEvent(manualCode));
+        _scannedTicketsBox.put(manualCode, DateTime.now().toIso8601String());
+        _qrController.clear();
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Veuillez entrer une référence valide')),
@@ -92,8 +90,11 @@ class _ScanPageState extends State<ScanPage> {
       value: ticketBloc,
       child: BlocListener<TicketBloc, TicketState>(
         listener: (context, state) {
-          print('BlocListener state: $state');
+          print('ScanPage: Bloc state: $state');
           if (state is TicketScanned) {
+            print(
+              'ScanPage: Navigating to TicketDetailsPage for ticket: ${state.ticket}',
+            );
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -107,11 +108,16 @@ class _ScanPageState extends State<ScanPage> {
               }
             });
           } else if (state is TicketError) {
+            print('ScanPage: Error: ${state.message}');
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(state.message)));
             setState(() {
               qrText = null;
+            });
+          } else if (state is TicketLoading) {
+            setState(() {
+              qrText = 'Traitement en cours...';
             });
           }
         },
@@ -148,7 +154,7 @@ class _ScanPageState extends State<ScanPage> {
                     }
                     if (qrText != null) {
                       return Text(
-                        'Ticket scanné : $qrText\nTraitement en cours...',
+                        qrText!,
                         style: TextStyle(fontSize: TSizes.md),
                         textAlign: TextAlign.center,
                       );

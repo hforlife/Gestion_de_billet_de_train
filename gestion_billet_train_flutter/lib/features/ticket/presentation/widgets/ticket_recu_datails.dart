@@ -81,8 +81,8 @@ class TicketRecuDatails extends StatelessWidget {
                           height: THelperFunctions.screenHeight() * 0.015,
                         ),
                         SizedBox(
-                          height: THelperFunctions.screenHeight() * 0.24,
-                          width: THelperFunctions.screenWidth() * 0.8,
+                          height: THelperFunctions.screenHeight() * 0.27,
+                          width: THelperFunctions.screenWidth() * 0.9,
                           child: Card(
                             child: Padding(
                               padding: EdgeInsets.all(
@@ -96,7 +96,7 @@ class TicketRecuDatails extends StatelessWidget {
                                       Icon(Iconsax.cd),
                                       SizedBox(
                                         width:
-                                            THelperFunctions.screenHeight() *
+                                            THelperFunctions.screenWidth() *
                                             0.015,
                                       ),
                                       Column(
@@ -120,19 +120,11 @@ class TicketRecuDatails extends StatelessWidget {
                                       ),
                                     ],
                                   ),
-                                  SizedBox(
-                                    height:
-                                        THelperFunctions.screenHeight() * 0.015,
-                                  ),
                                   Divider(
                                     color: Colors.grey,
                                     thickness: 0.5,
                                     height:
                                         THelperFunctions.screenHeight() * 0.02,
-                                  ),
-                                  SizedBox(
-                                    height:
-                                        THelperFunctions.screenHeight() * 0.015,
                                   ),
                                   Row(
                                     children: [
@@ -142,7 +134,7 @@ class TicketRecuDatails extends StatelessWidget {
                                       ),
                                       SizedBox(
                                         width:
-                                            THelperFunctions.screenHeight() *
+                                            THelperFunctions.screenWidth() *
                                             0.015,
                                       ),
                                       Column(
@@ -206,20 +198,18 @@ class TicketRecuDatails extends StatelessWidget {
                           )
                         else
                           const Center(child: Text('QR Code non disponible')),
-                        SizedBox(
-                          height: THelperFunctions.screenHeight() * 0.025,
-                        ),
                         ExpansionTile(
                           title: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 'Détails supplémentaires',
-                                style: TextStyle(fontSize: TSizes.md),
+                                style: TextStyle(fontSize: TSizes.md * 1.1),
                               ),
                               Icon(Iconsax.arrow_down_1),
                             ],
                           ),
+                          showTrailingIcon: false,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -632,7 +622,7 @@ class TicketRecuDatails extends StatelessWidget {
                         SizedBox(width: THelperFunctions.screenWidth() * 0.015),
                         Text(
                           'Imprimer',
-                          style: TextStyle(fontSize: TSizes.md * 1.2),
+                          style: TextStyle(fontSize: TSizes.md * 1.1),
                         ),
                       ],
                     ),
@@ -643,7 +633,7 @@ class TicketRecuDatails extends StatelessWidget {
                       foregroundColor: Colors.white,
                       backgroundColor: TColors.buttonSecondary,
                       minimumSize: Size(
-                        THelperFunctions.screenWidth() * 0.4,
+                        THelperFunctions.screenWidth() * 0.3,
                         THelperFunctions.screenHeight() * 0.08,
                       ),
                       shape: RoundedRectangleBorder(
@@ -652,7 +642,7 @@ class TicketRecuDatails extends StatelessWidget {
                     ),
                     child: Text(
                       'Nouvelle Vente',
-                      style: TextStyle(fontSize: TSizes.md * 1.2),
+                      style: TextStyle(fontSize: TSizes.md * 1.1),
                     ),
                   ),
                 ],

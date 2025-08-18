@@ -63,7 +63,7 @@ class TicketInfoCard extends StatelessWidget {
               ),
               SizedBox(height: THelperFunctions.screenHeight() * 0.015),
               SizedBox(
-                height: THelperFunctions.screenHeight() * 0.24,
+                height: THelperFunctions.screenHeight() * 0.27,
                 width: THelperFunctions.screenWidth() * 0.9,
                 child: Card(
                   child: Padding(
@@ -97,22 +97,16 @@ class TicketInfoCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        SizedBox(
-                          height: THelperFunctions.screenHeight() * 0.015,
-                        ),
                         Divider(
                           color: Colors.grey,
                           thickness: 0.5,
                           height: THelperFunctions.screenHeight() * 0.02,
                         ),
-                        SizedBox(
-                          height: THelperFunctions.screenHeight() * 0.015,
-                        ),
                         Row(
                           children: [
                             Icon(Iconsax.location, color: TColors.secondary),
                             SizedBox(
-                              width: THelperFunctions.screenHeight() * 0.015,
+                              width: THelperFunctions.screenWidth() * 0.015,
                             ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,7 +157,7 @@ class TicketInfoCard extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                height: THelperFunctions.screenHeight() * 0.268,
+                height: THelperFunctions.screenHeight() * 0.3,
                 width: THelperFunctions.screenWidth() * 0.9,
                 child: Card(
                   child: Padding(
@@ -192,7 +186,7 @@ class TicketInfoCard extends StatelessWidget {
                           ],
                         ),
                         SizedBox(
-                          height: THelperFunctions.screenHeight() * 0.025,
+                          height: THelperFunctions.screenHeight() * 0.02,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -213,7 +207,7 @@ class TicketInfoCard extends StatelessWidget {
                           ],
                         ),
                         SizedBox(
-                          height: THelperFunctions.screenHeight() * 0.025,
+                          height: THelperFunctions.screenHeight() * 0.02,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -234,7 +228,7 @@ class TicketInfoCard extends StatelessWidget {
                           ],
                         ),
                         SizedBox(
-                          height: THelperFunctions.screenHeight() * 0.025,
+                          height: THelperFunctions.screenHeight() * 0.02,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -253,9 +247,6 @@ class TicketInfoCard extends StatelessWidget {
                                   ),
                             ),
                           ],
-                        ),
-                        SizedBox(
-                          height: THelperFunctions.screenHeight() * 0.025,
                         ),
                       ],
                     ),
@@ -353,13 +344,13 @@ class TicketInfoCard extends StatelessWidget {
                   ),
                   SizedBox(height: THelperFunctions.screenHeight() * 0.02),
                   SizedBox(
-                    height: THelperFunctions.screenHeight() * 0.080,
+                    height: THelperFunctions.screenHeight() * 0.1,
                     width: THelperFunctions.screenWidth() * 0.9,
                     child: Card(
                       child: Row(
                         children: [
                           SizedBox(
-                            width: THelperFunctions.screenWidth() * 0.045,
+                            width: THelperFunctions.screenWidth() * 0.030,
                           ),
                           Icon(Iconsax.scan_barcode),
                           SizedBox(

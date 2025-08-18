@@ -20,7 +20,7 @@ class ScanTicket {
   Future<Either<Failure, Ticket>> call(String qrCode) async {
     print('Scanning ticket with QR code: $qrCode');
     try {
-      if (!qrCode.startsWith('TICKET_')) {
+      if (!qrCode.startsWith('TKT_')) {
         return Left(Failure(message: 'Format de QR code invalide'));
       }
 

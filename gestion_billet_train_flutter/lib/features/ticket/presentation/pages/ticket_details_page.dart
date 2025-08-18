@@ -83,7 +83,7 @@ class TicketDetailsPage extends StatelessWidget {
                             foregroundColor: TColors.white,
                             backgroundColor: TColors.buttonSecondary,
                             minimumSize: Size(
-                              THelperFunctions.screenWidth() * 0.35,
+                              THelperFunctions.screenWidth() * 0.3,
                               THelperFunctions.screenHeight() * 0.08,
                             ),
                             shape: RoundedRectangleBorder(

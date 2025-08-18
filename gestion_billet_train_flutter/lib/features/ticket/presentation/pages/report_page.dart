@@ -20,99 +20,166 @@ class ReportPage extends StatefulWidget {
 class _ReportPageState extends State<ReportPage> {
   String baseUrl = ApiConstants.baseUrl;
   DateTime selectedDate = DateTime.now();
+  String filterType = 'Jour'; // Default filter: Day
   Future<Map<String, dynamic>>? _reportData;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _reportData = fetchReportData(selectedDate, filterType);
+  }
 
   Future<String?> getToken() async {
     return await _secureStorage.read(key: 'bearer_token');
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _reportData = fetchReportData(selectedDate);
-  }
-
-  Future<Map<String, dynamic>> fetchReportData(DateTime date) async {
+  Future<Map<String, dynamic>> fetchReportData(
+    DateTime date,
+    String filterType,
+  ) async {
     String apiUrl = '$baseUrl/v1/venteByUser';
-    // Assume AuthService provides the token; replace with your auth mechanism
     final token = await getToken();
 
-    final response = await http.get(
-      Uri.parse(apiUrl),
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+    List<dynamic> allSales = [];
+    String? nextUrl = apiUrl;
+
+    // Fetch all pages
+    while (nextUrl != null) {
+      final response = await http.get(
+        Uri.parse(nextUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        allSales.addAll(jsonData['data']['data']);
+        nextUrl = jsonData['data']['next_page_url'];
+      } else {
+        throw Exception('Failed to load report data: ${response.statusCode}');
+      }
+    }
+
+    // Define date range based on filterType
+    DateTime startDate;
+    DateTime endDate;
+    if (filterType == 'Jour') {
+      startDate = DateTime(date.year, date.month, date.day);
+      endDate = startDate.add(const Duration(days: 1));
+    } else if (filterType == 'Mois') {
+      startDate = DateTime(date.year, date.month, 1);
+      endDate = DateTime(date.year, date.month + 1, 1);
+    } else {
+      // 'Année'
+      startDate = DateTime(date.year, 1, 1);
+      endDate = DateTime(date.year + 1, 1, 1);
+    }
+
+    int ticketsSold = 0;
+    int totalSales = 0;
+    double totalRevenue = 0.0;
+    int ticketsWithPenalties = 0;
+    double penaltyRevenue = 0.0;
+    int ticketsSoldToday = 0;
+
+    final todayStart = DateTime.now().copyWith(
+      hour: 0,
+      minute: 0,
+      second: 0,
+      microsecond: 0,
     );
+    final todayEnd = todayStart.add(const Duration(days: 1));
 
-    if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body);
-      final List<dynamic> sales = jsonData['data']['data'];
-
-      // Calculate metrics
-      int ticketsSold = 0;
-      double totalRevenue = 0.0;
-      int ticketsWithPenalties = 0;
-      double penaltyRevenue = 0.0;
-      int ticketsSoldToday = 0;
-
-      final selectedDateStart = DateTime(date.year, date.month, date.day);
-      final selectedDateEnd = selectedDateStart.add(const Duration(days: 1));
-      final todayStart = DateTime.now();
-      todayStart.copyWith(hour: 0, minute: 0, second: 0, microsecond: 0);
-
-      for (var sale in sales) {
-        final saleDate = DateTime.parse(sale['date_vente']);
-        if (saleDate.isAfter(selectedDateStart) &&
-            saleDate.isBefore(selectedDateEnd)) {
-          ticketsSold += sale['quantite'] as int;
-          totalRevenue += sale['total'] as num;
-          if (sale['penalite'] > 0) {
-            ticketsWithPenalties += sale['quantite'] as int;
-            penaltyRevenue += sale['penalite'] as num;
-          }
-          // Check if sale is from today
-          if (saleDate.day == todayStart.day &&
-              saleDate.month == todayStart.month &&
-              saleDate.year == todayStart.year) {
-            ticketsSoldToday += sale['quantite'] as int;
-          }
+    for (var sale in allSales) {
+      final saleDate = DateTime.parse(sale['date_vente']);
+      if (saleDate.isAfter(startDate) && saleDate.isBefore(endDate)) {
+        totalSales += 1;
+        ticketsSold += sale['quantite'] as int;
+        totalRevenue += (sale['total'] as num).toDouble();
+        if (sale['penalite'] > 0) {
+          ticketsWithPenalties += sale['quantite'] as int;
+          penaltyRevenue += (sale['penalite'] as num).toDouble();
+        }
+        if (saleDate.isAfter(todayStart) && saleDate.isBefore(todayEnd)) {
+          ticketsSoldToday += sale['quantite'] as int;
         }
       }
-
-      // Note: Scanned tickets are not determinable from the API; assuming 0 for now
-      const int scannedTickets = 0;
-
-      return {
-        'ticketsSold': ticketsSold,
-        'scannedTickets': scannedTickets,
-        'totalRevenue': totalRevenue,
-        'ticketsWithPenalties': ticketsWithPenalties,
-        'penaltyRevenue': penaltyRevenue,
-        'ticketsSoldToday': ticketsSoldToday,
-      };
-    } else {
-      throw Exception('Failed to load report data: ${response.statusCode}');
     }
+
+    return {
+      'ticketsSold': ticketsSold,
+      'totalSales': totalSales,
+      'totalRevenue': totalRevenue,
+      'ticketsWithPenalties': ticketsWithPenalties,
+      'penaltyRevenue': penaltyRevenue,
+      'ticketsSoldToday': ticketsSoldToday,
+    };
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    DatePickerEntryMode initialEntryMode = DatePickerEntryMode.calendar;
+    if (filterType == 'Mois') {
+      initialEntryMode = DatePickerEntryMode.calendarOnly;
+    } else if (filterType == 'Année') {
+      initialEntryMode = DatePickerEntryMode.calendarOnly;
+    }
+
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       locale: const Locale('fr', 'FR'),
+      initialEntryMode: initialEntryMode,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            datePickerTheme: DatePickerThemeData(
+              headerBackgroundColor: TColors.primary,
+              headerForegroundColor: TColors.white,
+              surfaceTintColor: TColors.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-        _reportData = fetchReportData(picked);
-      });
+
+    if (picked != null) {
+      DateTime newSelectedDate;
+      if (filterType == 'Jour') {
+        newSelectedDate = picked;
+      } else if (filterType == 'Mois') {
+        newSelectedDate = DateTime(picked.year, picked.month, 1);
+      } else {
+        // 'Année'
+        newSelectedDate = DateTime(picked.year, 1, 1);
+      }
+
+      if (newSelectedDate != selectedDate) {
+        setState(() {
+          selectedDate = newSelectedDate;
+          _reportData = fetchReportData(newSelectedDate, filterType);
+        });
+      }
     }
   }
 
   String _formatDate(DateTime date) {
-    final formatter = DateFormat('dd MMMM yyyy', 'fr_FR');
-    return formatter.format(date);
+    if (filterType == 'Jour') {
+      final formatter = DateFormat('dd MMMM yyyy', 'fr_FR');
+      return formatter.format(date);
+    } else if (filterType == 'Mois') {
+      final formatter = DateFormat('MMMM yyyy', 'fr_FR');
+      return formatter.format(date);
+    } else {
+      // 'Année'
+      final formatter = DateFormat('yyyy', 'fr_FR');
+      return formatter.format(date);
+    }
   }
 
   String _formatCurrency(double amount) {
@@ -130,6 +197,23 @@ class _ReportPageState extends State<ReportPage> {
       appBar: AppBar(
         title: const Text('Rapport'),
         actions: [
+          DropdownButton<String>(
+            value: filterType,
+            items: ['Jour', 'Mois', 'Année']
+                .map(
+                  (type) =>
+                      DropdownMenuItem<String>(value: type, child: Text(type)),
+                )
+                .toList(),
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  filterType = value;
+                  _reportData = fetchReportData(selectedDate, value);
+                });
+              }
+            },
+          ),
           TextButton(
             onPressed: () => _selectDate(context),
             child: Text(
@@ -152,7 +236,7 @@ class _ReportPageState extends State<ReportPage> {
 
           final data = snapshot.data!;
           final ticketsSold = data['ticketsSold'] as int;
-          final scannedTickets = data['scannedTickets'] as int;
+          final totalSales = data['totalSales'] as int;
           final totalRevenue = data['totalRevenue'] as double;
           final ticketsWithPenalties = data['ticketsWithPenalties'] as int;
           final penaltyRevenue = data['penaltyRevenue'] as double;
@@ -177,7 +261,7 @@ class _ReportPageState extends State<ReportPage> {
                     children: [
                       SizedBox(
                         height: THelperFunctions.screenHeight() * 0.09,
-                        width: THelperFunctions.screenWidth() * 0.4,
+                        width: THelperFunctions.screenWidth() * 0.45,
                         child: Card(
                           child: Row(
                             children: [
@@ -214,7 +298,7 @@ class _ReportPageState extends State<ReportPage> {
                                     ),
                                   ),
                                   Text(
-                                    "Billets vendus",
+                                    "Tickets vendus",
                                     style: TextStyle(
                                       fontSize: TSizes.sm * 1.4,
                                       fontWeight: FontWeight.w500,
@@ -228,7 +312,7 @@ class _ReportPageState extends State<ReportPage> {
                       ),
                       SizedBox(
                         height: THelperFunctions.screenHeight() * 0.09,
-                        width: THelperFunctions.screenWidth() * 0.4,
+                        width: THelperFunctions.screenWidth() * 0.45,
                         child: Card(
                           child: Row(
                             children: [
@@ -258,14 +342,14 @@ class _ReportPageState extends State<ReportPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    scannedTickets.toString(),
+                                    totalSales.toString(),
                                     style: TextStyle(
                                       fontSize: TSizes.md * 1.1,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Text(
-                                    "Billets scannés",
+                                    "Ventes Total",
                                     style: TextStyle(
                                       fontSize: TSizes.sm * 1.4,
                                       fontWeight: FontWeight.w500,
@@ -280,7 +364,7 @@ class _ReportPageState extends State<ReportPage> {
                     ],
                   ),
                   SizedBox(
-                    height: THelperFunctions.screenHeight() * 0.09,
+                    height: THelperFunctions.screenHeight() * 0.15,
                     child: Padding(
                       padding: EdgeInsets.only(
                         left: THelperFunctions.screenWidth() * 0.04,

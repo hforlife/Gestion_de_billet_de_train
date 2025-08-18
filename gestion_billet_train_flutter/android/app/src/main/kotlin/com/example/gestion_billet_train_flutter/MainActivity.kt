@@ -21,6 +21,7 @@ class MainActivity : FlutterActivity() {
             }
         }
 
+        // Register broadcast receiver for DataWedge scans
         val filter = IntentFilter()
         filter.addAction("com.example.gestion_billet_train_flutter.SCAN")
         filter.addCategory("android.intent.category.DEFAULT")
@@ -31,8 +32,8 @@ class MainActivity : FlutterActivity() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == "com.example.gestion_billet_train_flutter.SCAN") {
                 val scanData = intent.getStringExtra("com.symbol.datawedge.data_string")
-                if (scanData != null) {
-                    MethodChannel(flutterEngine?.dartExecutor?.binaryMessenger, CHANNEL)
+                if (scanData != null && flutterEngine != null) {
+                    MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL)
                         .invokeMethod("onScanResult", scanData)
                 }
             }
