@@ -8,7 +8,6 @@ import Swal from "sweetalert2";
 const props = defineProps({
     trains: Array,
     lignes: Array,
-    // tarifs: Array,
     gares: Array,
 });
 

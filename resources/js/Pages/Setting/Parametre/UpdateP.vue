@@ -2,25 +2,25 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import { defineProps, watch } from "vue";
 
-const form = useForm({
-    classe: "",
-    prix_multiplier: "",
+const props = defineProps({
+    system: Array,
 });
 
-const { errors } = form;
+const form = useForm({
+    mode_vente: props.system.mode_vente,
+    tarif_kilometrique: props.system.tarif_kilometrique,
+    tarif_minimum: props.system.tarif_minimum,
+    penalite: props.system.penalite,
+    bagage_kg: props.system.bagage_kg,
+});
 
-// Soumission du formulaire
 const submit = () => {
-    form.post(route("classe.store"), {
+    form.post(route("system.store"), {
         preserveScroll: true,
         onSuccess: () => {
-            Swal.fire(
-                "Succès",
-                "Classe de voiture ajoutée avec succès.",
-                "success"
-            );
-            form.reset();
+            Swal.fire("Succès", "Paramètres système mis à jour.", "success");
         },
         onError: () => {
             Swal.fire("Erreur", "Merci de vérifier le formulaire.", "error");
@@ -31,112 +31,95 @@ const submit = () => {
 
 <template>
     <AppLayout>
-        <!-- En-tête de page -->
+        <!-- En-tête -->
         <div class="settings-header">
             <div class="header-content">
                 <h1 class="page-title">Paramètres Système</h1>
-                <p class="page-subtitle">
-                    Gestion des configurations de l'application
-                </p>
+                <p class="page-subtitle">Gestion des configurations de l'application</p>
             </div>
         </div>
 
-        <!-- Contenu principal -->
+        <!-- Une seule carte -->
         <div class="settings-container">
-            <!-- Section des cartes de paramètres -->
-            <div class="settings-grid">
-                <!-- Carte 1: Prix par catégorie -->
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h2 class="card-title">
-                            <i class="fas fa-box-open icon"></i>
-                            Gestion Casse
-                        </h2>
-                        <p class="card-description">
-                            Définir les classes de voitures
-                        </p>
-                    </div>
+            <div class="settings-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-cogs icon"></i> Configuration générale
+                    </h2>
+                    <p class="card-description">
+                        Gérez toutes les configurations dans un seul formulaire
+                    </p>
+                </div>
 
-                    <div class="card-body">
-                        <form class="settings-form" @submit.prevent="submit">
+                <div class="card-body">
+                    <form class="settings-form" @submit.prevent="submit">
+                        <!-- Section 1 : Mode de calcul -->
+                        <div class="form-group">
+                            <label class="form-label">Mode de calcul</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" value="par_kilometrage" v-model="form.mode_vente" />
+                                    <span class="radio-label">Par kilométrage</span>
+                                    <span class="radio-description">Calcul basé sur la distance parcourue</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" value="par_voyage" v-model="form.mode_vente" />
+                                    <span class="radio-label">Valeur prédéfinie</span>
+                                    <span class="radio-description">Prix fixes selon les destinations</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Section 2 : Tarifs kilométriques (si applicable) -->
+                        <div v-if="form.mode_vente === 'par_kilometrage'">
                             <div class="form-group">
-                                <label for="classe" class="form-label"
-                                    >Classe</label
-                                >
-                                <select
-                                    id="classe"
-                                    class="form-control select-input"
-                                    v-model="form.classe"
-                                    required
-                                >
-                                    <option disabled value="">
-                                        -- Sélectionner une classe --
-                                    </option>
-                                    <option value="premiere">Première</option>
-                                    <option value="deuxieme">Deuxième</option>
-                                </select>
-                                <div
-                                    v-if="form.errors.classe"
-                                    class="error-message"
-                                >
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    {{ form.errors.classe }}
-                                </div>
+                                <label class="form-label">Tarif kilométrique</label>
+                                <input type="number" class="form-control" v-model="form.tarif_kilometrique" placeholder="2.30" />
+                                <div class="form-hint">Appliqué à tous les trajets en mode kilométrique</div>
                             </div>
 
                             <div class="form-group">
-                                <label for="prix_multiplier" class="form-label"
-                                    >Multiplicateur de prix</label
-                                >
-                                <div class="input-with-unit">
-                                    <input
-                                        type="number"
-                                        id="prix_multiplier"
-                                        v-model="form.prix_multiplier"
-                                        class="form-control number-input"
-                                        min="0"
-                                        step="0.1"
-                                        required
-                                    />
-                                </div>
-                                <div
-                                    v-if="form.errors.prix_multiplier"
-                                    class="error-message"
-                                >
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    {{ form.errors.prix_multiplier }}
-                                </div>
+                                <label class="form-label">Tarif minimum</label>
+                                <input type="number" class="form-control" v-model="form.tarif_minimum" placeholder="3050" />
+                                <div class="form-hint">Appliqué si le coût est inférieur</div>
                             </div>
+                        </div>
 
-                            <div class="form-actions">
-                                <button
-                                    type="reset"
-                                    class="btn btn-secondary"
-                                    @click="form.reset()"
-                                >
-                                    <i class="fas fa-undo"></i> Réinitialiser
-                                </button>
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary"
-                                    :disabled="form.processing"
-                                >
-                                    <template v-if="form.processing">
-                                        <i class="fas fa-spinner fa-spin"></i>
-                                        Enregistrement...
-                                    </template>
-                                    <template v-else>
-                                        <i class="fas fa-save"></i> Enregistrer
-                                    </template>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        <!-- Section 3 : Bagages -->
+                        <div class="form-group">
+                            <label class="form-label">Prix du kg de Bagage</label>
+                            <input type="number" class="form-control" v-model="form.bagage_kg" placeholder="500" />
+                            <div class="form-hint">Appliqué à tous les transports</div>
+                        </div>
+
+                        <!-- Section 4 : Pénalité -->
+                        <div class="form-group">
+                            <label class="form-label">Pénalité (%)</label>
+                            <input type="number" class="form-control" v-model="form.penalite" placeholder="%" step="any" min="0" />
+                            <div class="form-hint">Pourcentage appliqué en cas de pénalités</div>
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="form-actions">
+                            <button type="reset" class="btn btn-secondary" @click="form.reset()">
+                                <i class="fas fa-undo"></i> Annuler
+                            </button>
+                            <button type="submit" class="btn btn-primary" :disabled="form.processing">
+                                <template v-if="form.processing">
+                                    <i class="fas fa-spinner fa-spin"></i> Mise à jour...
+                                </template>
+                                <template v-else>
+                                    <i class="fas fa-save"></i> Enregistrer
+                                </template>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </AppLayout>
 </template>
+
 
 <style scoped>
 /* Style général */

@@ -126,13 +126,38 @@ class VenteController
     {
         $this->authorize('create vente');
         $this->authorize('createKilometrage vente');
+
         $voyages = Voyage::with([
             'ligne.arrets.gare',
             'train.wagons.classeWagon',
+            'train.wagons.places', // Charger les places
             'ligne.gareDepart',
             'ligne.gareArrivee',
+            'tarifs.classeWagon',
+            'ventes.place' // Charger les ventes avec leurs places
         ])
-            ->get();
+            ->whereNotIn('statut', ['terminé', 'annulé'])
+            ->get()
+            ->map(function ($voyage) {
+                // Calcul des places disponibles par classe
+                $placesParClasse = $this->calculateAvailableSeats($voyage);
+
+                return [
+                    ...$voyage->toArray(),
+                    'places_par_classe' => $placesParClasse,
+                    'tarifs' => $voyage->tarifs->map(function ($tarif) use ($placesParClasse) {
+                        $disponibles = $placesParClasse[$tarif->classe_wagon_id] ?? 0;
+
+                        return [
+                            'id' => $tarif->id,
+                            'prix' => $tarif->prix,
+                            'classe_wagon_id' => $tarif->classe_wagon_id,
+                            'classe_wagon' => $tarif->classeWagon,
+                            'places_disponibles' => $disponibles
+                        ];
+                    })
+                ];
+            });
         $classeWagons = ClassesWagon::all();
         $gares = Gare::all();
         $modesPaiement = ModesPaiement::all();
@@ -156,16 +181,18 @@ class VenteController
 
         // Validation des données
         $validated = $request->validate([
-            'client_nom' => 'required|string|max:255',
+            'client_nom' => 'nullable|string|max:255',
             'voyage_id' => 'required|exists:voyages,id',
             'mode_paiement_id' => 'required|exists:modes_paiement,id',
             'point_vente_id' => 'required|exists:points_ventes,id',
             'classe_wagon_id' => 'required|exists:classes_wagon,id',
             'quantite' => 'required|integer|min:1|max:10',
+            'quantite_demi_tarif' => 'nullable|integer|min:1|max:10',
             'demi_tarif' => 'boolean',
             'prix' => 'required|numeric|min:0',
             'bagage' => 'boolean',
             'poids_bagage' => 'nullable|numeric|min:0|max:30|required_if:bagage,true',
+            'penalite' => 'boolean',
             'statut' => 'required|in:payé,réservé',
         ]);
 
@@ -198,9 +225,9 @@ class VenteController
             }
 
             // Génération de référence unique
-            $reference = 'TICKET_' . strtoupper(uniqid()) . '_' . rand(100, 999);
+            $reference = 'TKT_' . strtoupper(uniqid()) . '_' . rand(100, 999);
             while (Vente::where('reference', $reference)->exists()) {
-                $reference = 'TICKET_' . strtoupper(uniqid()) . '_' . rand(100, 999);
+                $reference = 'TKT_' . strtoupper(uniqid()) . '_' . rand(100, 999);
             }
 
             // Génération QR Code
@@ -276,7 +303,7 @@ class VenteController
             'place.wagon.classeWagon',
             'modePaiement',
             'pointVente.gare',
-            'classeWagon', 
+            'classeWagon',
             'creator'
         ])->findOrFail($id);
 

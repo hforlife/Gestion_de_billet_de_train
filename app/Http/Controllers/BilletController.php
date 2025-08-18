@@ -42,17 +42,17 @@ class BilletController extends Controller
         // En-tête avec logo
         $pdf->Image(public_path('assets/images/icon_white.png'), 3, 3, 15, '', 'PNG');
         $pdf->SetFont('helvetica', 'B', 8);
-        $pdf->SetXY(20, 3);
+        $pdf->SetXY(20, 4);
         $pdf->Cell(0, 5, 'Billet de Train - SOPAFER', 0, 1);
 
         // Ligne de séparation
         $pdf->Line(3, 10, 82, 10);
 
         // Section Passager
-        $pdf->SetFont('helvetica', 'B', 7);
+        $pdf->SetFont('helvetica', 'B', 5);
         $pdf->SetXY(3, 12);
         $pdf->Cell(20, 5, 'PASSAGER:', 0, 0);
-        $pdf->SetFont('helvetica', '', 8);
+        $pdf->SetFont('helvetica', '', 5);
         $pdf->Cell(0, 5, mb_strtoupper($vente->client_nom), 0, 1);
 
         // Section Trajet
@@ -62,22 +62,20 @@ class BilletController extends Controller
         // Section Horaires
         $this->drawInfoBox($pdf, 'DATE', $vente->voyage->date_depart, 3, 26, 25);
         $this->drawInfoBox($pdf, 'CLASSE', $vente->classeWagon->classe, 30, 26, 25);
-        // $this->drawInfoBox($pdf, 'CLASSE', $vente->classeWagon->classe, 57, 26, 25);
 
         // Section Place
-        // $this->drawInfoBox($pdf, 'TRAIN', $vente->train->numero, 3, 34, 25);
-        $this->drawInfoBox($pdf, 'WAGON', $vente->place->wagon->numero_wagon, 3, 34, 25);
+        $this->drawInfoBox($pdf, 'VOITURE', $vente->place->wagon->numero_wagon, 3, 34, 25);
         $this->drawInfoBox($pdf, 'PLACE', $vente->place->numero, 30, 34, 25);
 
         // QR Code (20x20mm)
         $qrcode = new TCPDF2DBarcode($vente->reference, 'QRCODE,M');
-        $pdf->SetXY(60, 18);
-        $pdf->Image('@'.$qrcode->getBarcodePngData(), '', '', 20, 20, 'PNG');
+        $pdf->SetXY(60, 32);
+        $pdf->Image('@'.$qrcode->getBarcodePngData(), '', '', 10, 10, 'PNG');
 
         // Pied de page
         $pdf->SetFont('helvetica', 'I', 5);
         $pdf->SetXY(3, 50);
-        $pdf->Cell(0, 3, 'Réf: '.$vente->reference.' | Édité le '.now()->format('d/m/Y H:i'), 0, 0);
+        $pdf->Cell(0, 3, 'Réf: '. $vente->reference .' | '.$vente->voyage->numero_voyage.'  | Généré le '.now()->format('d/m/Y H:i'), 0, 0);
 
         // Barre de sécurité
         $pdf->SetLineWidth(0.5);

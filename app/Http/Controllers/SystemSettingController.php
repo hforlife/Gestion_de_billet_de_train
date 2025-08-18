@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 
@@ -12,6 +14,15 @@ class SystemSettingController extends Controller
 {
     use AuthorizesRequests;
     //
+    public function edit($id)
+    {
+        $this->authorize('create system_setting');
+
+        return Inertia::render('Setting/Parametre/UpdateP', [
+            'system' => SystemSetting::findOrFail($id)
+        ]);
+    }
+
     public function store(Request $request)
     {
         $this->authorize('create system_setting');
@@ -28,7 +39,8 @@ class SystemSettingController extends Controller
                 'numeric',
                 Rule::requiredIf(fn() => $request->input('mode_vente') === 'par_kilometrage')
             ],
-            'coefficients_classes' => 'nullable|json',
+            'penalite' => 'nullable|numeric|between:0,999.99',
+            'bagage_kg' => 'nullable|numeric|between:0,999.99',
         ]);
 
         SystemSetting::updateOrCreate(
@@ -36,6 +48,6 @@ class SystemSettingController extends Controller
             $validatedData
         );
 
-        return redirect()->back()->with('success', 'Paramètres système mis à jour.');
+        return redirect()->route('setting.index')->with('success', 'Paramètres système mis à jour.');
     }
 }

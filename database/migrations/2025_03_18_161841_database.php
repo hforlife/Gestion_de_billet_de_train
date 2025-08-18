@@ -43,7 +43,7 @@ return new class extends Migration {
         // 2. Structure des trains
         Schema::create('classes_wagon', function (Blueprint $table) {
             $table->id();
-            $table->enum('classe', ['premiere', 'deuxieme']);
+            $table->string('classe');
             $table->decimal('prix_multiplier', 5, 2)->default(1.0); // Multiplicateur pour le tarif
             $table->timestamps();
         });
@@ -166,6 +166,7 @@ return new class extends Migration {
             $table->decimal('prix', 8, 2);
             $table->integer('quantite')->default(1);
             $table->boolean('demi_tarif')->default(false);
+            $table->integer('quantite_demi_tarif')->default(0);
             $table->dateTime('date_vente')->useCurrent();
             $table->boolean('bagage')->default(false);
             $table->decimal('poids_bagage', 8, 2)->nullable();
@@ -271,11 +272,11 @@ return new class extends Migration {
 
         Schema::create('system_settings', function (Blueprint $table) {
             $table->id();
-            $table->enum('mode_vente', ['par_voyage', 'par_kilometrage'])->default('par_voyage');
+            $table->enum('mode_vente', ['par_voyage', 'par_kilometrage'])->default('par_kilometrage');
             $table->decimal('tarif_kilometrique', 10, 2)->nullable(); // exemple : 20.32
             $table->decimal('tarif_minimum', 10, 2)->nullable(); // montant minimal d’un billet
-            $table->json('coefficients_classes')->nullable(); // ex: {"1": 1.2, "2": 1.0, "3": 0.8}
-            $table->decimal('penalite', 10, 2)->nullable(); // ex: {"1": 1.2, "2": 1.0, "3": 0.8}
+            $table->decimal('bagage_kg')->nullable();
+            $table->decimal('penalite', 10, 2)->nullable();
             $table->timestamps();
         });
     }

@@ -34,14 +34,15 @@ class Voyage extends Model
         return $this->belongsToMany(ClassesWagon::class, 'tarifs_gares')
             ->withPivot('prix', 'date_effet', 'date_expiration');
     }
+
     public function gareDepart()
     {
-        return $this->belongsTo(ArretsLigne::class, 'gare_depart_id');
+        return $this->belongsTo(Gare::class, 'gare_depart_id');
     }
 
     public function gareArrivee()
     {
-        return $this->belongsTo(ArretsLigne::class, 'gare_arrivee_id');
+        return $this->belongsTo(Gare::class, 'gare_arrivee_id');
     }
 
     public function train()
@@ -64,7 +65,7 @@ class Voyage extends Model
     {
         return $this->hasMany(TarifVoyage::class);
     }
-    
+
     public function placesDisponibles()
     {
         return $this->train->capacite_totale - $this->ventes()->count();

@@ -1,661 +1,814 @@
-<script setup>
+/<script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import { useForm } from "@inertiajs/vue3";
+import { defineProps, reactive, watch } from "vue";
+import { router, Link } from "@inertiajs/vue3";
+import { Plus, Pencil, Trash } from "lucide-vue-next";
 import Swal from "sweetalert2";
-import { defineProps, watch } from "vue";
 
 const props = defineProps({
-    categories: Array,
-});
-// Formulaire de paramètre
-const form = useForm({
-    categorie_id: "",
-    poids_min: 0,
-    poids_max: 0,
-    prix_par_kg: 0,
+    parametres: Object,
+    ClassesWagons: Object,
+    Settings: Object,
 });
 
-const settingsForm = useForm({
-    mode_vente: "par_voyage",
-    tarif_kilometrique: "",
-    tarif_minimum: "",
-    coefficients_classes: JSON.stringify({ 1: 1.2, 2: 1.0, 3: 0.8 }),
-});
+// Actions Paramètre Système
+const editSetting = (id) => {
+    router.visit(route("system.edit", id));
+};
 
-watch(
-    () => form.poids_max,
-    (val) => {
-        if (val < form.poids_min) {
-            Swal.fire(
-                "Attention",
-                "Le poids maximum doit être supérieur au minimum",
-                "warning"
-            );
+// Actions Catégorie
+const editCat = (id) => {
+    router.visit(route("setting.edit", id));
+};
+
+const deleteCat = (id) => {
+    Swal.fire({
+        title: "Êtes-vous sûr ?",
+        text: "Cette action est irréversible !",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Oui, supprimer !",
+        cancelButtonText: "Annuler",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(route("setting.destroy", id), {
+                onSuccess: () => {
+                    Swal.fire(
+                        "Supprimé !",
+                        "La classe a été supprimée avec succès.",
+                        "success"
+                    );
+                },
+            });
         }
-    }
-);
-watch(
-    () => form.poids_min,
-    (val) => {
-        if (val < 0) {
-            Swal.fire(
-                "Attention",
-                "Le poids minimum ne peut pas être négatif",
-                "warning"
-            );
-        }
-    }
-);
-
-// Soumission du formulaire
-const submit = () => {
-    form.post(route("setting.store"), {
-        preserveScroll: true,
-        onSuccess: () => {
-            Swal.fire("Succès", "Paramètre ajouté avec succès.", "success");
-            form.reset();
-        },
-        onError: () => {
-            Swal.fire("Erreur", "Merci de vérifier le formulaire.", "error");
-        },
     });
 };
 
-const submitSettings = () => {
-    settingsForm.post(route("system.store"), {
-        preserveScroll: true,
-        onSuccess: () => {
-            Swal.fire("Succès", "Paramètres système mis à jour.", "success");
-        },
-        onError: () => {
-            Swal.fire("Erreur", "Merci de vérifier le formulaire.", "error");
-        },
+// Actions Classe
+const editClasse = (id) => {
+    router.visit(route("classe.edit", id));
+};
+
+const deleteClasse = (id) => {
+    Swal.fire({
+        title: "Êtes-vous sûr ?",
+        text: "Cette action est irréversible !",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Oui, supprimer !",
+        cancelButtonText: "Annuler",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(route("classe.destroy", id), {
+                onSuccess: () => {
+                    Swal.fire(
+                        "Supprimé !",
+                        "La classe a été supprimée avec succès.",
+                        "success"
+                    );
+                },
+            });
+        }
     });
 };
 </script>
 
 <template>
     <AppLayout>
-        <!-- En-tête de page -->
-        <div class="settings-header">
+        <!-- En-tête de page amélioré -->
+        <div class="sales-header">
             <div class="header-content">
-                <h1 class="page-title">Paramètres Système</h1>
-                <p class="page-subtitle">
-                    Gestion des configurations de l'application
-                </p>
+                <div class="header-title-wrapper">
+                    <h1 class="page-title">Paramètres Système</h1>
+                </div>
+                <div class="breadcrumb-wrapper">
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <Link :href="route('dashboard')"
+                                >Tableau de bord</Link
+                            >
+                            <span class="breadcrumb-divider">/</span>
+                        </li>
+                        <li class="breadcrumb-item active">Paramètre</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
-        <!-- Contenu principal -->
-        <div class="settings-container">
-            <!-- Section des cartes de paramètres -->
-            <div class="settings-grid">
-                <!-- Carte 1: Prix par catégorie -->
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h2 class="card-title">
-                            <i class="fas fa-box-open icon"></i>
-                            Tarification par catégorie
-                        </h2>
-                        <p class="card-description">
-                            Définir les prix en fonction du poids des colis
-                        </p>
-                    </div>
-
-                    <div class="card-body">
-                        <form class="settings-form" @submit.prevent="submit">
-                            <div class="form-group">
-                                <label for="categorie_id" class="form-label"
-                                    >Catégorie de colis</label
-                                >
-                                <select
-                                    id="categorie_id"
-                                    class="form-control select-input"
-                                    v-model="form.categorie_id"
-                                    required
-                                >
-                                    <option disabled value="">
-                                        -- Sélectionner une catégorie --
-                                    </option>
-                                    <option
-                                        v-for="cat in props.categories"
-                                        :key="cat.id"
-                                        :value="cat.id"
-                                    >
-                                        {{ cat.nom }}
-                                    </option>
-                                </select>
-                                <div
-                                    v-if="form.errors.categorie_id"
-                                    class="error-message"
-                                >
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    {{ form.errors.categorie_id }}
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group half-width">
-                                    <label for="poids_min" class="form-label"
-                                        >Poids min (kg)</label
-                                    >
-                                    <input
-                                        type="number"
-                                        id="poids_min"
-                                        v-model="form.poids_min"
-                                        class="form-control number-input"
-                                        placeholder="0.0"
-                                        min="0"
-                                        step="0.1"
-                                        required
-                                    />
-                                    <div
-                                        v-if="form.errors.poids_min"
-                                        class="error-message"
-                                    >
-                                        <i
-                                            class="fas fa-exclamation-circle"
-                                        ></i>
-                                        {{ form.errors.poids_min }}
-                                    </div>
-                                </div>
-
-                                <div class="form-group half-width">
-                                    <label for="poids_max" class="form-label"
-                                        >Poids max (kg)</label
-                                    >
-                                    <input
-                                        type="number"
-                                        id="poids_max"
-                                        v-model="form.poids_max"
-                                        class="form-control number-input"
-                                        placeholder="10.0"
-                                        min="0"
-                                        step="0.1"
-                                        required
-                                    />
-                                    <div
-                                        v-if="form.errors.poids_max"
-                                        class="error-message"
-                                    >
-                                        <i
-                                            class="fas fa-exclamation-circle"
-                                        ></i>
-                                        {{ form.errors.poids_max }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="prix_par_kg" class="form-label"
-                                    >Prix au kg (FCFA)</label
-                                >
-                                <div class="input-with-unit">
-                                    <input
-                                        type="number"
-                                        id="prix_par_kg"
-                                        v-model="form.prix_par_kg"
-                                        class="form-control number-input"
-                                        placeholder="250"
-                                        min="0"
-                                        step="10"
-                                        required
-                                    />
-                                    <!-- <span class="input-unit">FCFA</span> -->
-                                </div>
-                                <div
-                                    v-if="form.errors.prix_par_kg"
-                                    class="error-message"
-                                >
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    {{ form.errors.prix_par_kg }}
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button
-                                    type="reset"
-                                    class="btn btn-secondary"
-                                    @click="form.reset()"
-                                >
-                                    <i class="fas fa-undo"></i> Réinitialiser
-                                </button>
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary"
-                                    :disabled="form.processing"
-                                >
-                                    <template v-if="form.processing">
-                                        <i class="fas fa-spinner fa-spin"></i>
-                                        Enregistrement...
-                                    </template>
-                                    <template v-else>
-                                        <i class="fas fa-save"></i> Enregistrer
-                                    </template>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Carte 2: Système de ventes -->
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h2 class="card-title">
-                            <i class="fas fa-cogs icon"></i>
-                            Configuration des ventes
-                        </h2>
-                        <p class="card-description">
-                            Choisissez le mode de calcul des tarifs
-                        </p>
-                    </div>
-
-                    <div class="card-body">
-                        <form
-                            class="settings-form"
-                            @submit.prevent="submitSettings"
+        <!-- Catégories Colis -->
+        <div class="sales-container">
+            <!-- Contenu principal -->
+            <div class="sales-container">
+                <div class="sales-card">
+                    <div class="table-header">
+                        <h3 class="table-title">
+                            Liste des tarifs par kg des catégories de colis
+                        </h3>
+                        <Link
+                            :href="route('setting.create')"
+                            class="btn-create-sm"
+                            aria-label="Créer un nouveau tarif"
                         >
-                            <div class="form-group">
-                                <label class="form-label">Mode de calcul</label>
-                                <div class="radio-group">
-                                    <label class="radio-option">
-                                        <input
-                                            type="radio"
-                                            name="mode_vente"
-                                            value="par_kilometrage"
-                                            v-model="settingsForm.mode_vente"
-                                        />
-                                        <span class="radio-label">
-                                            Par kilométrage
-                                        </span>
-                                        <span class="radio-description"
-                                            >Calcul basé sur la distance
-                                            parcourue</span
-                                        >
-                                    </label>
-                                    <label class="radio-option">
-                                        <input
-                                            type="radio"
-                                            name="mode_vente"
-                                            value="par_voyage"
-                                            v-model="settingsForm.mode_vente"
-                                        />
-                                        <span class="radio-label"
-                                            >Valeur prédéfinie</span
-                                        >
-                                        <span class="radio-description"
-                                            >Prix fixes selon les
-                                            destinations</span
-                                        >
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button
-                                    type="reset"
-                                    class="btn btn-secondary"
-                                    @click="form.reset()"
-                                >
-                                    <i class="fas fa-undo"></i> Annuler
-                                </button>
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary"
-                                    :disabled="form.processing"
-                                >
-                                    <template v-if="form.processing">
-                                        <i class="fas fa-spinner fa-spin"></i>
-                                        Mise à jour...
-                                    </template>
-                                    <template v-else>
-                                        <i class="fas fa-sync-alt"></i> Mettre à
-                                        jour
-                                    </template>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Carte 3: Tarif kilométrique -->
-                <div class="settings-card" v-if="settingsForm.mode_vente === 'par_kilometrage'">
-                    <div class="card-header">
-                        <h2 class="card-title">
-                            <i class="fas fa-tachometer-alt icon"></i>
-                            Tarification kilométrique
-                        </h2>
-                        <p class="card-description">
-                            Définir le prix par kilomètre parcouru
-                        </p>
+                            <Plus size="16" class="me-1" />
+                            Nouveau tarif kg
+                        </Link>
                     </div>
 
-                    <div class="card-body">
-                        <form
-                            class="settings-form"
-                            @submit.prevent="submitSettings"
-                        >
-                            <div class="form-group">
-                                <label class="form-label"
-                                    >Tarif kilométrique</label
+                    <!-- Tableau -->
+                    <div class="table-responsive">
+                        <table class="sales-table">
+                            <thead>
+                                <tr>
+                                    <th class="column-id">#</th>
+                                    <th>Catégorie</th>
+                                    <th>Poids min</th>
+                                    <th>Poids max</th>
+                                    <th>Prix au kg</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="(parametre, index) in parametres.data"
+                                    :key="parametre.id"
                                 >
-                                <div class="input-with-unit">
-                                    <input
-                                        type="number"
-                                        class="form-control number-input"
-                                        v-model="settingsForm.tarif_kilometrique"
-                                        placeholder="2.30"
-                                    />
-                                </div>
-                                <div class="form-hint">
-                                    Ce tarif s'appliquera à tous les transports
-                                    utilisant le mode kilométrique
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Tarif minimum</label>
-                                <div class="input-with-unit">
-                                    <input
-                                        type="number"
-                                        class="form-control number-input"
-                                        v-model="settingsForm.tarif_minimum"
-                                        placeholder="3050"
-                                    />
-                                </div>
-                                <div class="form-hint">
-                                    Ce tarif s'appliquera à tous les transports
-                                    ayant un coût inférieur à ce montant
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="reset" class="btn btn-secondary">
-                                    <i class="fas fa-undo"></i> Annuler
-                                </button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Appliquer
-                                </button>
-                            </div>
-                        </form>
+                                    <td class="column-id">{{ index + 1 }}</td>
+                                    <td class="column-name">
+                                        {{ parametre.categorie.nom }}
+                                    </td>
+                                    <td class="text-capitalize">
+                                        {{ parametre.poids_min }}
+                                    </td>
+                                    <td class="text-capitalize">
+                                        {{ parametre.poids_max }}
+                                    </td>
+                                    <td class="text-capitalize">
+                                        {{ parametre.prix_par_kg }}
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <Link
+                                                @click="editCat(parametre.id)"
+                                                class="btn-action btn-edit"
+                                                title="Modifier"
+                                            >
+                                                <Pencil size="16" />
+                                            </Link>
+                                            <button
+                                                @click="deleteCat(parametre.id)"
+                                                class="btn-action btn-delete"
+                                                title="Supprimer"
+                                            >
+                                                <Trash size="16" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr v-if="parametres.data.length === 0">
+                                    <td
+                                        colspan="7"
+                                        class="text-center py-4 text-muted"
+                                    >
+                                        Aucun tarif de catégorie trouvé
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
+
+
+        <!-- Paramètre Système -->
+        <div class="sales-container">
+            <!-- Contenu principal -->
+            <div class="sales-container">
+                <div class="sales-card">
+                    <div class="table-header">
+                        <h3 class="table-title">
+                            Paramètres appliquées
+                        </h3>
+                        <!-- <Link
+                            :href="route('points-vente.create')"
+                            class="btn-create-sm"
+                            aria-label="Créer une nouvelle vente"
+                        >
+                            <Plus size="16" class="me-1" />
+                            Nouveau point de Vente
+                        </Link> -->
+                    </div>
+
+                    <!-- Tableau -->
+                    <div class="table-responsive">
+                        <table class="sales-table">
+                            <thead>
+                                <tr>
+                                    <th class="column-id">#</th>
+                                    <th>Mode de Vente</th>
+                                    <th>Tarif par Kilométrage</th>
+                                    <th>Tarif Minimum</th>
+                                    <th>Prix au kg(Excedent de bagage)</th>
+                                    <th>Pénalité</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="(Setting, index) in [Settings]"
+                                    :key="Setting.id"
+                                >
+                                    <td class="column-id">{{ index + 1 }}</td>
+                                    <td class="column-name">
+                                        {{ Setting.mode_vente }}
+                                    </td>
+                                    <td class="text-capitalize">
+                                        {{ Setting.tarif_kilometrique }}
+                                    </td>
+                                    <td class="text-capitalize">
+                                        {{ Setting.tarif_minimum }}
+                                    </td>
+                                    <td class="text-capitalize">
+                                        {{ Setting.bagage_kg }}
+                                    </td>
+                                    <td class="text-capitalize">
+                                        {{ Setting.penalite }}
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <Link
+                                                @click="editSetting(Setting.id)"
+                                                class="btn-action btn-edit"
+                                                title="Modifier"
+                                            >
+                                                <Pencil size="16" />
+                                            </Link>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestion Classe de voiture -->
+        <div class="sales-container">
+            <!-- Contenu principal -->
+            <div class="sales-container">
+                <div class="sales-card">
+                    <div class="table-header">
+                        <h3 class="table-title">
+                            Gestion des Classes de Voitures
+                        </h3>
+                        <Link
+                            :href="route('classe.create')"
+                            class="btn-create-sm"
+                            aria-label="Créer une nouvelle vente"
+                        >
+                            <Plus size="16" class="me-1" />
+                             Nouvelle Classe
+                        </Link>
+                    </div>
+
+                    <!-- Tableau -->
+                    <div class="table-responsive">
+                        <table class="sales-table">
+                            <thead>
+                                <tr>
+                                    <th class="column-id">#</th>
+                                    <th>Nom de la Classe</th>
+                                    <th>Multiplicateur de Prix</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                   v-for="(classe, index) in ClassesWagons.data" :key="classe.id"
+                                >
+                                    <td class="column-id">{{ index + 1 }}</td>
+                                    <td class="text-capitalize">
+                                       {{ classe.classe }}
+                                    </td>
+                                    <td class="text-capitalize">
+                                       {{ classe.prix_multiplier }}
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <Link
+                                                @click="editClasse(classe.id)"
+                                                class="btn-action btn-edit"
+                                                title="Modifier"
+                                            >
+                                                <Pencil size="16" />
+                                            </Link>
+                                            <button
+                                                @click="deleteClasse(classe.id)"
+                                                class="btn-action btn-delete"
+                                                title="Supprimer"
+                                            >
+                                                <Trash size="16" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr v-if="ClassesWagons.data.length === 0">
+                                    <td
+                                        colspan="7"
+                                        class="text-center py-4 text-muted"
+                                    >
+                                        Aucune classe trouvée
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
     </AppLayout>
 </template>
 
 <style scoped>
 /* Style général */
-.settings-header {
+.sales-header {
     background-color: #f8f9fa;
     padding: 1.5rem 2rem;
     border-bottom: 1px solid #e1e5eb;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .header-content {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
+}
+
+.header-title-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
 .page-title {
     font-size: 1.8rem;
     font-weight: 600;
     color: #2c3e50;
-    margin-bottom: 0.5rem;
+    margin: 0;
 }
 
-.page-subtitle {
-    font-size: 1rem;
-    color: #7a8a9b;
-    margin-bottom: 0;
-}
-
-.settings-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-}
-
-.settings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-/* Cartes de paramètres */
-.settings-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e1e5eb;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.settings-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
-    background-color: #f9fafb;
-}
-
-.card-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
+.breadcrumb-wrapper {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-}
-
-.card-title .icon {
-    margin-right: 0.75rem;
-    color: #4a6cf7;
-}
-
-.card-description {
-    font-size: 0.85rem;
-    color: #6c757d;
-    margin-bottom: 0;
-}
-
-.card-body {
-    padding: 1.5rem;
-}
-
-/* Formulaires */
-.settings-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.form-group {
-    margin-bottom: 0;
-}
-
-.form-label {
-    display: block;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #495057;
-    margin-bottom: 0.5rem;
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.6rem 0.75rem;
-    font-size: 0.9rem;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.form-control:focus {
-    border-color: #4a6cf7;
-    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.25);
-}
-
-.select-input {
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 1rem;
-}
-
-.number-input {
-    text-align: right;
-}
-
-.input-with-unit {
-    position: relative;
-}
-
-.input-with-unit .input-unit {
-    position: absolute;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.8rem;
-    color: #6c757d;
-    background-color: #f8f9fa;
-    padding: 0 0.25rem;
-    border-radius: 3px;
-}
-
-.form-row {
-    display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
 }
 
-.half-width {
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item {
+    color: #6c757d;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.breadcrumb-item:hover {
+    color: #4a6cf7;
+}
+
+.breadcrumb-item.active {
+    color: #4a6cf7;
+    font-weight: 500;
+}
+
+.breadcrumb-divider {
+    color: #adb5bd;
+    margin: 0 0.5rem;
+}
+
+.sales-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Filtres */
+.filters-container {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
     flex: 1;
+    min-width: 250px;
 }
 
-/* Radio boutons */
-.radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+.filter-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.9rem;
 }
 
-.radio-option {
-    display: flex;
-    flex-direction: column;
-    padding: 0.75rem;
+.filter-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
     border: 1px solid #e1e5eb;
-    border-radius: 4px;
-    cursor: pointer;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background-color: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.filter-select:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.15);
+    outline: none;
+}
+
+.search-group {
+    flex: 2;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    border: 1px solid #e1e5eb;
+    border-radius: 8px;
+    font-size: 1rem;
     transition: all 0.2s;
 }
 
-.radio-option:hover {
+.search-input:focus {
     border-color: #4a6cf7;
-    background-color: #f8f9ff;
+    box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.15);
+    outline: none;
 }
 
-.radio-option input {
-    margin-right: 0.5rem;
-}
-
-.radio-label {
+.search-btn {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3rem;
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
+}
+
+/* Carte du tableau */
+.sales-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e1e5eb;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.table-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Boutons */
+.btn-create,
+.btn-create-sm {
+    background-color: #4a6cf7;
+    border: none;
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-create-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-create:hover,
+.btn-create-sm:hover {
+    background-color: #3a5ce4;
+    transform: translateY(-1px);
+}
+
+/* Tableau */
+.sales-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sales-table thead {
+    background-color: #f8f9fa;
+}
+
+.sales-table th {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e1e5eb;
+}
+
+.sales-table th.text-center {
+    text-align: center;
+}
+
+.sales-table th.text-end {
+    text-align: right;
+}
+
+.sales-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+.sales-table td.text-center {
+    text-align: center;
+}
+
+.sales-table td.text-end {
+    text-align: right;
+}
+
+.sales-table tr:last-child td {
+    border-bottom: none;
+}
+
+.sales-table tr:hover td {
+    background-color: #f9fafb;
+}
+
+/* Colonnes spécifiques */
+.column-id {
+    width: 60px;
+    color: #6c757d;
+    font-weight: 500;
+    text-align: center;
+}
+
+.client-name {
     font-weight: 500;
     color: #2c3e50;
 }
 
-.radio-label i {
-    margin-right: 0.5rem;
-    color: #4a6cf7;
+.voyage-info {
+    min-width: 200px;
 }
 
-.radio-description {
-    font-size: 0.8rem;
+.voyage-name {
+    font-weight: 500;
+}
+
+.voyage-date {
+    font-size: 0.85rem;
     color: #6c757d;
-    margin-left: 1.5rem;
-    margin-top: 0.25rem;
 }
 
-/* Messages d'erreur */
-.error-message {
+.train-number {
+    font-family: monospace;
+    font-size: 1.1rem;
+}
+
+.price,
+.quantity,
+.weight {
+    font-family: monospace;
+    font-weight: 500;
+}
+
+/* Badges de statut */
+.status-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 50px;
     font-size: 0.8rem;
-    color: #dc3545;
-    margin-top: 0.25rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-badge.yes {
+    background-color: #e6f7ff;
+    color: #1890ff;
+}
+
+.status-badge.no {
+    background-color: #fff2f0;
+    color: #ff4d4f;
+}
+
+/* Boutons d'action */
+.action-buttons {
     display: flex;
-    align-items: center;
-}
-
-.error-message i {
-    margin-right: 0.25rem;
-}
-
-.form-hint {
-    font-size: 0.75rem;
-    color: #6c757d;
-    margin-top: 0.25rem;
-    font-style: italic;
-}
-
-/* Boutons */
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #f0f0f0;
-}
-
-.btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
     justify-content: center;
     gap: 0.5rem;
+}
+
+.btn-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background-color: transparent;
     cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-action:hover {
+    transform: scale(1.1);
+}
+
+.btn-view {
+    color: #4a6cf7;
+    background-color: rgba(74, 108, 247, 0.1);
+}
+
+.btn-view:hover {
+    background-color: rgba(74, 108, 247, 0.2);
+}
+
+.btn-edit {
+    color: #faad14;
+    background-color: rgba(250, 173, 20, 0.1);
+}
+
+.btn-edit:hover {
+    background-color: rgba(250, 173, 20, 0.2);
+}
+
+.btn-delete {
+    color: #ff4d4f;
+    background-color: rgba(255, 77, 79, 0.1);
+}
+
+.btn-delete:hover {
+    background-color: rgba(255, 77, 79, 0.2);
+}
+
+/* Message aucun résultat */
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+.no-results i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #adb5bd;
+}
+
+/* Pied de tableau */
+.table-footer {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.pagination-info {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pagination-link {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #e1e5eb;
+    color: #495057;
+    text-decoration: none;
+    font-size: 0.9rem;
+    min-width: 36px;
+    text-align: center;
     transition: all 0.2s;
 }
 
-.btn i {
-    font-size: 0.9em;
-}
-
-.btn-secondary {
+.pagination-link:hover:not(.active):not(.disabled) {
     background-color: #f8f9fa;
-    border: 1px solid #e1e5eb;
-    color: #495057;
-}
-
-.btn-secondary:hover {
-    background-color: #e9ecef;
     border-color: #dae0e5;
 }
 
-.btn-primary {
+.pagination-link.active {
     background-color: #4a6cf7;
-    border: 1px solid #4a6cf7;
+    border-color: #4a6cf7;
     color: white;
 }
 
-.btn-primary:hover {
-    background-color: #3a5ce4;
-    border-color: #3a5ce4;
+.pagination-link.disabled {
+    color: #adb5bd;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
-.btn-primary:disabled {
-    background-color: #a0b0f8;
-    border-color: #a0b0f8;
-    cursor: not-allowed;
-    opacity: 0.8;
+.pagination-link.prev-next {
+    font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .filters-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .filter-group,
+    .search-group {
+        min-width: 100%;
+    }
+
+    .sales-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .header-title-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .table-footer {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        width: 100%;
+    }
 }
 </style>

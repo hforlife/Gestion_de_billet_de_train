@@ -12,9 +12,7 @@ class SystemSetting extends Model
         'mode_vente',
         'tarif_kilometrique',
         'tarif_minimum',
-        'coefficients_classes',
-    ];
-    protected $casts = [
-        'coefficients_classes' => 'array',
+        'penalite',
+        'bagage_kg',
     ];
 }

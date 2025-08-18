@@ -18,13 +18,14 @@ const form = useForm({
     mode_paiement_id: props.modesPaiement[0]?.id || null,
     point_vente_id: props.pointsVente[0]?.id || null,
     quantite: 1,
+    quantite_demi_tarif: 0,
     prix: 0, // Ceci représente le prix UNITAIRE seulement
     prix_total: 0, // Nouveau champ pour le total
     demi_tarif: false,
     bagage: false,
-    poids_bagage: null,
+    poids_bagage: "",
     statut: "payé",
-    penalite: null,
+    penalite: false,
 });
 
 const selectedVoyage = computed(() =>

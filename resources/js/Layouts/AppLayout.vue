@@ -844,14 +844,14 @@ onMounted(() => {
                             <span
                                 class="text-muted d-block text-center text-sm-left d-sm-inline-block"
                             >
-                                Copyright © DOUCSOFT Technologies
+                                Copyright © Intellec 3
                                 {{ new Date().getFullYear() }}
                             </span>
                             <span
                                 class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center"
                             >
                                 Site
-                                <a href="#" target="_blank"
+                                <a href="https://doucsoft.tech" target="_blank"
                                     >Doucsoft Technologies</a
                                 >
                                 par doucsoft.com

@@ -13,24 +13,25 @@ class ClasseController extends Controller
 {
     use AuthorizesRequests;
      // Liste des ClassesWagons
-    public function index(Request $request): Response
+    public function index()
     {
-        $filters = $request->only('search');
+        // $filters = $request->only('search');
 
-        $ClassesWagons = ClassesWagon::query()
-            ->filter($filters)
-            ->orderBy('classe')
-            ->paginate(10)
-            ->withQueryString();
+        // $ClassesWagons = ClassesWagon::query()
+        //     ->filter($filters)
+        //     ->orderBy('classe')
+        //     ->paginate(10)
+        //     ->withQueryString();
 
-        return Inertia::render('Trains/Classe/Index', [
-            'filters' => $filters,
-            'ClassesWagons' => $ClassesWagons->through(fn($ClassesWagon) => [
-                'id' => $ClassesWagon->id,
-                'classe' => $ClassesWagon->classe,
-                'prix_multiplier' => $ClassesWagon->prix_multiplier
-            ]),
-        ]);
+        // return Inertia::render('Trains/Classe/Index', [
+        //     'filters' => $filters,
+        //     'ClassesWagons' => $ClassesWagons->through(fn($ClassesWagon) => [
+        //         'id' => $ClassesWagon->id,
+        //         'classe' => $ClassesWagon->classe,
+        //         'prix_multiplier' => $ClassesWagon->prix_multiplier
+        //     ]),
+        // ]);
+        return redirect()->route('setting.index');
     }
 
     // Formulaire de création
@@ -44,7 +45,7 @@ class ClasseController extends Controller
     {
         $validated = $request->validate([
             'classe' => 'required|string|max:255',
-            'prix_multiplier' => 'required|string|max:255',
+            'prix_multiplier' => 'required|numeric|min:0',
         ]);
 
         $ClassesWagon = ClassesWagon::create($validated);
@@ -69,7 +70,7 @@ class ClasseController extends Controller
 
         $validated = $request->validate([
             'classe' => 'required',
-            'prix_multiplier' => 'required|string|max:255',
+            'prix_multiplier' => 'required|numeric|min:0',
         ]);
 
         $ClassesWagon->update($validated);

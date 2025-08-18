@@ -24,8 +24,6 @@ class VoyageController
         $voyages = Voyage::with([
             'train',
             'ligne',
-            // 'gareDepart:id,nom',
-            // 'gareArrivee:id,nom',
         ])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -53,7 +51,7 @@ class VoyageController
         return Inertia::render('Voyages/Create', [
             'trains' => Train::select('id', 'numero')->get(),
             'lignes' => Ligne::with(['arrets.gare'])->get(),
-            'gares' => Gare::select('id', 'nom')->where('type', '!=', ['fermee', 'halte'])->get(),
+            'gares' => Gare::select('id', 'nom')->where('type', '!=', ['halte'])->get(),
         ]);
     }
 
@@ -131,7 +129,7 @@ class VoyageController
         $this->authorize('update voyage');
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
-            'numero_voyage' => 'required|string|unique:voyages,numero_voyage',
+            'numero_voyage' => 'required|string',
             'train_id' => 'required|exists:trains,id',
             'gare_depart_id' => 'required|exists:gares,id',
             'gare_arrivee_id' => 'required|exists:gares,id',

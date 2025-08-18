@@ -17,14 +17,15 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RoleSeeder::class);
         $this->call(AdminSeeder::class);
-        // $this->call(PermissionSeeder::class);
         $this->call(GareSeeder::class);
         $this->call(TrainSeeder::class);
         $this->call(LigneSeeder::class);
         $this->call(ClasseSeeder::class);
         $this->call(ModesPaiementSeeder::class);
-        $this->call(PointVenteSeeder::class);
         $this->call(CategorieColisSeeder::class);
+        $this->call(ArretLigneSeeder::class);
+        $this->call(PointVenteSeeder::class);
+        $this->call(SytemSettingSeeder::class);
 
         // Optionnel : créer des utilisateurs de test
         // User::factory(5)->create()->each(function ($user) {

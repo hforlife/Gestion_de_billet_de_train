@@ -2,17 +2,23 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import { defineProps } from "vue";
+
+const props = defineProps({
+    ClassesWagon: Object,
+});
+
 
 const form = useForm({
-    classe: "",
-    prix_multiplier: "",
+   classe: props.ClassesWagon.classe,
+   prix_multiplier: props.ClassesWagon.prix_multiplier,
 });
 
 const { errors } = form;
 
 // Soumission du formulaire
 const submit = () => {
-    form.post(route("classe.store"), {
+    form.put(route("classe.update", props.ClassesWagon.id), {
         preserveScroll: true,
         onSuccess: () => {
             Swal.fire(
@@ -50,7 +56,7 @@ const submit = () => {
                     <div class="card-header">
                         <h2 class="card-title">
                             <i class="fas fa-box-open icon"></i>
-                            Gestion Casse
+                            Gestion Classe
                         </h2>
                         <p class="card-description">
                             Définir les classes de voitures
@@ -60,7 +66,7 @@ const submit = () => {
                     <div class="card-body">
                         <form class="settings-form" @submit.prevent="submit">
                             <div class="form-group">
-                                <label for="classe" class="form-label"
+                                <label for="categorie_id" class="form-label"
                                     >Classe</label
                                 >
                                 <select
@@ -84,8 +90,60 @@ const submit = () => {
                                 </div>
                             </div>
 
+                            <div class="form-row">
+                                <div class="form-group half-width">
+                                    <label for="poids_min" class="form-label"
+                                        >Poids min (kg)</label
+                                    >
+                                    <input
+                                        type="number"
+                                        id="poids_min"
+                                        v-model="form.poids_min"
+                                        class="form-control number-input"
+                                        placeholder="0.0"
+                                        min="0"
+                                        step="0.1"
+                                        required
+                                    />
+                                    <div
+                                        v-if="form.errors.poids_min"
+                                        class="error-message"
+                                    >
+                                        <i
+                                            class="fas fa-exclamation-circle"
+                                        ></i>
+                                        {{ form.errors.poids_min }}
+                                    </div>
+                                </div>
+
+                                <div class="form-group half-width">
+                                    <label for="poids_max" class="form-label"
+                                        >Poids max (kg)</label
+                                    >
+                                    <input
+                                        type="number"
+                                        id="poids_max"
+                                        v-model="form.poids_max"
+                                        class="form-control number-input"
+                                        placeholder="10.0"
+                                        min="0"
+                                        step="0.1"
+                                        required
+                                    />
+                                    <div
+                                        v-if="form.errors.poids_max"
+                                        class="error-message"
+                                    >
+                                        <i
+                                            class="fas fa-exclamation-circle"
+                                        ></i>
+                                        {{ form.errors.poids_max }}
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="form-group">
-                                <label for="prix_multiplier" class="form-label"
+                                <label for="prix_par_kg" class="form-label"
                                     >Multiplicateur de prix</label
                                 >
                                 <div class="input-with-unit">
@@ -94,8 +152,7 @@ const submit = () => {
                                         id="prix_multiplier"
                                         v-model="form.prix_multiplier"
                                         class="form-control number-input"
-                                        min="0"
-                                        step="0.1"
+                                        placeholder="Ex:1.5"
                                         required
                                     />
                                 </div>
