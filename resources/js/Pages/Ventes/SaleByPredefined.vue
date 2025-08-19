@@ -9,6 +9,8 @@ const props = defineProps({
     trains: Array,
     modesPaiement: Array,
     pointsVente: Array,
+    systemSettings: Object,
+    classeWagons: Array,
 });
 
 const form = useForm({
@@ -19,8 +21,8 @@ const form = useForm({
     point_vente_id: props.pointsVente[0]?.id || null,
     quantite: 1,
     quantite_demi_tarif: 0,
-    prix: 0, // Ceci représente le prix UNITAIRE seulement
-    prix_total: 0, // Nouveau champ pour le total
+    prix: 0, // prix unitaire de base
+    prix_total: 0, // prix total final
     demi_tarif: false,
     bagage: false,
     poids_bagage: "",
@@ -28,6 +30,15 @@ const form = useForm({
     penalite: false,
 });
 
+const formatNumber = (value) => {
+    if (isNaN(value)) return "0";
+    return new Intl.NumberFormat("fr-FR").format(value);
+};
+
+// Helpers
+const floatOrZero = (v) => (isNaN(parseFloat(v)) ? 0 : parseFloat(v));
+
+// Voyage & classe sélectionnés
 const selectedVoyage = computed(() =>
     props.voyages.find((v) => v.id === form.voyage_id)
 );
@@ -40,161 +51,109 @@ const selectedClass = computed(() =>
     )
 );
 
-// const calculatePrice = () => {
-//     if (!selectedClass.value) {
-//         form.prix = 0;
-//         return;
-//     }
-
-//     const unitPrice = parseFloat(selectedClass.value.prix || 0);
-//     const quantity = parseInt(form.quantite) || 1;
-
-//     form.prix = form.demi_tarif
-//         ? Math.round((unitPrice * quantity) / 2)
-//         : unitPrice * quantity;
-// };
+// Extra bagage
 const bagageExtra = computed(() => {
     if (!form.bagage || !form.poids_bagage) return 0;
+
     const freeWeight = 10;
-    const pricePerKg = 500;
-    return form.poids_bagage > freeWeight
-        ? (form.poids_bagage - freeWeight) * pricePerKg
-        : 0;
+    const pricePerKg = floatOrZero(props.systemSettings?.bagage_kg || 500);
+    const supplement =
+        form.poids_bagage > freeWeight
+            ? (form.poids_bagage - freeWeight) * pricePerKg
+            : 0;
+
+    return Math.ceil(supplement / 50) * 50; // arrondi au multiple de 50
 });
-// Calcul du prix total final (incluant quantité, demi-tarif et bagage)
+
+// Calcul du prix total final
 const totalPrice = computed(() => {
     if (!selectedClass.value) return 0;
 
-    let unitPrice = parseFloat(form.prix) || 0;
-    let quantity = parseInt(form.quantite) || 1;
+    const unitPrice = floatOrZero(selectedClass.value.prix);
+    let total = 0;
 
-    // Appliquer demi-tarif
-    if (form.demi_tarif) {
-        unitPrice = unitPrice / 2;
+    // Billets plein tarif et demi-tarif
+    const billetsPleinTarif = form.quantite - form.quantite_demi_tarif;
+    total += unitPrice * billetsPleinTarif;
+    total += (unitPrice / 2) * form.quantite_demi_tarif;
+
+    // Extra bagage
+    total += bagageExtra.value;
+
+    // Application de la pénalité si activée
+    if (form.penalite) {
+        const penaliteRate =
+            floatOrZero(props.systemSettings?.penalite || 5) / 100;
+        total += total * penaliteRate;
     }
 
-    // Calculer le total
-    return unitPrice * quantity + bagageExtra.value;
+    // Arrondi au centaine supérieure
+    if (total < 500) return Math.floor(total / 100) * 100;
+    if (total < 1000) return Math.ceil(total / 50) * 50;
+    return Math.ceil(total / 100) * 100;
 });
 
-// Met à jour le prix unitaire
-const updateUnitPrice = () => {
-    form.prix = selectedClass.value?.prix || 0;
-    form.prix_total = totalPrice.value; // Mise à jour du total
-};
-
-// const calculateUnitPrice = () => {
-//     if (!selectedClass.value) {
-//         form.prix = 0;
-//         return;
-//     }
-
-//     // Toujours prendre le prix unitaire du tarif
-//     form.prix = parseFloat(selectedClass.value.prix || 0);
-// };
-
-const getSelectedTrainInfo = () => {
-    const voyage = props.voyages.find((v) => v.id === form.voyage_id);
-    if (!voyage || !voyage.train) return "Non défini";
-    return `${voyage.train.numero}`;
-};
-
-// const quantityAdjustedPrice = computed(() => {
-//     let price = form.prix * form.quantite;
-//     if (form.demi_tarif) price = price / 2;
-//     return price;
-// });
-
-// Mise à jour du prix total
-
-const formatNumber = (value) => new Intl.NumberFormat("fr-FR").format(value);
-
-// watch(() => form.classe_wagon_id, calculatePrice);
-// watch(() => form.quantite, calculatePrice);
-// watch(() => form.demi_tarif, calculatePrice);
-// watch(
-//     () => form.voyage_id,
-//     () => {
-//         form.classe_wagon_id = null;
-//         form.prix = 0;
-//     }
-// );
-// watch(
-//     () => [bagageExtra.value],
-//     () => {
-//         form.prix =  bagageExtra.value + form.prix;
-//     },
-//     { immediate: true }
-// );
-// Watchers
-watch(() => form.classe_wagon_id, updateUnitPrice);
+// Mise à jour automatique des prix
 watch(
-    () => [form.quantite, form.demi_tarif, form.bagage, form.poids_bagage],
+    () => [
+        form.quantite,
+        form.quantite_demi_tarif,
+        form.demi_tarif,
+        form.bagage,
+        form.poids_bagage,
+        form.penalite,
+        form.classe_wagon_id,
+    ],
     () => {
-        form.prix_total = totalPrice.value; // Mise à jour du total quand qqch change
+        form.prix = selectedClass.value?.prix || 0;
+        form.prix_total = totalPrice.value;
     },
-    { deep: true }
+    { deep: true, immediate: true }
 );
 
 const resetPOS = () => {
     form.reset();
     form.quantite = 1;
+    form.quantite_demi_tarif = 0;
     form.prix = 0;
+    form.prix_total = 0;
     form.statut = "payé";
+    form.bagage = false;
+    form.poids_bagage = "";
+    form.penalite = false;
+};
+
+const getSelectedTrainInfo = () => {
+    const voyage = props.voyages.find((v) => v.id === form.voyage_id);
+    return voyage?.train?.numero || "Non défini";
 };
 
 const submit = () => {
     form.transform((data) => ({
         ...data,
-        prix: totalPrice.value, // Envoie le prix total final
+        prix: form.prix_total, // on envoie le total au backend
     })).post(route("vente.store"), {
         onSuccess: () => {
             Swal.fire({
                 title: "Succès!",
                 text: "La vente a été enregistrée",
                 icon: "success",
-                confirmButtonText: "OK",
-                customClass: {
-                    confirmButton:
-                        "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded",
-                },
-            }).then(() => {
-                resetPOS();
-            });
+            }).then(() => resetPOS());
         },
         onError: (errors) => {
-            let errorMessage = errors.message || "Une erreur est survenue";
-
-            // Gestion spécifique des places indisponibles
             if (errors.place) {
-                errorMessage = `Aucune place disponible pour le voyage #${
-                    errors.voyage_id || form.voyage_id
-                }`;
+                Swal.fire({
+                    icon: "error",
+                    title: "Erreur",
+                    text: errors.place,
+                });
+            } else {
+                Swal.fire({
+                    title: "Erreur",
+                    text: errors.message || "Une erreur est survenue",
+                    icon: "error",
+                });
             }
-
-            Swal.fire({
-                title: "Erreur",
-                html: `
-                    <div class="text-left">
-                        <p>${errorMessage}</p>
-                        ${
-                            errors.voyage_id
-                                ? `
-                        <div class="mt-4 p-2 bg-red-50 rounded">
-                            <p class="font-semibold">Détails du voyage :</p>
-                            <p>Train: ${getSelectedTrainInfo()}</p>
-                            <p>Départ: ${
-                                selectedVoyage.value?.ligne?.gareDepart?.nom
-                            }</p>
-                        </div>
-                        `
-                                : ""
-                        }
-                    </div>
-                `,
-                icon: "error",
-                confirmButtonText: "OK",
-            });
         },
     });
 };
@@ -423,18 +382,13 @@ const submit = () => {
                                     </div>
                                 </div>
 
-                                <!-- Quantité / Demi-tarif -->
+                                <!-- Options tarifaires -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="pos-form-group">
-                                        <label>Quantité</label>
+                                        <label>Quantité totale</label>
                                         <div class="quantity-selector">
                                             <button
-                                                class="quantity-btn"
-                                                @click="
-                                                    form.quantite > 1
-                                                        ? form.quantite--
-                                                        : null
-                                                "
+                                                @click="decreaseQty"
                                                 :disabled="form.quantite <= 1"
                                             >
                                                 -
@@ -443,28 +397,86 @@ const submit = () => {
                                                 v-model.number="form.quantite"
                                                 type="number"
                                                 min="1"
-                                                class="pos-input quantity-input"
-                                                required
+                                                class="quantity-input"
                                             />
-                                            <button
-                                                class="quantity-btn"
-                                                @click="form.quantite++"
-                                            >
+                                            <button @click="form.quantite++">
                                                 +
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="pos-form-group checkbox-group">
-                                        <label class="custom-checkbox">
+
+                                    <div class="pos-form-group">
+                                        <label class="checkbox-label">
                                             <input
                                                 v-model="form.demi_tarif"
                                                 type="checkbox"
-                                                class="pos-checkbox"
                                             />
-                                            <span class="checkmark"></span>
-                                            Demi-tarif (enfant &lt; 10 ans)
+                                            Demi-tarif (enfant)
                                         </label>
+
+                                        <div
+                                            v-if="form.demi_tarif"
+                                            class="mt-2"
+                                        >
+                                            <label
+                                                >Nombre de billets en
+                                                demi-tarif</label
+                                            >
+                                            <input
+                                                v-model.number="
+                                                    form.quantite_demi_tarif
+                                                "
+                                                type="number"
+                                                min="0"
+                                                :max="form.quantite"
+                                                class="pos-input"
+                                            />
+                                        </div>
                                     </div>
+                                </div>
+
+                                <!-- Bagage -->
+                                <div class="pos-form-group checkbox-group">
+                                    <label class="custom-checkbox">
+                                        <input
+                                            v-model="form.bagage"
+                                            type="checkbox"
+                                            class="pos-checkbox"
+                                        />
+                                        <span class="checkmark"></span>
+                                        Bagage supplémentaire
+                                    </label>
+                                </div>
+                                <transition name="slide-down">
+                                    <div
+                                        v-if="form.bagage"
+                                        class="pos-form-group"
+                                    >
+                                        <label>Poids (kg)</label>
+                                        <input
+                                            v-model.number="form.poids_bagage"
+                                            type="number"
+                                            min="0"
+                                            step="0.1"
+                                            class="pos-input floating-input"
+                                            placeholder="Ex: 12.5"
+                                        />
+                                        <span class="floating-label"
+                                            >Poids en kg</span
+                                        >
+                                    </div>
+                                </transition>
+
+                                <div class="pos-form-group">
+                                    <label class="checkbox-label">
+                                        <input
+                                            v-model="form.penalite"
+                                            type="checkbox"
+                                        />
+                                        Appliquer pénalité ({{
+                                            systemSettings?.penalite || 5
+                                        }}%)
+                                    </label>
                                 </div>
 
                                 <!-- Paiement -->
@@ -507,38 +519,6 @@ const submit = () => {
                                         <div class="select-arrow"></div>
                                     </div>
                                 </div>
-
-                                <!-- Bagage -->
-                                <div class="pos-form-group checkbox-group">
-                                    <label class="custom-checkbox">
-                                        <input
-                                            v-model="form.bagage"
-                                            type="checkbox"
-                                            class="pos-checkbox"
-                                        />
-                                        <span class="checkmark"></span>
-                                        Bagage supplémentaire
-                                    </label>
-                                </div>
-                                <transition name="slide-down">
-                                    <div
-                                        v-if="form.bagage"
-                                        class="pos-form-group"
-                                    >
-                                        <label>Poids (kg)</label>
-                                        <input
-                                            v-model.number="form.poids_bagage"
-                                            type="number"
-                                            min="0"
-                                            step="0.1"
-                                            class="pos-input floating-input"
-                                            placeholder="Ex: 12.5"
-                                        />
-                                        <span class="floating-label"
-                                            >Poids en kg</span
-                                        >
-                                    </div>
-                                </transition>
 
                                 <!-- Total avec animation -->
                                 <!-- <div
@@ -604,7 +584,7 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <div class="pos-cart-summary">
+                        <div class="pos-cart-summary" v-if="form.prix > 0">
                             <!-- Prix unitaire -->
                             <div class="pos-summary-row">
                                 <span>Prix unitaire:</span>
@@ -612,43 +592,89 @@ const submit = () => {
                             </div>
 
                             <!-- Détail demi-tarif -->
-                            <div class="pos-summary-row" v-if="form.demi_tarif">
-                                <span>Demi-tarif appliqué:</span>
+                            <div
+                                v-if="
+                                    form.demi_tarif &&
+                                    form.quantite_demi_tarif > 0
+                                "
+                                class="pos-summary-row"
+                            >
+                                <span
+                                    >Billets plein tarif ({{
+                                        form.quantite -
+                                        form.quantite_demi_tarif
+                                    }}):</span
+                                >
                                 <span
                                     >{{
-                                        formatNumber(form.prix / 2)
+                                        formatNumber(
+                                            form.prix *
+                                                (form.quantite -
+                                                    form.quantite_demi_tarif)
+                                        )
                                     }}
-                                    FCFA/u</span
+                                    FCFA</span
+                                >
+                            </div>
+                            <div
+                                v-if="
+                                    form.demi_tarif &&
+                                    form.quantite_demi_tarif > 0
+                                "
+                                class="pos-summary-row"
+                            >
+                                <span
+                                    >Billets demi-tarif ({{
+                                        form.quantite_demi_tarif
+                                    }}):</span
+                                >
+                                <span
+                                    >{{
+                                        formatNumber(
+                                            (form.prix / 2) *
+                                                form.quantite_demi_tarif
+                                        )
+                                    }}
+                                    FCFA</span
                                 >
                             </div>
 
-                            <!-- Quantité -->
-                            <div class="pos-summary-row">
-                                <span>Quantité:</span>
-                                <span>{{ form.quantite }}</span>
-                            </div>
-
-                            <!-- Sous-total avant bagage -->
-                            <div class="pos-summary-row">
-                                <span>Sous-total:</span>
-                                <span>
-                                    {{ formatNumber(totalPrice - bagageExtra) }}
-                                    FCFA
-                                </span>
-                            </div>
-
-                            <!-- Supplément bagage -->
-                            <div class="pos-summary-row" v-if="bagageExtra > 0">
+                            <div
+                                v-if="form.bagage && bagageExtra > 0"
+                                class="pos-summary-row"
+                            >
                                 <span>Supplément bagage:</span>
                                 <span
                                     >{{ formatNumber(bagageExtra) }} FCFA</span
                                 >
                             </div>
 
-                            <!-- Total final -->
-                            <div class="pos-summary-row total-row">
+                            <div v-if="form.penalite" class="pos-summary-row">
+                                <span
+                                    >Pénalité ({{
+                                        systemSettings?.penalite || 5
+                                    }}%):</span
+                                >
+                                <span
+                                    >{{
+                                        formatNumber(
+                                            totalPrice -
+                                                (quantityAdjustedPrice +
+                                                    bagageExtra)
+                                        )
+                                    }}
+                                    FCFA</span
+                                >
+                            </div>
+
+                            <div
+                                class="pos-summary-row"
+                                style="font-weight: 700; font-size: 1.2em"
+                            >
                                 <span>Total:</span>
-                                <span>{{ formatNumber(totalPrice) }} FCFA</span>
+                                <span class="pos-total"
+                                    >{{ formatNumber(totalPrice) }} FCFA</span
+                                >
                             </div>
                         </div>
 

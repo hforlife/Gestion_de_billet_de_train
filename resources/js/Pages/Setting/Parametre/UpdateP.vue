@@ -35,7 +35,9 @@ const submit = () => {
         <div class="settings-header">
             <div class="header-content">
                 <h1 class="page-title">Paramètres Système</h1>
-                <p class="page-subtitle">Gestion des configurations de l'application</p>
+                <p class="page-subtitle">
+                    Gestion des configurations de l'application
+                </p>
             </div>
         </div>
 
@@ -58,14 +60,31 @@ const submit = () => {
                             <label class="form-label">Mode de calcul</label>
                             <div class="radio-group">
                                 <label class="radio-option">
-                                    <input type="radio" value="par_kilometrage" v-model="form.mode_vente" />
-                                    <span class="radio-label">Par kilométrage</span>
-                                    <span class="radio-description">Calcul basé sur la distance parcourue</span>
+                                    <input
+                                        type="radio"
+                                        value="par_kilometrage"
+                                        v-model="form.mode_vente"
+                                    />
+                                    <span class="radio-label"
+                                        >Par kilométrage</span
+                                    >
+                                    <span class="radio-description"
+                                        >Calcul basé sur la distance
+                                        parcourue</span
+                                    >
                                 </label>
                                 <label class="radio-option">
-                                    <input type="radio" value="par_voyage" v-model="form.mode_vente" />
-                                    <span class="radio-label">Valeur prédéfinie</span>
-                                    <span class="radio-description">Prix fixes selon les destinations</span>
+                                    <input
+                                        type="radio"
+                                        value="par_voyage"
+                                        v-model="form.mode_vente"
+                                    />
+                                    <span class="radio-label"
+                                        >Valeur prédéfinie</span
+                                    >
+                                    <span class="radio-description"
+                                        >Prix fixes selon les destinations</span
+                                    >
                                 </label>
                             </div>
                         </div>
@@ -73,40 +92,88 @@ const submit = () => {
                         <!-- Section 2 : Tarifs kilométriques (si applicable) -->
                         <div v-if="form.mode_vente === 'par_kilometrage'">
                             <div class="form-group">
-                                <label class="form-label">Tarif kilométrique</label>
-                                <input type="number" class="form-control" v-model="form.tarif_kilometrique" placeholder="2.30" />
-                                <div class="form-hint">Appliqué à tous les trajets en mode kilométrique</div>
+                                <label class="form-label"
+                                    >Tarif kilométrique</label
+                                >
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    v-model="form.tarif_kilometrique"
+                                    placeholder="2.30"
+                                    min="0"
+                                    step="any"
+                                />
+                                <div class="form-hint">
+                                    Appliqué à tous les trajets en mode
+                                    kilométrique
+                                </div>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">Tarif minimum</label>
-                                <input type="number" class="form-control" v-model="form.tarif_minimum" placeholder="3050" />
-                                <div class="form-hint">Appliqué si le coût est inférieur</div>
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    v-model="form.tarif_minimum"
+                                    placeholder="3050"
+                                    min="0"
+                                    step="any"
+                                />
+                                <div class="form-hint">
+                                    Appliqué si le coût est inférieur
+                                </div>
                             </div>
                         </div>
 
                         <!-- Section 3 : Bagages -->
                         <div class="form-group">
-                            <label class="form-label">Prix du kg de Bagage</label>
-                            <input type="number" class="form-control" v-model="form.bagage_kg" placeholder="500" />
-                            <div class="form-hint">Appliqué à tous les transports</div>
+                            <label class="form-label"
+                                >Prix du kg de Bagage</label
+                            >
+                            <input
+                                type="number"
+                                class="form-control"
+                                v-model="form.bagage_kg"
+                                placeholder="500"
+                            />
+                            <div class="form-hint">
+                                Appliqué à tous les transports
+                            </div>
                         </div>
 
                         <!-- Section 4 : Pénalité -->
                         <div class="form-group">
                             <label class="form-label">Pénalité (%)</label>
-                            <input type="number" class="form-control" v-model="form.penalite" placeholder="%" step="any" min="0" />
-                            <div class="form-hint">Pourcentage appliqué en cas de pénalités</div>
+                            <input
+                                type="number"
+                                class="form-control"
+                                v-model="form.penalite"
+                                placeholder="%"
+                                step="any"
+                                min="0"
+                            />
+                            <div class="form-hint">
+                                Pourcentage appliqué en cas de pénalités
+                            </div>
                         </div>
 
                         <!-- Boutons -->
                         <div class="form-actions">
-                            <button type="reset" class="btn btn-secondary" @click="form.reset()">
+                            <button
+                                type="reset"
+                                class="btn btn-secondary"
+                                @click="form.reset()"
+                            >
                                 <i class="fas fa-undo"></i> Annuler
                             </button>
-                            <button type="submit" class="btn btn-primary" :disabled="form.processing">
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                                :disabled="form.processing"
+                            >
                                 <template v-if="form.processing">
-                                    <i class="fas fa-spinner fa-spin"></i> Mise à jour...
+                                    <i class="fas fa-spinner fa-spin"></i> Mise
+                                    à jour...
                                 </template>
                                 <template v-else>
                                     <i class="fas fa-save"></i> Enregistrer
@@ -119,7 +186,6 @@ const submit = () => {
         </div>
     </AppLayout>
 </template>
-
 
 <style scoped>
 /* Style général */

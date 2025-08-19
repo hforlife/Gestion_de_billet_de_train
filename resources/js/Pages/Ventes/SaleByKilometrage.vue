@@ -51,12 +51,12 @@ const roundPrice = (price) => {
 };
 
 // Sélections calculées
-const selectedVoyage = computed(() => 
-    props.voyages.find((v) => v.id === form.voyage_id) || null
+const selectedVoyage = computed(
+    () => props.voyages.find((v) => v.id === form.voyage_id) || null
 );
 
-const getSelectedTrainInfo = computed(() => 
-    selectedVoyage.value?.train?.numero || "Non défini"
+const getSelectedTrainInfo = computed(
+    () => selectedVoyage.value?.train?.numero || "Non défini"
 );
 
 const availableClasses = computed(() => selectedVoyage.value?.tarifs || []);
@@ -84,7 +84,10 @@ watch(
     ],
     ([newDepart, newArrivee]) => {
         if (newDepart && newArrivee) {
-            kilometrageState.distance_km = calculateDistance(newDepart, newArrivee);
+            kilometrageState.distance_km = calculateDistance(
+                newDepart,
+                newArrivee
+            );
         } else {
             kilometrageState.distance_km = 0;
         }
@@ -110,10 +113,17 @@ const selectVoyage = (voyage) => {
 };
 
 // Helpers
-const formatNumber = (v) => isNaN(v) ? "0" : new Intl.NumberFormat("fr-FR").format(v);
-const formatTime = (t) => t ? new Date(t).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "";
+const formatNumber = (v) =>
+    isNaN(v) ? "0" : new Intl.NumberFormat("fr-FR").format(v);
+const formatTime = (t) =>
+    t
+        ? new Date(t).toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+          })
+        : "";
 const decreaseQty = () => form.quantite > 1 && form.quantite--;
-const floatOrZero = (v) => isNaN(parseFloat(v)) ? 0 : parseFloat(v);
+const floatOrZero = (v) => (isNaN(parseFloat(v)) ? 0 : parseFloat(v));
 
 // Calcul du prix unitaire avec coefficient de classe
 const unitKilometragePrice = computed(() => {
@@ -128,7 +138,9 @@ const unitKilometragePrice = computed(() => {
     if (distance <= 0 || tarif_km <= 0) return 0;
 
     // Récupération du coefficient de la classe sélectionnée
-    const selectedClasse = props.classeWagons.find(c => c.id === form.classe_wagon_id);
+    const selectedClasse = props.classeWagons.find(
+        (c) => c.id === form.classe_wagon_id
+    );
     const coefficient = selectedClasse?.prix_multiplier || 1.0;
 
     // Calcul du prix brut
@@ -150,39 +162,47 @@ const quantityAdjustedPrice = computed(() => {
     }
 
     const billetsPleinTarif = form.quantite - form.quantite_demi_tarif;
-    return (unitKilometragePrice.value * billetsPleinTarif) + 
-           ((unitKilometragePrice.value / 2) * form.quantite_demi_tarif);
+    return (
+        unitKilometragePrice.value * billetsPleinTarif +
+        (unitKilometragePrice.value / 2) * form.quantite_demi_tarif
+    );
 });
 
 // Calcul du supplément bagage
 const bagageExtra = computed(() => {
     if (!form.bagage || !form.poids_bagage) return 0;
-    
+
     const freeWeight = 10;
     const pricePerKg = floatOrZero(props.systemSettings.bagage_kg || 500);
-    const supplement = form.poids_bagage > freeWeight 
-        ? (form.poids_bagage - freeWeight) * pricePerKg 
-        : 0;
-    
+    const supplement =
+        form.poids_bagage > freeWeight
+            ? (form.poids_bagage - freeWeight) * pricePerKg
+            : 0;
+
     return roundPrice(supplement);
 });
 
 // Calcul du prix total avec pénalité
 const totalPrice = computed(() => {
     let total = quantityAdjustedPrice.value + bagageExtra.value;
-    
+
     if (form.penalite) {
-        const penaliteRate = floatOrZero(props.systemSettings.penalite || 5) / 100;
+        const penaliteRate =
+            floatOrZero(props.systemSettings.penalite || 5) / 100;
         total += total * penaliteRate;
     }
-    
+
     return roundPrice(total);
 });
 
 // Mise à jour du prix dans le formulaire
-watch([totalPrice], () => {
-    form.prix = totalPrice.value;
-}, { immediate: true });
+watch(
+    [totalPrice],
+    () => {
+        form.prix = totalPrice.value;
+    },
+    { immediate: true }
+);
 
 // Réinitialisation
 const resetPOS = () => {
@@ -214,7 +234,11 @@ const validateBeforeSubmit = () => {
         return false;
     }
     if (form.demi_tarif && form.quantite_demi_tarif > form.quantite) {
-        Swal.fire("Erreur", "Le nombre de billets en demi-tarif ne peut pas dépasser la quantité totale", "error");
+        Swal.fire(
+            "Erreur",
+            "Le nombre de billets en demi-tarif ne peut pas dépasser la quantité totale",
+            "error"
+        );
         return false;
     }
     return true;
@@ -233,11 +257,19 @@ const submit = () => {
             }).then(() => resetPOS());
         },
         onError: (errors) => {
-            Swal.fire({
-                title: "Erreur",
-                text: errors.message || "Une erreur est survenue",
-                icon: "error",
-            });
+            if (errors.place) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Erreur",
+                    text: errors.place,
+                });
+            } else {
+                Swal.fire({
+                    title: "Erreur",
+                    text: errors.message || "Une erreur est survenue",
+                    icon: "error",
+                });
+            }
         },
     });
 };
@@ -250,7 +282,14 @@ const submit = () => {
             <div class="pos-header animate-header">
                 <div class="pos-logo">SOPAFER Vente - Kilométrique</div>
                 <div class="pos-date">
-                    {{ new Date().toLocaleDateString("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) }}
+                    {{
+                        new Date().toLocaleDateString("fr-FR", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        })
+                    }}
                 </div>
             </div>
 
@@ -258,27 +297,50 @@ const submit = () => {
                 <!-- Liste des voyages -->
                 <div class="pos-products custom-scrollbar">
                     <div class="pos-search">
-                        <input type="text" placeholder="Rechercher un voyage..." class="pos-search-input" />
+                        <input
+                            type="text"
+                            placeholder="Rechercher un voyage..."
+                            class="pos-search-input"
+                        />
                     </div>
 
                     <div class="pos-products-grid">
-                        <div v-for="voyage in voyages" :key="voyage.id"
-                             class="pos-product-card"
-                             :class="{ selected: form.voyage_id === voyage.id, 'has-train': voyage.train }"
-                             @click="selectVoyage(voyage)">
+                        <div
+                            v-for="voyage in voyages"
+                            :key="voyage.id"
+                            class="pos-product-card"
+                            :class="{
+                                selected: form.voyage_id === voyage.id,
+                                'has-train': voyage.train,
+                            }"
+                            @click="selectVoyage(voyage)"
+                        >
                             <div class="pos-product-info">
                                 <h3>{{ voyage.nom }}</h3>
                                 <p v-if="voyage.ligne">
-                                    <span class="departure">{{ voyage.ligne.gare_depart.nom }}</span>
+                                    <span class="departure">{{
+                                        voyage.ligne.gare_depart.nom
+                                    }}</span>
                                     <span class="arrow">→</span>
-                                    <span class="arrival">{{ voyage.ligne.gare_arrivee.nom }}</span>
+                                    <span class="arrival">{{
+                                        voyage.ligne.gare_arrivee.nom
+                                    }}</span>
                                 </p>
                                 <div class="pos-product-meta">
-                                    <span>Départ: {{ formatTime(voyage.date_depart) }}</span>
-                                    <span>Train #{{ voyage.train?.numero }}</span>
+                                    <span
+                                        >Départ:
+                                        {{
+                                            formatTime(voyage.date_depart)
+                                        }}</span
+                                    >
+                                    <span
+                                        >Train #{{ voyage.train?.numero }}</span
+                                    >
                                 </div>
                             </div>
-                            <div v-if="voyage.train" class="train-badge">Train #{{ voyage.train.numero }}</div>
+                            <div v-if="voyage.train" class="train-badge">
+                                Train #{{ voyage.train.numero }}
+                            </div>
                             <div class="hover-effect"></div>
                         </div>
                     </div>
@@ -288,7 +350,10 @@ const submit = () => {
                 <div class="pos-cart custom-scrollbar">
                     <div class="pos-cart-header slide-in-top">
                         <h2>TRANSACTION EN COURS</h2>
-                        <div class="pos-cart-count pulse" v-if="form.quantite > 0">
+                        <div
+                            class="pos-cart-count pulse"
+                            v-if="form.quantite > 0"
+                        >
                             {{ form.quantite }} billet(s)
                         </div>
                     </div>
@@ -298,19 +363,43 @@ const submit = () => {
                             <!-- Informations client -->
                             <div class="pos-form-group">
                                 <label>Nom du client</label>
-                                <input v-model="form.client_nom" type="text" class="pos-input" placeholder="Nom complet" />
-                                <div v-if="form.errors.client_nom" v-text="form.errors.client_nom" class="text-danger"></div>
+                                <input
+                                    v-model="form.client_nom"
+                                    type="text"
+                                    class="pos-input"
+                                    placeholder="Nom complet"
+                                />
+                                <div
+                                    v-if="form.errors.client_nom"
+                                    v-text="form.errors.client_nom"
+                                    class="text-danger"
+                                ></div>
                             </div>
 
                             <!-- Voyage sélectionné -->
                             <div class="pos-form-group">
                                 <label>Voyage sélectionné</label>
                                 <div class="voyage-display">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                                        ></path>
                                         <circle cx="12" cy="10" r="3"></circle>
                                     </svg>
-                                    <input type="text" :value="selectedVoyage?.nom" class="pos-input" readonly />
+                                    <input
+                                        type="text"
+                                        :value="selectedVoyage?.nom"
+                                        class="pos-input"
+                                        readonly
+                                    />
                                 </div>
                             </div>
 
@@ -318,13 +407,28 @@ const submit = () => {
                             <div class="pos-form-group">
                                 <label>Train</label>
                                 <div class="train-display">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 2c-3 0-6 1-6 5v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7c0-4-3-5-6-5z"></path>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            d="M12 2c-3 0-6 1-6 5v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7c0-4-3-5-6-5z"
+                                        ></path>
                                         <path d="M12 2v5"></path>
                                         <path d="M8 12h8"></path>
                                         <path d="M8 16h8"></path>
                                     </svg>
-                                    <input type="text" :value="getSelectedTrainInfo" class="pos-input" readonly />
+                                    <input
+                                        type="text"
+                                        :value="getSelectedTrainInfo"
+                                        class="pos-input"
+                                        readonly
+                                    />
                                 </div>
                             </div>
 
@@ -332,18 +436,93 @@ const submit = () => {
                             <div class="pos-form-group">
                                 <label>Classe</label>
                                 <div class="select-wrapper">
-                                    <select v-model="form.classe_wagon_id" class="pos-select" required>
-                                        <option value="" disabled>Sélectionnez une classe</option>
-                                        <option v-for="classe in classeWagons" :key="classe.id" :value="classe.id">
-                                            {{ classe.classe }} (x{{ classe.prix_multiplier }})
+                                    <select
+                                        v-model="form.classe_wagon_id"
+                                        class="pos-select"
+                                        required
+                                    >
+                                        <option value="" disabled>
+                                            Sélectionnez une classe
+                                        </option>
+                                        <option
+                                            v-for="classe in classeWagons"
+                                            :key="classe.id"
+                                            :value="classe.id"
+                                        >
+                                            {{ classe.classe }} (x{{
+                                                classe.prix_multiplier
+                                            }})
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
-                                    <div v-if="form.errors.classe_wagon_id" v-text="form.errors.classe_wagon_id" class="text-danger"></div>
+                                    <div
+                                        v-if="form.errors.classe_wagon_id"
+                                        v-text="form.errors.classe_wagon_id"
+                                        class="text-danger"
+                                    ></div>
                                 </div>
-                                <div v-for="tarif in availableClasses" :key="tarif.id">
-                                    <div :class="{ 'text-red-500': tarif.places_disponibles <= 0 }">
-                                        Places Disponibles: {{ tarif.places_disponibles }}
+                                <div
+                                    v-for="tarif in availableClasses"
+                                    :key="tarif.id"
+                                >
+                                    <div
+                                        :class="{
+                                            'text-red-500':
+                                                tarif.places_disponibles <= 0,
+                                        }"
+                                    >
+                                        Places Disponibles:
+                                        {{ tarif.places_disponibles }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Options tarifaires -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="pos-form-group">
+                                    <label>Quantité totale</label>
+                                    <div class="quantity-selector">
+                                        <button
+                                            @click="decreaseQty"
+                                            :disabled="form.quantite <= 1"
+                                        >
+                                            -
+                                        </button>
+                                        <input
+                                            v-model.number="form.quantite"
+                                            type="number"
+                                            min="1"
+                                            class="quantity-input"
+                                        />
+                                        <button @click="form.quantite++">
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="pos-form-group">
+                                    <label class="checkbox-label">
+                                        <input
+                                            v-model="form.demi_tarif"
+                                            type="checkbox"
+                                        />
+                                        Demi-tarif (enfant)
+                                    </label>
+
+                                    <div v-if="form.demi_tarif" class="mt-2">
+                                        <label
+                                            >Nombre de billets en
+                                            demi-tarif</label
+                                        >
+                                        <input
+                                            v-model.number="
+                                                form.quantite_demi_tarif
+                                            "
+                                            type="number"
+                                            min="0"
+                                            :max="form.quantite"
+                                            class="pos-input"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -352,12 +531,26 @@ const submit = () => {
                             <div class="pos-form-group">
                                 <label>Gare de départ</label>
                                 <div class="select-wrapper">
-                                    <select v-model="kilometrageState.gare_depart_id" class="pos-select" required>
-                                        <option value="" disabled>Sélectionnez</option>
-                                        <option v-for="arret in selectedVoyage?.ligne?.arrets || []" 
-                                                :key="'depart-' + arret.gare_id" 
-                                                :value="arret.gare_id">
-                                            {{ arret.gare.nom }} ({{ arret.distance_depart }} km)
+                                    <select
+                                        v-model="
+                                            kilometrageState.gare_depart_id
+                                        "
+                                        class="pos-select"
+                                        required
+                                    >
+                                        <option value="" disabled>
+                                            Sélectionnez
+                                        </option>
+                                        <option
+                                            v-for="arret in selectedVoyage
+                                                ?.ligne?.arrets || []"
+                                            :key="'depart-' + arret.gare_id"
+                                            :value="arret.gare_id"
+                                        >
+                                            {{ arret.gare.nom }} ({{
+                                                arret.distance_depart
+                                            }}
+                                            km)
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
@@ -367,12 +560,26 @@ const submit = () => {
                             <div class="pos-form-group">
                                 <label>Gare d'arrivée</label>
                                 <div class="select-wrapper">
-                                    <select v-model="kilometrageState.gare_arrivee_id" class="pos-select" required>
-                                        <option value="" disabled>Sélectionnez</option>
-                                        <option v-for="arret in selectedVoyage?.ligne?.arrets || []" 
-                                                :key="'arrivee-' + arret.gare_id" 
-                                                :value="arret.gare_id">
-                                            {{ arret.gare.nom }} ({{ arret.distance_depart }} km)
+                                    <select
+                                        v-model="
+                                            kilometrageState.gare_arrivee_id
+                                        "
+                                        class="pos-select"
+                                        required
+                                    >
+                                        <option value="" disabled>
+                                            Sélectionnez
+                                        </option>
+                                        <option
+                                            v-for="arret in selectedVoyage
+                                                ?.ligne?.arrets || []"
+                                            :key="'arrivee-' + arret.gare_id"
+                                            :value="arret.gare_id"
+                                        >
+                                            {{ arret.gare.nom }} ({{
+                                                arret.distance_depart
+                                            }}
+                                            km)
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
@@ -381,59 +588,46 @@ const submit = () => {
 
                             <div class="pos-form-group">
                                 <label>Distance (km)</label>
-                                <input type="text" :value="kilometrageState.distance_km" class="pos-input" readonly />
-                            </div>
-
-                            <!-- Options tarifaires -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="pos-form-group">
-                                    <label>Quantité totale</label>
-                                    <div class="quantity-selector">
-                                        <button @click="decreaseQty" :disabled="form.quantite <= 1">-</button>
-                                        <input v-model.number="form.quantite" type="number" min="1" class="quantity-input" />
-                                        <button @click="form.quantite++">+</button>
-                                    </div>
-                                </div>
-
-                                <div class="pos-form-group">
-                                    <label class="checkbox-label">
-                                        <input v-model="form.demi_tarif" type="checkbox" />
-                                        Demi-tarif (enfant)
-                                    </label>
-
-                                    <div v-if="form.demi_tarif" class="mt-2">
-                                        <label>Nombre de billets en demi-tarif</label>
-                                        <input v-model.number="form.quantite_demi_tarif" 
-                                               type="number" 
-                                               min="0" 
-                                               :max="form.quantite" 
-                                               class="pos-input" />
-                                    </div>
-                                </div>
+                                <input
+                                    type="text"
+                                    :value="kilometrageState.distance_km"
+                                    class="pos-input"
+                                    readonly
+                                />
                             </div>
 
                             <!-- Options supplémentaires -->
                             <div class="pos-form-group">
                                 <label class="checkbox-label">
-                                    <input v-model="form.bagage" type="checkbox" />
+                                    <input
+                                        v-model="form.bagage"
+                                        type="checkbox"
+                                    />
                                     Bagage supplémentaire
                                 </label>
                             </div>
 
                             <div v-if="form.bagage" class="pos-form-group">
                                 <label>Poids du bagage (kg)</label>
-                                <input v-model.number="form.poids_bagage" 
-                                       type="number" 
-                                       min="0" 
-                                       step="0.1" 
-                                       class="pos-input" 
-                                       placeholder="Ex: 12.5" />
+                                <input
+                                    v-model.number="form.poids_bagage"
+                                    type="number"
+                                    min="0"
+                                    step="0.1"
+                                    class="pos-input"
+                                    placeholder="Ex: 12.5"
+                                />
                             </div>
 
                             <div class="pos-form-group">
                                 <label class="checkbox-label">
-                                    <input v-model="form.penalite" type="checkbox" />
-                                    Appliquer pénalité ({{ systemSettings?.penalite || 5 }}%)
+                                    <input
+                                        v-model="form.penalite"
+                                        type="checkbox"
+                                    />
+                                    Appliquer pénalité ({{
+                                        systemSettings?.penalite || 5
+                                    }}%)
                                 </label>
                             </div>
 
@@ -441,26 +635,50 @@ const submit = () => {
                             <div class="pos-form-group">
                                 <label>Mode de paiement</label>
                                 <div class="select-wrapper">
-                                    <select v-model="form.mode_paiement_id" class="pos-select" required>
-                                        <option v-for="mode in modesPaiement" :key="mode.id" :value="mode.id">
+                                    <select
+                                        v-model="form.mode_paiement_id"
+                                        class="pos-select"
+                                        required
+                                    >
+                                        <option
+                                            v-for="mode in modesPaiement"
+                                            :key="mode.id"
+                                            :value="mode.id"
+                                        >
                                             {{ mode.type }}
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
-                                    <div v-if="form.errors.mode_paiement_id" v-text="form.errors.mode_paiement_id" class="text-danger"></div>
+                                    <div
+                                        v-if="form.errors.mode_paiement_id"
+                                        v-text="form.errors.mode_paiement_id"
+                                        class="text-danger"
+                                    ></div>
                                 </div>
                             </div>
 
                             <div class="pos-form-group">
                                 <label>Point de vente</label>
                                 <div class="select-wrapper">
-                                    <select v-model="form.point_vente_id" class="pos-select" required>
-                                        <option v-for="point in pointsVente" :key="point.id" :value="point.id">
+                                    <select
+                                        v-model="form.point_vente_id"
+                                        class="pos-select"
+                                        required
+                                    >
+                                        <option
+                                            v-for="point in pointsVente"
+                                            :key="point.id"
+                                            :value="point.id"
+                                        >
                                             {{ point.gare?.nom }}
                                         </option>
                                     </select>
                                     <div class="select-arrow"></div>
-                                    <div v-if="form.errors.point_vente_id" v-text="form.errors.point_vente_id" class="text-danger"></div>
+                                    <div
+                                        v-if="form.errors.point_vente_id"
+                                        v-text="form.errors.point_vente_id"
+                                        class="text-danger"
+                                    ></div>
                                 </div>
                             </div>
 
@@ -468,12 +686,20 @@ const submit = () => {
                             <div class="pos-form-group">
                                 <label>Statut de paiement</label>
                                 <div class="select-wrapper">
-                                    <select v-model="form.statut" class="pos-select" required>
+                                    <select
+                                        v-model="form.statut"
+                                        class="pos-select"
+                                        required
+                                    >
                                         <option value="payé">Payé</option>
                                         <option value="réservé">Réservé</option>
                                     </select>
                                     <div class="select-arrow"></div>
-                                    <div v-if="form.errors.statut" v-text="form.errors.statut" class="text-danger"></div>
+                                    <div
+                                        v-if="form.errors.statut"
+                                        v-text="form.errors.statut"
+                                        class="text-danger"
+                                    ></div>
                                 </div>
                             </div>
 
@@ -481,47 +707,141 @@ const submit = () => {
                             <div class="pos-cart-summary">
                                 <div class="pos-summary-row">
                                     <span>Prix unitaire:</span>
-                                    <span>{{ formatNumber(unitKilometragePrice) }} FCFA</span>
+                                    <span
+                                        >{{
+                                            formatNumber(unitKilometragePrice)
+                                        }}
+                                        FCFA</span
+                                    >
                                 </div>
 
-                                <div v-if="form.demi_tarif && form.quantite_demi_tarif > 0" class="pos-summary-row">
-                                    <span>Billets plein tarif ({{ form.quantite - form.quantite_demi_tarif }}):</span>
-                                    <span>{{ formatNumber(unitKilometragePrice * (form.quantite - form.quantite_demi_tarif)) }} FCFA</span>
+                                <div
+                                    v-if="
+                                        form.demi_tarif &&
+                                        form.quantite_demi_tarif > 0
+                                    "
+                                    class="pos-summary-row"
+                                >
+                                    <span
+                                        >Billets plein tarif ({{
+                                            form.quantite -
+                                            form.quantite_demi_tarif
+                                        }}):</span
+                                    >
+                                    <span
+                                        >{{
+                                            formatNumber(
+                                                unitKilometragePrice *
+                                                    (form.quantite -
+                                                        form.quantite_demi_tarif)
+                                            )
+                                        }}
+                                        FCFA</span
+                                    >
                                 </div>
 
-                                <div v-if="form.demi_tarif && form.quantite_demi_tarif > 0" class="pos-summary-row">
-                                    <span>Billets demi-tarif ({{ form.quantite_demi_tarif }}):</span>
-                                    <span>{{ formatNumber((unitKilometragePrice / 2) * form.quantite_demi_tarif) }} FCFA</span>
+                                <div
+                                    v-if="
+                                        form.demi_tarif &&
+                                        form.quantite_demi_tarif > 0
+                                    "
+                                    class="pos-summary-row"
+                                >
+                                    <span
+                                        >Billets demi-tarif ({{
+                                            form.quantite_demi_tarif
+                                        }}):</span
+                                    >
+                                    <span
+                                        >{{
+                                            formatNumber(
+                                                (unitKilometragePrice / 2) *
+                                                    form.quantite_demi_tarif
+                                            )
+                                        }}
+                                        FCFA</span
+                                    >
                                 </div>
 
-                                <div v-if="form.bagage && bagageExtra > 0" class="pos-summary-row">
+                                <div
+                                    v-if="form.bagage && bagageExtra > 0"
+                                    class="pos-summary-row"
+                                >
                                     <span>Supplément bagage:</span>
-                                    <span>{{ formatNumber(bagageExtra) }} FCFA</span>
+                                    <span
+                                        >{{
+                                            formatNumber(bagageExtra)
+                                        }}
+                                        FCFA</span
+                                    >
                                 </div>
 
-                                <div v-if="form.penalite" class="pos-summary-row">
-                                    <span>Pénalité ({{ systemSettings?.penalite || 5 }}%):</span>
-                                    <span>{{ formatNumber(totalPrice - (quantityAdjustedPrice + bagageExtra)) }} FCFA</span>
+                                <div
+                                    v-if="form.penalite"
+                                    class="pos-summary-row"
+                                >
+                                    <span
+                                        >Pénalité ({{
+                                            systemSettings?.penalite || 5
+                                        }}%):</span
+                                    >
+                                    <span
+                                        >{{
+                                            formatNumber(
+                                                totalPrice -
+                                                    (quantityAdjustedPrice +
+                                                        bagageExtra)
+                                            )
+                                        }}
+                                        FCFA</span
+                                    >
                                 </div>
 
-                                <div class="pos-summary-row" style="font-weight: 700; font-size: 1.2em">
+                                <div
+                                    class="pos-summary-row"
+                                    style="font-weight: 700; font-size: 1.2em"
+                                >
                                     <span>Total:</span>
-                                    <span class="pos-total">{{ formatNumber(totalPrice) }} FCFA</span>
+                                    <span class="pos-total"
+                                        >{{
+                                            formatNumber(totalPrice)
+                                        }}
+                                        FCFA</span
+                                    >
                                 </div>
                             </div>
 
                             <!-- Actions -->
                             <div class="pos-cart-actions">
-                                <button @click="resetPOS" class="pos-cancel-btn">Annuler</button>
-                                <button @click="submit" class="pos-pay-btn" :disabled="form.processing">
-                                    <span v-if="!form.processing">Valider la vente</span>
+                                <button
+                                    @click="resetPOS"
+                                    class="pos-cancel-btn"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    @click="submit"
+                                    class="pos-pay-btn"
+                                    :disabled="form.processing"
+                                >
+                                    <span v-if="!form.processing"
+                                        >Valider la vente</span
+                                    >
                                     <span v-else>Enregistrement...</span>
                                 </button>
                             </div>
                         </div>
 
                         <div v-else class="empty-cart-message">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <line x1="12" y1="8" x2="12" y2="12"></line>
                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>

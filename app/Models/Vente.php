@@ -121,7 +121,7 @@ class Vente extends Model
         return $this->hasMany(VenteItem::class);
     }
 
-    public function classeWagon(): BelongsTo
+    public function classeWagon()
     {
         return $this->belongsTo(ClassesWagon::class, 'classe_wagon_id');
     }

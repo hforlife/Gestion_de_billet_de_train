@@ -45,9 +45,8 @@ const form = computed(() => ({
         "Inconnu",
 
     point_vente:
-        props.vente.point_vente?.nom ||
-        props.vente.pointVente?.nom ||
         props.vente.pointVente?.gare?.nom ||
+        props.vente.pointVente?.nom ||
         "Inconnu",
     classe_wagon:
         props.vente.classeWagon?.nom ||

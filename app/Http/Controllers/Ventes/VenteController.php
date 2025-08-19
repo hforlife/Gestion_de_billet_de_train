@@ -187,7 +187,7 @@ class VenteController
             'point_vente_id' => 'required|exists:points_ventes,id',
             'classe_wagon_id' => 'required|exists:classes_wagon,id',
             'quantite' => 'required|integer|min:1|max:10',
-            'quantite_demi_tarif' => 'nullable|integer|min:1|max:10',
+            'quantite_demi_tarif' => 'nullable|integer',
             'demi_tarif' => 'boolean',
             'prix' => 'required|numeric|min:0',
             'bagage' => 'boolean',
@@ -213,6 +213,12 @@ class VenteController
                     $query->where('voyage_id', $voyage->id);
                 })
                 ->first();
+
+            if ($placeLibre->count() < $validated['quantite']) {
+                return back()
+                    ->withErrors(['place' => 'Pas assez de places disponibles pour cette classe.'])
+                    ->withInput();
+            }
 
             if (!$placeLibre) {
                 Log::warning('Aucune place disponible', [
@@ -261,11 +267,13 @@ class VenteController
                 'place_id' => $placeLibre->id,
                 'prix' => $validated['prix'],
                 'quantite' => $validated['quantite'],
+                'quantite_demi_tarif' => $validated['quantite_demi_tarif'],
                 'bagage' => $validated['bagage'],
                 'poids_bagage' => $validated['bagage'] ? $validated['poids_bagage'] : null,
                 'classe_wagon_id' => $validated['classe_wagon_id'],
                 'demi_tarif' => $validated['demi_tarif'],
                 'statut' => $validated['statut'],
+                'penalite' => $validated['penalite'],
                 'reference' => $reference,
                 'qrcode' => $qrPath,
                 'date_vente' => now(),
@@ -309,9 +317,9 @@ class VenteController
 
         // Debug: Vérifiez les données chargées
         logger('Vente data:', [
-            'mode_paiement' => $vente->modePaiement,
-            'point_vente' => $vente->pointVente,
-            'gare' => $vente->pointVente->gare ?? null
+            'mode_paiement' => optional($vente->modePaiement)->type,
+            'point_vente' => optional($vente->pointVente)->nom,
+            'gare' => optional($vente->pointVente?->gare)->nom
         ]);
 
         return Inertia::render('Ventes/Show', [
