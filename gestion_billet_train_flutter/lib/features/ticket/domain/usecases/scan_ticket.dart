@@ -35,7 +35,7 @@ class ScanTicket {
       // Fetch ticket details
       final token = await _getToken();
       if (token == null) {
-        return Left(Failure(message: 'Token non trouvé'));
+        return Left(Failure(message: 'Veuillez vous reconnecter!!'));
       }
 
       final response = await http.get(
@@ -66,7 +66,7 @@ class ScanTicket {
           );
         }
       } else {
-        return Left(Failure(message: 'Erreur API: ${response.statusCode}'));
+        return Left(Failure(message: "Nous n'avons pas trouvé de ticket!!!"));
       }
     } catch (e) {
       print('Error fetching ticket: $e');

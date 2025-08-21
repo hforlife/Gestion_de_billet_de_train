@@ -1,6 +1,8 @@
 class Ticket {
   final String id;
   final String? clientName;
+  final int? quantite_demi_tarif;
+  final bool? penalite;
   final String? departure;
   final String? destination;
   final double price;
@@ -53,6 +55,8 @@ class Ticket {
   Ticket({
     required this.id,
     this.clientName,
+    this.quantite_demi_tarif,
+    this.penalite,
     this.departure,
     this.destination,
     required this.price,
@@ -128,7 +132,7 @@ class Ticket {
       createdAt:
           DateTime.tryParse(vente['date_vente']?.toString() ?? '') ??
           DateTime.now(),
-      trainNumber: voyage['train_id']?.toString(),
+      trainNumber: voyage['train']?['numero']?.toString() ?? 'Inconnu',
       classType: classeWagon['classe']?.toString(),
       wagon: wagon['numero_wagon']?.toString(),
       seatNumber: place['numero']?.toString(),
@@ -182,6 +186,8 @@ class Ticket {
     String? id,
     String? clientName,
     String? departure,
+    int? quantite_demi_tarif,
+    bool? penalite,
     String? destination,
     double? price,
     bool? isValidated,

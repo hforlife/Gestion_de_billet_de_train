@@ -34,7 +34,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       result.fold(
         (failure) {
           print('Échec: ${failure.message}');
-          emit(AuthError('Échec de la connexion: ${failure.message}'));
+          if (failure.message == "Erreur serveur") {
+            emit(AuthError('Email/Username ou mot de passe incorrect'));
+          } else {
+            emit(AuthError('Échec de la connexion: ${failure.message}'));
+          }
         },
         (user) {
           print('Succès, utilisateur: $user');

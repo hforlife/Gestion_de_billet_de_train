@@ -128,10 +128,10 @@ class _SellTicketPageState extends State<SellTicketPage> {
                 ? SettingModel.fromJson(Map<String, dynamic>.from(settingRaw))
                 : SettingModel(
                     modeVente: "par_kilometrage",
-                    coefficientsClasses: {"1": 1.2, "2": 1.0, "3": 0.8},
-                    tarifKilometrique: 20.0,
+                    tarifKilometrique: 20.32,
                     tarifMinimum: 3050.0,
-                    baguageTarif: 500.0,
+                    bagage_kg: 500.0,
+                    penalite: 5.0,
                   );
             print('New Setting: $newSetting');
             await _dataBox.put('setting', newSetting?.toJson());
@@ -142,20 +142,20 @@ class _SellTicketPageState extends State<SellTicketPage> {
               'setting',
               SettingModel(
                 modeVente: "par_kilometrage",
-                coefficientsClasses: {"1": 1.2, "2": 1.0, "3": 0.8},
-                tarifKilometrique: 20.0,
+                tarifKilometrique: 20.32,
                 tarifMinimum: 3050.0,
-                baguageTarif: 500.0,
+                bagage_kg: 500.0,
+                penalite: 5.0,
               ).toJson(),
             );
             if (!mounted) return;
             setState(
               () => setting = SettingModel(
                 modeVente: "par_kilometrage",
-                coefficientsClasses: {"1": 1.2, "2": 1.0, "3": 0.8},
-                tarifKilometrique: 20.0,
+                tarifKilometrique: 20.32,
                 tarifMinimum: 3050.0,
-                baguageTarif: 500.0,
+                bagage_kg: 500.0,
+                penalite: 5.0,
               ),
             );
           }
@@ -167,20 +167,20 @@ class _SellTicketPageState extends State<SellTicketPage> {
             'setting',
             SettingModel(
               modeVente: "par_kilometrage",
-              coefficientsClasses: {"1": 1.2, "2": 1.0, "3": 0.8},
-              tarifKilometrique: 20.0,
+              tarifKilometrique: 20.32,
               tarifMinimum: 3050.0,
-              baguageTarif: 500.0,
+              bagage_kg: 500.0,
+              penalite: 5.0,
             ).toJson(),
           );
           if (!mounted) return;
           setState(
             () => setting = SettingModel(
               modeVente: "par_kilometrage",
-              coefficientsClasses: {"1": 1.2, "2": 1.0, "3": 0.8},
-              tarifKilometrique: 20.0,
+              tarifKilometrique: 20.32,
               tarifMinimum: 3050.0,
-              baguageTarif: 500.0,
+              bagage_kg: 500.0,
+              penalite: 5.0,
             ),
           );
         }
@@ -264,10 +264,10 @@ class _SellTicketPageState extends State<SellTicketPage> {
               ? SettingModel.fromJson(Map<String, dynamic>.from(storedSetting))
               : SettingModel(
                   modeVente: "par_kilometrage",
-                  coefficientsClasses: {"1": 1.2, "2": 1.0, "3": 0.8},
-                  tarifKilometrique: 20.0,
+                  tarifKilometrique: 20.32,
                   tarifMinimum: 3050.0,
-                  baguageTarif: 500.0,
+                  bagage_kg: 500.0,
+                  penalite: 5.0,
                 );
         });
 
@@ -309,10 +309,10 @@ class _SellTicketPageState extends State<SellTicketPage> {
             ? SettingModel.fromJson(Map<String, dynamic>.from(storedSetting))
             : SettingModel(
                 modeVente: "par_kilometrage",
-                coefficientsClasses: {"1": 1.2, "2": 1.0, "3": 0.8},
-                tarifKilometrique: 20.0,
+                tarifKilometrique: 20.32,
                 tarifMinimum: 3050.0,
-                baguageTarif: 500.0,
+                bagage_kg: 500.0,
+                penalite: 5.0,
               );
       });
       voyages =
@@ -408,21 +408,9 @@ class _SellTicketPageState extends State<SellTicketPage> {
           basePrice =
               double.tryParse(selectedTarif['prix']?.toString() ?? '0.0') ??
               0.0;
-          if (classeId != null) {
-            final selectedClass = classse.firstWhere(
-              (clas) => clas['id'].toString() == classeId,
-              orElse: () => {'prix_multiplier': '1.0'},
-            );
-            final prixMultiplier =
-                double.tryParse(
-                  selectedClass['prix_multiplier']?.toString() ?? '1.0',
-                ) ??
-                1.0;
-            basePrice *= prixMultiplier;
-            print(
-              'par_voyage: Selected tarif=$selectedTarif, basePrice=$basePrice, prixMultiplier=$prixMultiplier',
-            );
-          }
+          print(
+            'par_voyage: Selected tarif=$selectedTarif, basePrice=$basePrice',
+          );
         } catch (e) {
           print('Error in par_voyage tariff lookup: $e');
         }
@@ -435,7 +423,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
           classeId != null &&
           classse.isNotEmpty) {
         try {
-          final double tarifKm = setting!.tarifKilometrique ?? 20.0;
+          final double tarifKm = setting!.tarifKilometrique ?? 20.32;
           final double tarifMin = setting!.tarifMinimum ?? 3050.0;
           final selectedClass = classse.firstWhere(
             (clas) => clas['id'].toString() == classeId,
@@ -464,22 +452,23 @@ class _SellTicketPageState extends State<SellTicketPage> {
       print('Unknown modeVente: ${setting!.modeVente}');
     }
 
-    if (hasPenalty) {
-      basePrice *= 1.2;
-      print('Applied penalty: basePrice=$basePrice');
+    if (hasPenalty && (setting!.penalite != null)) {
+      basePrice *= (1 + (setting!.penalite! / 100));
+      print('Applied penalty: ${setting!.penalite}% basePrice=$basePrice');
     }
 
-    if (hasBaguage && baggageWeight > 10) {
-      double baguageTarif = setting!.baguageTarif ?? 500.0;
-      baggageCost = (baggageWeight - 10) * baguageTarif;
-      print('Baggage cost: $baggageCost, baguageTarif=$baguageTarif');
+    if (hasBaguage && baggageWeight > 10 && setting!.baguageTarif != null) {
+      baggageCost = (baggageWeight - 10) * setting!.baguageTarif!;
+      print(
+        'Baggage cost: $baggageCost, baguageTarif=${setting!.baguageTarif}',
+      );
     }
 
     final double childPrice = demiTarif ? basePrice * 0.5 : basePrice;
     final finalPrice =
         (adultTickets * basePrice) + (childTickets * childPrice) + baggageCost;
     print(
-      'Final price: $finalPrice, adultTickets=$adultTickets, childTickets=$childTickets',
+      'Final price: $finalPrice, adultTickets=$adultTickets, childTickets=$childTickets, baggageCost=$baggageCost',
     );
     return finalPrice;
   }
@@ -513,6 +502,8 @@ class _SellTicketPageState extends State<SellTicketPage> {
         'bagage': hasBaguage ? '1' : '0',
         if (hasBaguage) 'poids_bagage': baggageWeight.toStringAsFixed(2),
         'statut': 'payé',
+        'quantite_demi_tarif': nombreEnfants,
+        'penalite': hasPenalty,
       };
 
       print('Starting sell for ticket: $postData');
@@ -560,6 +551,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         ''
                   : ''),
         price: calculatedPrice,
+        quantite_demi_tarif: nombreEnfants,
         isValidated: false,
         hasPenalty: hasPenalty,
         createdAt: DateTime.now(),
@@ -570,6 +562,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                   )['trainNumber'] ??
                   'T123'
             : 'T123',
+        penalite: hasPenalty,
         classType: classeId != null
             ? classse.firstWhere(
                     (clas) => clas['id'].toString() == classeId,
@@ -1310,7 +1303,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "Appliquer une pénalité (+20%)",
+                            "Appliquer une pénalité (+${(setting?.penalite ?? 5.0)}%)",
                             style: GoogleFonts.roboto(
                               fontSize: TSizes.fontSizeMd,
                             ),
@@ -1618,7 +1611,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                           style: TextStyle(fontSize: TSizes.md),
                                         ),
                                         Text(
-                                          '+20%',
+                                          '+${(setting?.penalite ?? 5.0)}%',
                                           style: Theme.of(context)
                                               .textTheme
                                               .labelMedium!
@@ -1678,7 +1671,7 @@ class _SellTicketPageState extends State<SellTicketPage> {
                                               .labelMedium!
                                               .copyWith(
                                                 color: TColors.black,
-                                                fontSize: TSizes.md * 1.2,
+                                                fontSize: TSizes.md * 1.1,
                                               ),
                                         ),
                                       ],

@@ -105,6 +105,10 @@ class TicketModel extends HiveObject {
   final DateTime? creatorEmailVerifiedAt;
   @HiveField(49)
   final String? qrCodeUrl;
+  @HiveField(50)
+  final bool? penalite;
+  @HiveField(51)
+  final int? quantite_demi_tarif;
 
   TicketModel({
     required this.id,
@@ -115,6 +119,8 @@ class TicketModel extends HiveObject {
     required this.hasPenalty,
     required this.createdAt,
     this.trainNumber,
+    this.penalite,
+    this.quantite_demi_tarif,
     this.classType,
     this.wagon,
     this.seatNumber,
@@ -164,6 +170,8 @@ class TicketModel extends HiveObject {
     String? id,
     String? departure,
     String? destination,
+    int? quantite_demi_tarif,
+    bool? penalite,
     double? price,
     bool? isValidated,
     bool? hasPenalty,
@@ -215,6 +223,8 @@ class TicketModel extends HiveObject {
     return TicketModel(
       id: id ?? this.id,
       departure: departure ?? this.departure,
+      penalite: penalite ?? this.penalite,
+      quantite_demi_tarif: quantite_demi_tarif ?? this.quantite_demi_tarif,
       destination: destination ?? this.destination,
       price: price ?? this.price,
       isValidated: isValidated ?? this.isValidated,
@@ -271,6 +281,8 @@ class TicketModel extends HiveObject {
     return TicketModel(
       id: ticket.id,
       departure: ticket.departure,
+      penalite: ticket.penalite,
+      quantite_demi_tarif: ticket.quantite_demi_tarif,
       destination: ticket.destination,
       price: ticket.price,
       isValidated: ticket.isValidated,
@@ -326,6 +338,8 @@ class TicketModel extends HiveObject {
     id: id,
     departure: departure,
     destination: destination,
+    penalite: penalite,
+    quantite_demi_tarif: quantite_demi_tarif,
     price: price,
     isValidated: isValidated,
     hasPenalty: hasPenalty,
@@ -382,6 +396,8 @@ class TicketModel extends HiveObject {
       'destination': destination,
       'price': price,
       'isValidated': isValidated,
+      'quantite_demi_tarif': quantite_demi_tarif,
+      'penalite': penalite,
       'hasPenalty': hasPenalty,
       'createdAt': createdAt.toIso8601String(),
       'trainNumber': trainNumber,

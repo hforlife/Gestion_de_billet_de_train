@@ -1,47 +1,31 @@
-import 'dart:convert';
+import 'package:equatable/equatable.dart';
 
-class SettingModel {
+class SettingModel extends Equatable {
   final int? id;
   final String? modeVente;
   final double? tarifKilometrique;
-  final double? baguageTarif;
+  final double? bagage_kg;
+  final double? penalite;
   final double? tarifMinimum;
-  final Map<String, double>? coefficientsClasses;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  // Alias for bagage_kg to match SellTicketPage usage
+  double? get baguageTarif => bagage_kg;
 
   SettingModel({
     this.id,
     this.modeVente,
     this.tarifKilometrique,
-    this.baguageTarif,
+    this.bagage_kg,
+    this.penalite,
     this.tarifMinimum,
-    this.coefficientsClasses,
     this.createdAt,
     this.updatedAt,
   });
 
-  static SettingModel? fromJson(Map<String, dynamic>? json) {
-    if (json == null) return null;
-
-    Map<String, double>? coeffs;
-    final coeffsRaw = json['coefficients_classes'];
-    try {
-      if (coeffsRaw is String) {
-        // Decode JSON string to Map
-        final decoded = jsonDecode(coeffsRaw) as Map;
-        coeffs = decoded.map(
-          (k, v) => MapEntry(k.toString(), (v as num).toDouble()),
-        );
-      } else if (coeffsRaw is Map) {
-        coeffs = coeffsRaw.map(
-          (k, v) => MapEntry(k.toString(), (v as num).toDouble()),
-        );
-      }
-    } catch (e) {
-      print('Error decoding coefficients_classes: $e, coeffsRaw: $coeffsRaw');
-      coeffs = null;
-    }
+  factory SettingModel.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return SettingModel();
 
     return SettingModel(
       id: json['id'] is int
@@ -54,10 +38,12 @@ class SettingModel {
       tarifMinimum: json['tarif_minimum'] != null
           ? double.tryParse(json['tarif_minimum'].toString())
           : null,
-      baguageTarif: json['penalite'] != null
+      bagage_kg: json['bagage_kg'] != null
+          ? double.tryParse(json['bagage_kg']?.toString() ?? '')
+          : null,
+      penalite: json['penalite'] != null
           ? double.tryParse(json['penalite']?.toString() ?? '')
-          : null, // Adjust if baguageTarif is a different field
-      coefficientsClasses: coeffs,
+          : null,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
@@ -73,10 +59,22 @@ class SettingModel {
       'mode_vente': modeVente,
       'tarif_kilometrique': tarifKilometrique,
       'tarif_minimum': tarifMinimum,
-      'baguage_tarif': baguageTarif,
-      'coefficients_classes': coefficientsClasses,
+      'bagage_kg': bagage_kg,
+      'penalite': penalite,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    modeVente,
+    tarifKilometrique,
+    bagage_kg,
+    penalite,
+    tarifMinimum,
+    createdAt,
+    updatedAt,
+  ];
 }

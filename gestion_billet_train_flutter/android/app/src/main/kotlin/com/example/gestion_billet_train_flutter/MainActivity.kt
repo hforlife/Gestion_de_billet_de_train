@@ -1,4 +1,4 @@
-package com.example.gestion_billet_train_flutter
+package com.sopafer.dev
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -9,7 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.example.gestion_billet_train_flutter/datawedge"
+    private val CHANNEL = "com.sopafer.dev/datawedge"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -23,14 +23,14 @@ class MainActivity : FlutterActivity() {
 
         // Register broadcast receiver for DataWedge scans
         val filter = IntentFilter()
-        filter.addAction("com.example.gestion_billet_train_flutter.SCAN")
+        filter.addAction("com.sopafer.dev.SCAN")
         filter.addCategory("android.intent.category.DEFAULT")
         registerReceiver(dataWedgeReceiver, filter)
     }
 
     private val dataWedgeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.example.gestion_billet_train_flutter.SCAN") {
+            if (intent?.action == "com.sopafer.dev.SCAN") {
                 val scanData = intent.getStringExtra("com.symbol.datawedge.data_string")
                 if (scanData != null && flutterEngine != null) {
                     MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL)

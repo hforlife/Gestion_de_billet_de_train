@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
+import 'package:gestion_billet_train_flutter/core/constants/text_strings.dart';
 import 'package:gestion_billet_train_flutter/di/injection_container.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_event.dart';
@@ -30,7 +31,7 @@ class _HomePageState extends State<HomePage> {
   DateTime? _lastScanTime;
   late Box<String> _scannedTicketsBox;
   static const MethodChannel _channel = MethodChannel(
-    'com.example.gestion_billet_train_flutter/datawedge',
+    'com.sopafer.dev/datawedge',
   );
 
   @override
@@ -51,7 +52,7 @@ class _HomePageState extends State<HomePage> {
       if (scannedCode != null) {
         final now = DateTime.now();
         if (_lastScanTime == null ||
-            now.difference(_lastScanTime!).inMilliseconds > 1000) {
+            now.difference(_lastScanTime!).inMilliseconds > 200) {
           print('HomePage: Processing scan: $scannedCode');
           setState(() {
             qrText = scannedCode;
@@ -136,7 +137,7 @@ class _HomePageState extends State<HomePage> {
                   color: TColors.black,
                 ),
                 label: Text(
-                  'Rapport',
+                  TTexts.rapport,
                   style: GoogleFonts.roboto(
                     fontSize: THelperFunctions.screenWidth() * 0.04,
                     color: TColors.black,
@@ -199,7 +200,7 @@ class _HomePageState extends State<HomePage> {
                         left: THelperFunctions.screenWidth() * 0.085,
                       ),
                       child: Text(
-                        "SOPAFER",
+                        TTexts.appName,
                         style: TextStyle(
                           color: TColors.primary,
                           fontSize: THelperFunctions.screenWidth() * 0.08,
@@ -212,7 +213,7 @@ class _HomePageState extends State<HomePage> {
                         left: THelperFunctions.screenWidth() * 0.085,
                       ),
                       child: Text(
-                        "Scannez ou vendre des billets",
+                        TTexts.appUnderDescription,
                         style: TextStyle(
                           color: TColors.primary,
                           fontSize: TSizes.fontSizeSm,
@@ -273,7 +274,7 @@ class _HomePageState extends State<HomePage> {
                                     color: TColors.white,
                                   ),
                                   Text(
-                                    'Scanner un billet',
+                                    TTexts.scanTicket,
                                     style: GoogleFonts.roboto(
                                       fontSize:
                                           THelperFunctions.screenWidth() * 0.05,
@@ -320,7 +321,7 @@ class _HomePageState extends State<HomePage> {
                                     color: TColors.white,
                                   ),
                                   Text(
-                                    'Vendre un billet',
+                                    TTexts.vendreBillet,
                                     style: GoogleFonts.roboto(
                                       fontSize:
                                           THelperFunctions.screenWidth() * 0.05,

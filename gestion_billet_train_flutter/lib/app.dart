@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:gestion_billet_train_flutter/core/constants/app_colors.dart';
+import 'package:gestion_billet_train_flutter/core/constants/text_strings.dart';
 import 'package:gestion_billet_train_flutter/di/injection_container.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/auth_event.dart';
@@ -24,8 +26,15 @@ class App extends StatelessWidget {
         ),
       ],
       child: GetMaterialApp(
-        title: 'SOPAFER',
+        title: TTexts.appName,
         debugShowCheckedModeBanner: false,
+        locale: const Locale('fr', 'FR'),
+        supportedLocales: const [Locale('fr', 'FR')],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         theme: ThemeData(
           primarySwatch: Colors.blue,
           scaffoldBackgroundColor: AppColors.background,

@@ -9,7 +9,7 @@ class DataWedgeService {
   DataWedgeService._internal();
 
   static const MethodChannel _channel = MethodChannel(
-    'com.example.gestion_billet_train_flutter/datawedge',
+    'com.sopafer.dev/datawedge',
   );
   late Box<String> _scannedTicketsBox;
   DateTime? _lastScanTime;

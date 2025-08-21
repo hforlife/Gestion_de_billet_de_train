@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
+import 'package:gestion_billet_train_flutter/core/constants/text_strings.dart';
 import 'package:gestion_billet_train_flutter/di/injection_container.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/bloc/ticket_bloc.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/ticket_details_page.dart';
@@ -21,7 +22,7 @@ class _ScanPageState extends State<ScanPage> {
   DateTime? _lastScanTime;
   late Box<String> _scannedTicketsBox;
   static const MethodChannel _channel = MethodChannel(
-    'com.example.gestion_billet_train_flutter/datawedge',
+    'com.sopafer.dev/datawedge',
   );
 
   @override
@@ -129,7 +130,7 @@ class _ScanPageState extends State<ScanPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Utilisez le scanner du Zebra pour scanner un ticket ou entrez la référence manuellement',
+                  TTexts.scanSentence,
                   style: TextStyle(fontSize: TSizes.md),
                   textAlign: TextAlign.center,
                 ),
@@ -137,7 +138,7 @@ class _ScanPageState extends State<ScanPage> {
                 TextField(
                   controller: _qrController,
                   decoration: InputDecoration(
-                    labelText: 'Entrer la référence du ticket',
+                    labelText: TTexts.referencePlacholder,
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.send),
@@ -170,7 +171,7 @@ class _ScanPageState extends State<ScanPage> {
                       _qrController.clear();
                     });
                   },
-                  child: const Text('Réessayer'),
+                  child: const Text(TTexts.retry),
                 ),
               ],
             ),

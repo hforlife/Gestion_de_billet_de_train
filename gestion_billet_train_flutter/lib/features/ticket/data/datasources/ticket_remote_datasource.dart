@@ -81,11 +81,13 @@ class TicketRemoteDataSourceImpl implements TicketRemoteDataSource {
         'mode_paiement_id': ticket.modePaiementId?.toString(),
         'classe_wagon_id': ticket.classeWagonId?.toString(),
         'quantite': ticket.quantity?.toString() ?? '1',
-        'demi_tarif': '0', // Always '0' as per backend
+        'demi_tarif': ticket.isDemiTarif,
         'prix': ticket.price.toStringAsFixed(2),
         'bagage': ticket.hasBagage == true ? '1' : '0',
         if (ticket.hasBagage == true)
           'poids_bagage': ticket.baggageWeight?.toStringAsFixed(2),
+        'penalite': ticket.penalite,
+        'quantite_demi_tarif': ticket.quantite_demi_tarif?.toString() ?? '0',
         'statut': ticket.statut ?? 'payé',
       };
 
@@ -141,6 +143,8 @@ class TicketRemoteDataSourceImpl implements TicketRemoteDataSource {
               venteData['poids_bagage']?.toString() ?? '0.0',
             ),
             statut: venteData['statut'],
+            penalite: venteData['penalite'],
+            quantite_demi_tarif: venteData['quantite_demi_tarif'],
             isSynced: true,
           );
           return updatedTicket;

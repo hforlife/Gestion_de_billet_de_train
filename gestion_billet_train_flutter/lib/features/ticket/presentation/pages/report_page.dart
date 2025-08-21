@@ -6,6 +6,8 @@ import 'package:gestion_billet_train_flutter/core/constants/api_constants.dart';
 import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
+import 'package:gestion_billet_train_flutter/di/injection_container.dart';
+import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -23,10 +25,12 @@ class _ReportPageState extends State<ReportPage> {
   String filterType = 'Jour'; // Default filter: Day
   Future<Map<String, dynamic>>? _reportData;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  late Box<String> _scannedTicketsBox;
 
   @override
   void initState() {
     super.initState();
+    _scannedTicketsBox = sl<Box<String>>();
     _reportData = fetchReportData(selectedDate, filterType);
   }
 
@@ -38,16 +42,19 @@ class _ReportPageState extends State<ReportPage> {
     DateTime date,
     String filterType,
   ) async {
-    String apiUrl = '$baseUrl/v1/venteByUser';
+    String salesUrl = '$baseUrl/v1/venteByUser';
     final token = await getToken();
 
-    List<dynamic> allSales = [];
-    String? nextUrl = apiUrl;
+    if (token == null) {
+      throw Exception('Token non trouvé');
+    }
 
-    // Fetch all pages
-    while (nextUrl != null) {
+    // Fetch sales data
+    List<dynamic> allSales = [];
+    String? nextSalesUrl = salesUrl;
+    while (nextSalesUrl != null) {
       final response = await http.get(
-        Uri.parse(nextUrl),
+        Uri.parse(nextSalesUrl),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -57,11 +64,14 @@ class _ReportPageState extends State<ReportPage> {
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         allSales.addAll(jsonData['data']['data']);
-        nextUrl = jsonData['data']['next_page_url'];
+        nextSalesUrl = jsonData['data']['next_page_url'];
       } else {
-        throw Exception('Failed to load report data: ${response.statusCode}');
+        throw Exception('Failed to load sales data: ${response.statusCode}');
       }
     }
+
+    // Fetch scan data from Hive
+    final scans = _scannedTicketsBox.toMap().entries;
 
     // Define date range based on filterType
     DateTime startDate;
@@ -79,7 +89,7 @@ class _ReportPageState extends State<ReportPage> {
     }
 
     int ticketsSold = 0;
-    int totalSales = 0;
+    int totalScans = 0;
     double totalRevenue = 0.0;
     int ticketsWithPenalties = 0;
     double penaltyRevenue = 0.0;
@@ -93,10 +103,10 @@ class _ReportPageState extends State<ReportPage> {
     );
     final todayEnd = todayStart.add(const Duration(days: 1));
 
+    // Process sales data
     for (var sale in allSales) {
       final saleDate = DateTime.parse(sale['date_vente']);
       if (saleDate.isAfter(startDate) && saleDate.isBefore(endDate)) {
-        totalSales += 1;
         ticketsSold += sale['quantite'] as int;
         totalRevenue += (sale['total'] as num).toDouble();
         if (sale['penalite'] > 0) {
@@ -109,9 +119,17 @@ class _ReportPageState extends State<ReportPage> {
       }
     }
 
+    // Process scan data from Hive
+    for (var scan in scans) {
+      final scanDate = DateTime.parse(scan.value);
+      if (scanDate.isAfter(startDate) && scanDate.isBefore(endDate)) {
+        totalScans += 1;
+      }
+    }
+
     return {
       'ticketsSold': ticketsSold,
-      'totalSales': totalSales,
+      'totalScans': totalScans,
       'totalRevenue': totalRevenue,
       'ticketsWithPenalties': ticketsWithPenalties,
       'penaltyRevenue': penaltyRevenue,
@@ -236,7 +254,7 @@ class _ReportPageState extends State<ReportPage> {
 
           final data = snapshot.data!;
           final ticketsSold = data['ticketsSold'] as int;
-          final totalSales = data['totalSales'] as int;
+          final totalScans = data['totalScans'] as int;
           final totalRevenue = data['totalRevenue'] as double;
           final ticketsWithPenalties = data['ticketsWithPenalties'] as int;
           final penaltyRevenue = data['penaltyRevenue'] as double;
@@ -278,9 +296,9 @@ class _ReportPageState extends State<ReportPage> {
                                   ),
                                 ),
                                 child: Icon(
-                                  Iconsax.chart_214,
-                                  size: TSizes.md * 1.3,
-                                  color: TColors.primary,
+                                  Iconsax.ticket,
+                                  size: TSizes.md * 1.35,
+                                  color: TColors.black,
                                 ),
                               ),
                               SizedBox(
@@ -329,9 +347,9 @@ class _ReportPageState extends State<ReportPage> {
                                   ),
                                 ),
                                 child: Icon(
-                                  Iconsax.ticket,
-                                  size: TSizes.md * 1.35,
-                                  color: TColors.black,
+                                  Iconsax.scan_barcode,
+                                  size: TSizes.md * 1.3,
+                                  color: TColors.primary,
                                 ),
                               ),
                               SizedBox(
@@ -342,14 +360,14 @@ class _ReportPageState extends State<ReportPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    totalSales.toString(),
+                                    totalScans.toString(),
                                     style: TextStyle(
                                       fontSize: TSizes.md * 1.1,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Text(
-                                    "Ventes Total",
+                                    "Billets Scannés",
                                     style: TextStyle(
                                       fontSize: TSizes.sm * 1.4,
                                       fontWeight: FontWeight.w500,
@@ -365,34 +383,28 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                   SizedBox(
                     height: THelperFunctions.screenHeight() * 0.15,
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: THelperFunctions.screenWidth() * 0.04,
-                        right: THelperFunctions.screenWidth() * 0.04,
-                      ),
-                      child: Card(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Total Encaissement",
-                                  style: TextStyle(fontSize: TSizes.md * 1.2),
+                    child: Card(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Total Encaissement",
+                                style: TextStyle(fontSize: TSizes.md * 1.2),
+                              ),
+                              Text(
+                                _formatCurrency(totalRevenue),
+                                style: TextStyle(
+                                  fontSize: TSizes.md * 1.4,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                Text(
-                                  _formatCurrency(totalRevenue),
-                                  style: TextStyle(
-                                    fontSize: TSizes.md * 1.4,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),

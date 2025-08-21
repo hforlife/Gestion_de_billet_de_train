@@ -175,7 +175,7 @@ class TicketInfoCard extends StatelessWidget {
                               style: TextStyle(fontSize: TSizes.md),
                             ),
                             Text(
-                              "N°${ticket.trainNumber}",
+                              "${ticket.trainNumber}",
                               style: Theme.of(context).textTheme.labelMedium!
                                   .copyWith(
                                     color: TColors.black,
