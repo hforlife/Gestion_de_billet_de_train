@@ -1,6 +1,7 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
+import { Link } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 const props = defineProps({

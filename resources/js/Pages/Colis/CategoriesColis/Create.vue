@@ -2,6 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import { Link } from "@inertiajs/vue3";
 
 // Initialisation du formulaire
 const form = useForm({
@@ -101,13 +102,12 @@ const submit = () => {
 
                         <!-- Actions du formulaire -->
                         <div class="form-actions">
-                            <button
-                                type="button"
+                            <Link
+                                :href="route('categories-colis.index')"
                                 class="btn-cancel"
-                                @click="form.reset()"
                             >
                                 Annuler
-                            </button>
+                            </Link>
                             <button
                                 type="submit"
                                 class="btn-submit"

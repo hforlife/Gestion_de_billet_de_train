@@ -4,6 +4,8 @@ import { useForm } from "@inertiajs/vue3";
 import { computed, ref, watch, watchEffect, toRefs } from "vue";
 import Swal from "sweetalert2";
 import axios from "axios"; // manquait
+import { Link } from "@inertiajs/vue3";
+
 
 const props = defineProps({
     gares: Array,
@@ -348,11 +350,7 @@ const resetForm = () => {
                                     }}</span>
                                 </p>
                                 <div class="pos-product-price">
-                                    {{
-
-                                            voyage.tarifs?.[0]?.prix || 0
-
-                                    }}
+                                    {{ voyage.tarifs?.[0]?.prix || 0 }}
                                     FCFA
                                 </div>
                             </div>
@@ -640,7 +638,7 @@ const resetForm = () => {
                                     <div class="pos-summary-row">
                                         <span>Total:</span>
                                         <span class="pos-total bounce-in">
-                                            {{ form.prix }}  FCFA
+                                            {{ form.prix }} FCFA
                                         </span>
                                     </div>
                                 </div>
@@ -697,7 +695,7 @@ const resetForm = () => {
                                 @click="resetPOS"
                                 class="pos-cancel-btn hover-effect-btn"
                             >
-                                <span>Annuler</span>
+                                <span>Réinitialiser</span>
                             </button>
                             <button
                                 @click="submit"
@@ -733,7 +731,10 @@ const resetForm = () => {
             <div class="pos-popup">
                 <div class="pos-popup-header">
                     <h3>Calcul kilométrique</h3>
-                    <button @click="showKilometragePopup = false" class="pos-popup-close">
+                    <button
+                        @click="showKilometragePopup = false"
+                        class="pos-popup-close"
+                    >
                         &times;
                     </button>
                 </div>
@@ -746,7 +747,9 @@ const resetForm = () => {
                             class="pos-input"
                             @change="updateKilometrageDistance"
                         >
-                            <option value="" disabled>Sélectionnez une gare</option>
+                            <option value="" disabled>
+                                Sélectionnez une gare
+                            </option>
                             <option
                                 v-for="gare in gares"
                                 :key="gare.id"
@@ -764,7 +767,9 @@ const resetForm = () => {
                             class="pos-input"
                             @change="updateKilometrageDistance"
                         >
-                            <option value="" disabled>Sélectionnez une gare</option>
+                            <option value="" disabled>
+                                Sélectionnez une gare
+                            </option>
                             <option
                                 v-for="gare in gares"
                                 :key="gare.id"
@@ -797,10 +802,16 @@ const resetForm = () => {
                 </div>
 
                 <div class="pos-popup-actions">
-                    <button @click="showKilometragePopup = false" class="pos-popup-cancel">
+                    <button
+                        @click="showKilometragePopup = false"
+                        class="pos-popup-cancel"
+                    >
                         Annuler
                     </button>
-                    <button @click="applyKilometragePrice" class="pos-popup-confirm">
+                    <button
+                        @click="applyKilometragePrice"
+                        class="pos-popup-confirm"
+                    >
                         Appliquer
                     </button>
                 </div>

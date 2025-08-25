@@ -228,12 +228,12 @@ const sortBy = (column) => {
                                             >
                                                 <Trash size="16" />
                                             </button>
-                                            <button
+                                            <!-- <button
                                                 @click="viewUser(user.id)"
                                                 class="btn-action btn-view"
                                             >
                                                 <Eye size="16" />
-                                            </button>
+                                            </button> -->
                                         </div>
                                     </td>
                                 </tr>

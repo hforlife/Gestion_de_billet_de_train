@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 import { computed } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     errors: Object,
@@ -17,14 +18,14 @@ const form = useForm({
 // Grouper les permissions par ressource
 const groupedPermissions = computed(() => {
     const groups = {};
-    props.permissions.forEach(permission => {
+    props.permissions.forEach((permission) => {
         const parts = permission.name.split(" ");
         const resourceName = parts.length > 1 ? parts[1] : "autres";
 
         if (!groups[resourceName]) {
             groups[resourceName] = {
                 name: resourceName,
-                permissions: []
+                permissions: [],
             };
         }
 
@@ -42,35 +43,40 @@ const toggleAllPermissions = () => {
     if (form.permissions.length === allPermissions.value.length) {
         form.permissions = [];
     } else {
-        form.permissions = allPermissions.value.map(p => p.id);
+        form.permissions = allPermissions.value.map((p) => p.id);
     }
 };
 
 // Vérifier si toutes les permissions sont sélectionnées
-const allSelected = computed(() =>
-    form.permissions.length === allPermissions.value.length &&
-    allPermissions.value.length > 0
+const allSelected = computed(
+    () =>
+        form.permissions.length === allPermissions.value.length &&
+        allPermissions.value.length > 0
 );
 
 // Vérifie si toutes les permissions d’un groupe sont sélectionnées
 const allGroupSelected = (permissions) => {
-    return permissions.length > 0 &&
-        permissions.every(p => form.permissions.includes(p.id));
+    return (
+        permissions.length > 0 &&
+        permissions.every((p) => form.permissions.includes(p.id))
+    );
 };
 
 // Sélectionner/désélectionner tout un groupe
 const selectAll = (module, event) => {
-    const groupIds = module.permissions.map(p => p.id);
+    const groupIds = module.permissions.map((p) => p.id);
     if (event.target.checked) {
         const newPermissions = [...form.permissions];
-        groupIds.forEach(id => {
+        groupIds.forEach((id) => {
             if (!newPermissions.includes(id)) {
                 newPermissions.push(id);
             }
         });
         form.permissions = newPermissions;
     } else {
-        form.permissions = form.permissions.filter(id => !groupIds.includes(id));
+        form.permissions = form.permissions.filter(
+            (id) => !groupIds.includes(id)
+        );
     }
 };
 
@@ -139,7 +145,10 @@ const submit = () => {
                                     placeholder="Entrer le nom..."
                                     :class="{ 'is-invalid': form.errors.name }"
                                 />
-                                <div v-if="form.errors.name" class="invalid-feedback">
+                                <div
+                                    v-if="form.errors.name"
+                                    class="invalid-feedback"
+                                >
                                     {{ form.errors.name }}
                                 </div>
                             </div>
@@ -147,7 +156,10 @@ const submit = () => {
                             <!-- Permissions -->
                             <div class="form-group mb-4">
                                 <label>Permissions</label>
-                                <div v-if="form.errors.permissions" class="text-danger mb-2">
+                                <div
+                                    v-if="form.errors.permissions"
+                                    class="text-danger mb-2"
+                                >
                                     {{ form.errors.permissions }}
                                 </div>
 
@@ -160,7 +172,10 @@ const submit = () => {
                                         :checked="allSelected"
                                         @change="toggleAllPermissions"
                                     />
-                                    <label class="form-check-label fw-bold" for="select-all">
+                                    <label
+                                        class="form-check-label fw-bold"
+                                        for="select-all"
+                                    >
                                         Tout sélectionner
                                     </label>
                                 </div>
@@ -168,17 +183,34 @@ const submit = () => {
                                 <div class="row">
                                     <div
                                         class="col-md-4 mb-3"
-                                        v-for="(module, moduleName) in groupedPermissions"
+                                        v-for="(
+                                            module, moduleName
+                                        ) in groupedPermissions"
                                         :key="moduleName"
                                     >
                                         <div class="card h-100">
-                                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                                <h5 class="mb-0 text-capitalize">{{ module.name }}</h5>
+                                            <div
+                                                class="card-header bg-light d-flex justify-content-between align-items-center"
+                                            >
+                                                <h5
+                                                    class="mb-0 text-capitalize"
+                                                >
+                                                    {{ module.name }}
+                                                </h5>
                                                 <input
                                                     type="checkbox"
                                                     class="form-check-input"
-                                                    :checked="allGroupSelected(module.permissions)"
-                                                    @change="selectAll(module, $event)"
+                                                    :checked="
+                                                        allGroupSelected(
+                                                            module.permissions
+                                                        )
+                                                    "
+                                                    @change="
+                                                        selectAll(
+                                                            module,
+                                                            $event
+                                                        )
+                                                    "
                                                 />
                                             </div>
                                             <div class="card-body">
@@ -192,7 +224,9 @@ const submit = () => {
                                                         type="checkbox"
                                                         :id="`permission-${permission.id}`"
                                                         :value="permission.id"
-                                                        v-model="form.permissions"
+                                                        v-model="
+                                                            form.permissions
+                                                        "
                                                     />
                                                     <label
                                                         class="form-check-label"
@@ -208,15 +242,28 @@ const submit = () => {
                             </div>
 
                             <div class="d-flex justify-content-end mt-4">
-                                <button type="reset" class="btn btn-light me-2" @click="form.reset()">Annuler</button>
-                                <button type="submit" class="btn btn-primary" :disabled="form.processing">
+                                <Link
+                                    :href="route('role.index')"
+                                    class="btn-cancel"
+                                >
+                                    Annuler
+                                </Link>
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary"
+                                    :disabled="form.processing"
+                                >
                                     <span
                                         v-if="form.processing"
                                         class="spinner-border spinner-border-sm"
                                         role="status"
                                         aria-hidden="true"
                                     ></span>
-                                    {{ form.processing ? "En cours..." : "Valider" }}
+                                    {{
+                                        form.processing
+                                            ? "En cours..."
+                                            : "Valider"
+                                    }}
                                 </button>
                             </div>
                         </form>

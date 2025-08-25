@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 import { defineProps, watch } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     system: Array,
@@ -34,9 +35,9 @@ const submit = () => {
         <!-- En-tête -->
         <div class="settings-header">
             <div class="header-content">
-                <h1 class="page-title">Paramètres Système</h1>
+                <h1 class="page-title">Paramètres Mode de Vente</h1>
                 <p class="page-subtitle">
-                    Gestion des configurations de l'application
+                    Gestion des configurations du mode de vente
                 </p>
             </div>
         </div>
@@ -128,7 +129,7 @@ const submit = () => {
                         <!-- Section 3 : Bagages -->
                         <div class="form-group">
                             <label class="form-label"
-                                >Prix du kg de Bagage</label
+                                >Prix de l'Excedent de Bagage(Kg)</label
                             >
                             <input
                                 type="number"
@@ -164,7 +165,7 @@ const submit = () => {
                                 class="btn btn-secondary"
                                 @click="form.reset()"
                             >
-                                <i class="fas fa-undo"></i> Annuler
+                                <i class="fas fa-undo"></i> Réinitialiser
                             </button>
                             <button
                                 type="submit"

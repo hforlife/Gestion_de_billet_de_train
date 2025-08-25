@@ -4,14 +4,16 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -23,6 +25,8 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'point_vente_id',
+        'access_app'
     ];
 
     /**
@@ -41,31 +45,37 @@ class User extends Authenticatable
      * @return array<string, string>
      */
     protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+        {
+            return [
+                'email_verified_at' => 'datetime',
+                'password' => 'hashed',
+            ];
+        }
 
     public function scopeFilter($query, array $filters)
-{
-    $query->when($filters['search'] ?? null, function ($query, $search) {
-        $query->where('username', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
-    });
-}
+        {
+            $query->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
     public function scopeRole($query, $role)
-{
-    return $query->whereHas('roles', function ($q) use ($role) {
-        $q->where('name', $role);
-    });
-}
+        {
+            return $query->whereHas('roles', function ($q) use ($role) {
+                $q->where('name', $role);
+            });
+        }
 
     public function scopeNotRole($query, $role)
-{
-    return $query->whereDoesntHave('roles', function ($q) use ($role) {
-        $q->where('name', $role);
-    });
-}
+        {
+            return $query->whereDoesntHave('roles', function ($q) use ($role) {
+                $q->where('name', $role);
+            });
+        }
+
+    public function pointsVente(): BelongsTo
+        {
+            return $this->belongsTo(PointsVente::class, 'point_vente_id');
+        }
 }

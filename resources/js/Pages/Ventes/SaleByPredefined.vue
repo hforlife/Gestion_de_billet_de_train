@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
 import Swal from "sweetalert2";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     voyages: Array,
@@ -18,7 +19,6 @@ const form = useForm({
     classe_wagon_id: "",
     client_nom: "",
     mode_paiement_id: props.modesPaiement[0]?.id || null,
-    point_vente_id: props.pointsVente[0]?.id || null,
     quantite: 1,
     quantite_demi_tarif: 0,
     prix: 0, // prix unitaire de base
@@ -128,34 +128,123 @@ const getSelectedTrainInfo = () => {
     return voyage?.train?.numero || "Non défini";
 };
 
-const submit = () => {
+// Validation avant soumission
+const validateBeforeSubmit = () => {
+    if (!form.voyage_id) {
+        Swal.fire("Erreur", "Veuillez sélectionner un voyage", "error");
+        return false;
+    }
+    if (!form.classe_wagon_id) {
+        Swal.fire("Erreur", "Veuillez sélectionner une classe", "error");
+        return false;
+    }
+
+    if (form.demi_tarif && form.quantite_demi_tarif > form.quantite) {
+        Swal.fire(
+            "Erreur",
+            "Le nombre de billets en demi-tarif ne peut pas dépasser la quantité totale",
+            "error"
+        );
+        return false;
+    }
+    return true;
+};
+
+// Soumission avec indicateur de chargement
+const submit = (imprimer = false) => {
+    if (!validateBeforeSubmit()) return;
+
+    // Afficher un loading personnalisé
+    Swal.fire({
+        title: "Traitement en cours...",
+        text: "Enregistrement de la vente",
+        icon: "info",
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Transformation des données
     form.transform((data) => ({
         ...data,
-        prix: form.prix_total, // on envoie le total au backend
+        prix: form.prix_total,
+        quantite_demi_tarif: form.demi_tarif ? form.quantite_demi_tarif : 0,
+        bagage: form.bagage ? 1 : 0,
+        penalite: form.penalite ? 1 : 0,
+        imprimer: imprimer
     })).post(route("vente.store"), {
-        onSuccess: () => {
-            Swal.fire({
-                title: "Succès!",
-                text: "La vente a été enregistrée",
+        onSuccess: (response) => {
+            Swal.close();
+
+            const successOptions = {
                 icon: "success",
-            }).then(() => resetPOS());
-        },
-        onError: (errors) => {
-            if (errors.place) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Erreur",
-                    text: errors.place,
+                confirmButtonText: "OK",
+                confirmButtonColor: "#3085d6"
+            };
+
+            if (imprimer) {
+                successOptions.title = "Vente enregistrée !";
+                successOptions.text = "Le billet va s'imprimer automatiquement";
+
+                Swal.fire(successOptions).then((result) => {
+                    if (result.isConfirmed && response.props.vente) {
+                        imprimerBillet(response.props.vente);
+                    }
+                    resetPOS();
                 });
             } else {
-                Swal.fire({
-                    title: "Erreur",
-                    text: errors.message || "Une erreur est survenue",
-                    icon: "error",
+                successOptions.title = "Succès !";
+                successOptions.text = "Vente enregistrée avec succès";
+
+                Swal.fire(successOptions).then(() => {
+                    resetPOS();
                 });
             }
         },
+        onError: (errors) => {
+            Swal.close();
+
+            // Gestion spécifique des erreurs
+            const errorMap = {
+                place: "Aucune place disponible pour cette classe",
+                voyage_id: "Veuillez sélectionner un voyage valide",
+                classe_wagon_id: "Veuillez sélectionner une classe",
+                prix: "Erreur dans le calcul du prix",
+                quantite: "Quantité invalide"
+            };
+
+            const errorMessage = Object.keys(errorMap).find(key => errors[key])
+                ? errorMap[Object.keys(errorMap).find(key => errors[key])]
+                : errors.message || "Une erreur est survenue lors de l'enregistrement";
+
+            Swal.fire({
+                icon: "error",
+                title: "Erreur",
+                text: errorMessage,
+                confirmButtonText: "Compris"
+            });
+        },
     });
+};
+const imprimerBillet = (vente) => {
+    // Ouvrir le PDF généré par le contrôleur Laravel
+    const pdfUrl = route("vente.generate", vente.id);
+
+    // Ouvrir dans une nouvelle fenêtre pour impression
+    const printWindow = window.open(pdfUrl, "_blank");
+
+    // Vérifier si la fenêtre s'est ouverte correctement
+    if (!printWindow) {
+        Swal.fire({
+            title: "Erreur",
+            text: "Veuillez autoriser les pop-ups pour l'impression",
+            icon: "warning",
+        });
+    }
+
+    // Le PDF s'imprimera automatiquement grâce à TCPDF qui envoie le PDF directement
 };
 </script>
 
@@ -225,7 +314,7 @@ const submit = () => {
                                 <div class="pos-product-price">
                                     {{
                                         formatNumber(
-                                            voyage.tarifs?.[0]?.prix || 0
+                                            voyage.tarifs?.[1]?.prix || 0
                                         )
                                     }}
                                     FCFA
@@ -499,27 +588,6 @@ const submit = () => {
                                         <div class="select-arrow"></div>
                                     </div>
                                 </div>
-
-                                <div class="pos-form-group">
-                                    <label>Point de vente</label>
-                                    <div class="select-wrapper">
-                                        <select
-                                            v-model="form.point_vente_id"
-                                            class="pos-select"
-                                            required
-                                        >
-                                            <option
-                                                v-for="point in pointsVente"
-                                                :key="point.id"
-                                                :value="point.id"
-                                            >
-                                                {{ point.gare.nom }}
-                                            </option>
-                                        </select>
-                                        <div class="select-arrow"></div>
-                                    </div>
-                                </div>
-
                                 <!-- Total avec animation -->
                                 <!-- <div
                                     class="pos-cart-summary"
@@ -679,36 +747,125 @@ const submit = () => {
                         </div>
 
                         <!-- Actions -->
-                        <div class="pos-cart-actions" v-if="form.voyage_id">
+                        <div
+                            class="pos-cart-actions"
+                            style="
+                                display: flex;
+                                padding: 20px;
+                                margin: 0;
+                                gap: 15px;
+                                background: white;
+                                border-top: 1px solid #e2e8f0;
+                                position: fixed;
+                                bottom: 0;
+                                left: 0;
+                                right: 0;
+                                width: 100%;
+                                justify-content: center;
+                                z-index: 1000;
+                                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+                            "
+                        >
+                            <!-- Bouton Annuler -->
                             <button
                                 @click="resetPOS"
-                                class="pos-cancel-btn hover-effect-btn"
-                            >
-                                <span>Annuler</span>
-                            </button>
-                            <button
-                                @click="submit"
-                                :disabled="
-                                    !form.voyage_id ||
-                                    !form.classe_wagon_id ||
-                                    form.processing
+                                style="
+                                    flex: 1;
+                                    max-width: 120px;
+                                    padding: 12px 16px;
+                                    background: #f8f9fa;
+                                    border: 1px solid #dee2e6;
+                                    border-radius: 8px;
+                                    color: #6c757d;
+                                    font-weight: 500;
+                                    cursor: pointer;
+                                    transition: all 0.2s ease;
+                                    font-size: 14px;
                                 "
-                                class="pos-pay-btn hover-effect-btn"
+                                onmouseover="this.style.background='#e9ecef'; this.style.borderColor='#adb5bd'"
+                                onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='#dee2e6'"
                             >
-                                <span>Valider la vente</span>
-                                <svg
-                                    v-if="!form.processing"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path d="M5 12h14"></path>
-                                    <path d="M12 5l7 7-7 7"></path>
-                                </svg>
+                                <i
+                                    class="fas fa-times"
+                                    style="margin-right: 8px"
+                                ></i>
+                                Annuler
+                            </button>
+
+                            <!-- Bouton Valider -->
+                            <button
+                                @click="submit(false)"
+                                :disabled="form.processing"
+                                style="
+        flex: 1;
+        max-width: 150px;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        opacity: form.processing ? 0.7 : 1;
+    "
+                                onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(16, 185, 129, 0.3)'"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+                                :style="{ opacity: form.processing ? 0.7 : 1 }"
+                            >
+                                <span v-if="!form.processing">
+                                    <i
+                                        class="fas fa-check"
+                                        style="margin-right: 8px"
+                                    ></i>
+                                    Valider
+                                </span>
+                                <span v-else>
+                                    <i
+                                        class="fas fa-spinner fa-spin"
+                                        style="margin-right: 8px"
+                                    ></i>
+                                    ...
+                                </span>
+                            </button>
+
+                            <!-- Bouton Valider & Imprimer -->
+                            <button
+                                @click="submit(true)"
+                                :disabled="form.processing"
+                                style="
+        flex: 1;
+        max-width: 180px;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        opacity: form.processing ? 0.7 : 1;
+    "
+                                onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.3)'"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+                                :style="{ opacity: form.processing ? 0.7 : 1 }"
+                            >
+                                <span v-if="!form.processing">
+                                    <i
+                                        class="fas fa-print"
+                                        style="margin-right: 8px"
+                                    ></i>
+                                    Valider & Imprimer
+                                </span>
+                                <span v-else>
+                                    <i
+                                        class="fas fa-spinner fa-spin"
+                                        style="margin-right: 8px"
+                                    ></i>
+                                    ...
+                                </span>
                             </button>
                         </div>
                     </div>

@@ -21,9 +21,9 @@ class GareController
         return Inertia::render('Gares/Index', [
             'filters' => $filters,
             'gares' => Gare::query()
-                ->orderBy('nom')
+                // ->orderBy('nom')
                 ->filter($filters)
-                ->paginate(10)
+                ->paginate(50)
                 ->withQueryString()
                 ->through(fn($gare) => [
                     'id' => $gare->id,

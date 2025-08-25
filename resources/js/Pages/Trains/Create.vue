@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { ref } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import { Link } from "@inertiajs/vue3";
 
 // Initialisation du formulaire
 const form = useForm({
@@ -12,7 +13,7 @@ const form = useForm({
     nombre_agents: 0, // Ajout d'un champ pour le nombre d'agents
 });
 
-const {errors} = form;
+const { errors } = form;
 
 // Fonction d'envoi du formulaire
 const submit = () => {
@@ -45,7 +46,9 @@ const submit = () => {
                                 <span class="breadcrumb-divider">/</span>
                             </li>
                             <li>
-                                <span class="breadcrumb-item active">Nouveau</span>
+                                <span class="breadcrumb-item active"
+                                    >Nouveau</span
+                                >
                             </li>
                         </ol>
                     </nav>
@@ -67,7 +70,11 @@ const submit = () => {
                             <!-- Numéro du train -->
                             <div class="form-section">
                                 <div class="form-group">
-                                    <label for="numero" class="form-label required">Numéro du train</label>
+                                    <label
+                                        for="numero"
+                                        class="form-label required"
+                                        >Numéro du train</label
+                                    >
                                     <input
                                         type="text"
                                         class="form-input"
@@ -75,40 +82,80 @@ const submit = () => {
                                         v-model="form.numero"
                                         placeholder="Ex: TR001"
                                     />
-                                    <span v-if="errors.numero" class="form-error">{{ errors.numero }}</span>
+                                    <span
+                                        v-if="errors.numero"
+                                        class="form-error"
+                                        >{{ errors.numero }}</span
+                                    >
                                 </div>
                             </div>
 
                             <!-- Sens du train -->
                             <div class="form-section">
                                 <div class="form-group">
-                                    <label for="sens" class="form-label required">Sens du train</label>
-                                    <select class="form-select" v-model="form.sens">
-                                        <option value="" disabled>-- Choisissez un sens --</option>
-                                        <option value="Bamako-Kayes">Bamako-Kayes</option>
-                                        <option value="Kayes-Bamako">Kayes-Bamako</option>
+                                    <label
+                                        for="sens"
+                                        class="form-label required"
+                                        >Sens du train</label
+                                    >
+                                    <select
+                                        class="form-select"
+                                        v-model="form.sens"
+                                    >
+                                        <option value="" disabled>
+                                            -- Choisissez un sens --
+                                        </option>
+                                        <option value="Bamako-Kayes">
+                                            Bamako-Kayes
+                                        </option>
+                                        <option value="Kayes-Bamako">
+                                            Kayes-Bamako
+                                        </option>
                                     </select>
-                                    <span v-if="errors.sens" class="form-error">{{ errors.sens }}</span>
+                                    <span
+                                        v-if="errors.sens"
+                                        class="form-error"
+                                        >{{ errors.sens }}</span
+                                    >
                                 </div>
                             </div>
 
                             <!-- Etat du train -->
                             <div class="form-section">
                                 <div class="form-group">
-                                    <label for="etat" class="form-label required">État du train</label>
-                                    <select class="form-select" v-model="form.etat">
-                                        <option value="" disabled>-- Choisissez un état --</option>
+                                    <label
+                                        for="etat"
+                                        class="form-label required"
+                                        >État du train</label
+                                    >
+                                    <select
+                                        class="form-select"
+                                        v-model="form.etat"
+                                    >
+                                        <option value="" disabled>
+                                            -- Choisissez un état --
+                                        </option>
                                         <option value="actif">Actif</option>
-                                        <option value="en_maintenance">Maintenance</option>
+                                        <option value="en_maintenance">
+                                            Maintenance
+                                        </option>
                                     </select>
-                                    <span v-if="errors.etat" class="form-error">{{ errors.etat }}</span>
+                                    <span
+                                        v-if="errors.etat"
+                                        class="form-error"
+                                        >{{ errors.etat }}</span
+                                    >
                                 </div>
                             </div>
 
                             <!-- Nombre d'agents -->
                             <div class="form-section">
                                 <div class="form-group">
-                                    <label for="nombre_agents" class="form-label required">Nombre d'agents</label>
+                                    <label
+                                        for="nombre_agents"
+                                        class="form-label required"
+                                        >Nombre d'agents</label
+                                    >
                                     <div class="input-with-unit">
                                         <input
                                             type="number"
@@ -119,27 +166,35 @@ const submit = () => {
                                         />
                                         <span class="input-unit">agents</span>
                                     </div>
-                                    <span v-if="errors.nombre_agents" class="form-error">{{ errors.nombre_agents }}</span>
+                                    <span
+                                        v-if="errors.nombre_agents"
+                                        class="form-error"
+                                        >{{ errors.nombre_agents }}</span
+                                    >
                                 </div>
                             </div>
                         </div>
 
                         <!-- Actions du formulaire -->
                         <div class="form-actions">
-                            <button
-                                type="button"
+                            <Link
+                                :href="route('train.index')"
                                 class="btn-cancel"
-                                @click="form.reset()"
                             >
                                 Annuler
-                            </button>
+                            </Link>
                             <button
                                 type="submit"
                                 class="btn-submit"
                                 :disabled="form.processing"
                             >
-                                <span v-if="form.processing" class="spinner"></span>
-                                {{ form.processing ? "En cours..." : "Valider" }}
+                                <span
+                                    v-if="form.processing"
+                                    class="spinner"
+                                ></span>
+                                {{
+                                    form.processing ? "En cours..." : "Valider"
+                                }}
                             </button>
                         </div>
                     </form>
@@ -410,7 +465,9 @@ const submit = () => {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive */
@@ -425,7 +482,8 @@ const submit = () => {
         flex-direction: column;
     }
 
-    .btn-cancel, .btn-submit {
+    .btn-cancel,
+    .btn-submit {
         width: 100%;
     }
 

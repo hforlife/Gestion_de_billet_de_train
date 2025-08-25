@@ -1,4 +1,4 @@
-/<script setup>
+<script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, reactive, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
@@ -83,7 +83,7 @@ const deleteClasse = (id) => {
         <div class="sales-header">
             <div class="header-content">
                 <div class="header-title-wrapper">
-                    <h1 class="page-title">Paramètres Système</h1>
+                    <h1 class="page-title">Paramètres</h1>
                 </div>
                 <div class="breadcrumb-wrapper">
                     <ul class="breadcrumb">
@@ -106,7 +106,7 @@ const deleteClasse = (id) => {
                 <div class="sales-card">
                     <div class="table-header">
                         <h3 class="table-title">
-                            Liste des tarifs par kg des catégories de colis
+                            Gestion des Tarifs (Colis Express)
                         </h3>
                         <Link
                             :href="route('setting.create')"
@@ -191,8 +191,8 @@ const deleteClasse = (id) => {
                 <div class="sales-card">
                     <div class="table-header">
                         <h3 class="table-title">
-                            Paramètres appliquées
-                        </h3>
+                            Paramètres Mode de Vente (Kilométrique/Prédéfinie)
+                       </h3>
                         <!-- <Link
                             :href="route('points-vente.create')"
                             class="btn-create-sm"

@@ -69,8 +69,8 @@ class BilletController extends Controller
 
         // QR Code (20x20mm)
         $qrcode = new TCPDF2DBarcode($vente->reference, 'QRCODE,M');
-        $pdf->SetXY(60, 32);
-        $pdf->Image('@'.$qrcode->getBarcodePngData(), '', '', 10, 10, 'PNG');
+        $pdf->SetXY(60, 26);
+        $pdf->Image('@'.$qrcode->getBarcodePngData(), '', '', 15, 15, 'PNG');
 
         // Pied de page
         $pdf->SetFont('helvetica', 'I', 5);

@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
 import Swal from "sweetalert2";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     voyage: Object,

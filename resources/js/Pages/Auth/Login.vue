@@ -102,11 +102,6 @@ const submit = () => {
                                             <i class="input-helper"></i>
                                         </label>
                                     </div>
-                                    <a
-                                        href="#"
-                                        class="text-small forgot-password text-black"
-                                        >Mot de passe oublié</a
-                                    >
                                 </div>
 
                                 <div class="form-group">
@@ -125,10 +120,6 @@ const submit = () => {
                                 </div>
                             </form>
                         </div>
-
-                        <p class="footer-text text-center mt-2">
-                            © 2024 DoucsoftTechnologies. Tous droits réservés.
-                        </p>
                     </div>
                 </div>
             </div>

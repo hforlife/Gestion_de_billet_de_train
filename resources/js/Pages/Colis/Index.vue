@@ -162,7 +162,7 @@ const deleteBagage = (id) => {
                                         v-for="(coli, index) in colis.data"
                                         :key="coli.id"
                                     >
-                                        <td class="py-1">{{ index + 1 }}</td>
+                                        <td class="py-1">{{ colis.from + index }}</td>
                                         <td>{{ coli.user1 }}</td>
                                         <td>{{ coli.user2 }}</td>
                                         <td>{{ coli.categorie.nom }}</td>

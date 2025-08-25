@@ -184,7 +184,7 @@ class VenteController
             'client_nom' => 'nullable|string|max:255',
             'voyage_id' => 'required|exists:voyages,id',
             'mode_paiement_id' => 'required|exists:modes_paiement,id',
-            'point_vente_id' => 'required|exists:points_ventes,id',
+            // 'point_vente_id' => 'required|exists:points_ventes,id',
             'classe_wagon_id' => 'required|exists:classes_wagon,id',
             'quantite' => 'required|integer|min:1|max:10',
             'quantite_demi_tarif' => 'nullable|integer',
@@ -263,7 +263,7 @@ class VenteController
                 'client_nom' => $validated['client_nom'],
                 'voyage_id' => $validated['voyage_id'],
                 'mode_paiement_id' => $validated['mode_paiement_id'],
-                'point_vente_id' => $validated['point_vente_id'],
+                // 'point_vente_id' => $validated['point_vente_id'],
                 'place_id' => $placeLibre->id,
                 'prix' => $validated['prix'],
                 'quantite' => $validated['quantite'],
@@ -278,6 +278,7 @@ class VenteController
                 'qrcode' => $qrPath,
                 'date_vente' => now(),
                 'created_by' => $user->id,
+                'point_vente_id' => $user->point_vente_id,
             ]);
 
             DB::commit();
@@ -286,6 +287,16 @@ class VenteController
                 'vente_id' => $vente->id,
                 'reference' => $reference
             ]);
+
+            // Retourner la vente créée pour l'impression
+            if ($request->imprimer) {
+                return redirect()->route('vente.show', $vente->id)
+                    ->with('success', 'Billet vendu avec succès !')
+                    ->with('vente', $vente); // Passer la vente pour l'impression
+            }
+
+            return redirect()->route('vente.show', $vente->id)
+                ->with('success', 'Billet vendu avec succès !');
 
             return redirect()->route('vente.show', $vente->id)
                 ->with('success', 'Billet vendu avec succès !');
@@ -341,5 +352,24 @@ class VenteController
 
         return Redirect::route('vente.index')
             ->with('success', 'Vente supprimée avec succès');
+    }
+
+    public function print(Vente $vente)
+    {
+        $this->authorize('view', $vente);
+
+        $vente->load([
+            'voyage.gareDepart',
+            'voyage.gareArrivee',
+            'voyage.train',
+            'place.wagon.classeWagon',
+            'modePaiement',
+            'pointVente.gare'
+        ]);
+
+        return Inertia::render('Ventes/Print', [
+            'vente' => $vente,
+            'qrcode_url' => $vente->qrcode ? asset('storage/' . $vente->qrcode) : null,
+        ]);
     }
 }

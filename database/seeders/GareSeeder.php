@@ -16,47 +16,9 @@ class GareSeeder extends Seeder
      */
     public function run(): void
     {
-
-        // Jour de la semaine
-        // JoursSemaine::create([
-        //     'nom' => 'Lundi',
-        //     'created_at' => now(),
-        //     'updated_at' => now()
-        // ]);
-        // JoursSemaine::create([
-        //     'nom' => 'Mardi',
-        //     'created_at' => now(),
-        //     'updated_at' => now()
-        // ]);
-        // JoursSemaine::create([
-        //     'nom' => 'Mercredi',
-        //     'created_at' => now(),
-        //     'updated_at' => now()
-        // ]);
-        // JoursSemaine::create([
-        //     'nom' => 'Jeudi',
-        //     'created_at' => now(),
-        //     'updated_at' => now()
-        // ]);
-        // JoursSemaine::create([
-        //     'nom' => 'Vendredi',
-        //     'created_at' => now(),
-        //     'updated_at' => now()
-        // ]);
-        // JoursSemaine::create([
-        //     'nom' => 'Samedi',
-        //     'created_at' => now(),
-        //     'updated_at' => now()
-        // ]);
-        // JoursSemaine::create([ournir
-        //     'nom' => 'Dimanche',
-        //     'created_at' => now(),
-        //     'updated_at' => now()
-        // ]);
-
         // Gares
         Gare::create([
-            'nom' => 'Gare de Bamako',
+            'nom' => 'Bamako',
             'adresse' => 'Bamako',
             'type' => 'principale',
             'distance_km' => '0',
@@ -69,7 +31,7 @@ class GareSeeder extends Seeder
         ]);
 
         Gare::create([
-            'nom' => 'Gare de Kati',
+            'nom' => 'Kati',
             'adresse' => 'Kati',
             'type' => 'passage',
             'distance_km' => '14',
@@ -82,7 +44,7 @@ class GareSeeder extends Seeder
         ]);
 
         Gare::create([
-            'nom' => 'Gare de Négala',
+            'nom' => 'Négala',
             'adresse' => 'Négala',
             'type' => 'passage',
             'distance_km' => '61',
@@ -121,7 +83,7 @@ class GareSeeder extends Seeder
         ]);
 
         Gare::create([
-            'nom' => 'Gare de Sébécoro',
+            'nom' => 'Sébécoro',
             'adresse' => 'Sébécoro',
             'type' => 'passage',
             'distance_km' => '127',
@@ -134,7 +96,7 @@ class GareSeeder extends Seeder
         ]);
 
         Gare::create([
-            'nom' => 'Gare de Badinko',
+            'nom' => 'Badinko',
             'adresse' => 'Badinko',
             'type' => 'passage',
             'distance_km' => '154',
@@ -147,7 +109,7 @@ class GareSeeder extends Seeder
         ]);
 
         Gare::create([
-            'nom' => 'Gare de Kita',
+            'nom' => 'Kita',
             'adresse' => 'Kita',
             'type' => 'passage',
             'distance_km' => '185',
@@ -173,7 +135,7 @@ class GareSeeder extends Seeder
         ]);
 
         Gare::create([
-            'nom' => 'Gare de Toukoto',
+            'nom' => 'Toukoto',
             'adresse' => 'Toukoto',
             'type' => 'passage',
             'distance_km' => '254',
@@ -225,7 +187,7 @@ class GareSeeder extends Seeder
         ]);
 
          Gare::create([
-            'nom' => 'Gare de Oualia',
+            'nom' => 'Oualia',
             'adresse' => 'Oualia',
             'type' => 'passage',
             'distance_km' => '320',
@@ -290,7 +252,7 @@ class GareSeeder extends Seeder
         ]);
 
         Gare::create([
-            'nom' => 'Gare de Mahina',
+            'nom' => 'Mahina',
             'adresse' => 'Mahina',
             'type' => 'passage',
             'distance_km' => '377',
@@ -342,7 +304,7 @@ class GareSeeder extends Seeder
         ]);
 
         Gare::create([
-            'nom' => 'Gare de Diamou',
+            'nom' => 'Diamou',
             'adresse' => 'Diamou',
             'type' => 'passage',
             'distance_km' => '445',
@@ -394,7 +356,7 @@ class GareSeeder extends Seeder
         ]);
 
         Gare::create([
-            'nom' => 'Gare de Kayes',
+            'nom' => 'Kayes',
             'adresse' => 'Kayes',
             'type' => 'principale',
             'distance_km' => '492',

@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import { defineProps } from "vue";
 import Swal from "sweetalert2";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     colis: Object,
@@ -215,13 +216,12 @@ const submit = () => {
 
                         <!-- Actions du formulaire -->
                         <div class="form-actions">
-                            <button
-                                type="button"
+                            <Link
+                                :href="route('colis.index')"
                                 class="btn-cancel"
-                                @click="form.reset()"
                             >
                                 Annuler
-                            </button>
+                            </Link>
                             <button
                                 type="submit"
                                 class="btn-submit"

@@ -133,7 +133,7 @@ const deleteLigne = (id) => {
                         </thead>
                         <tbody>
                             <tr v-for="(ligne, index) in lignes.data" :key="ligne.id">
-                                <td class="column-id">{{ index + 1 }}</td>
+                                <td class="column-id">{{ lignes.from + index }}</td>
                                 <td class="line-name">{{ ligne.nom }}</td>
                                 <td class="arrival-station">{{ ligne.gare_depart }}</td>
                                 <td class="departure-station">{{ ligne.gare_arrivee }}</td>

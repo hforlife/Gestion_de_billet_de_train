@@ -52,7 +52,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{vente}', [VenteController::class, 'update'])->name('vente.update');
         Route::delete('/{id}', [VenteController::class, 'destroy'])->name('vente.destroy')->middleware('can:delete vente');
     });
-
+    Route::get('/vente/{vente}/print', [VenteController::class, 'print'])->name('vente.print');
     Route::get('/billet/{id}', [BilletController::class, 'generateBillet'])->name('vente.generate');
     Route::resource('/colis', ColisController::class)->except(['show']);
 

@@ -2,6 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps } from "vue";
 import { useForm } from "@inertiajs/vue3";
+import { Link } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 const props = defineProps({
@@ -173,13 +174,12 @@ const submit = () => {
 
                             <!-- Boutons -->
                             <div class="d-flex justify-content-end mt-4">
-                                <button
-                                    type="reset"
-                                    class="btn btn-light mr-2"
-                                    @click="form.reset()"
-                                >
-                                    Annuler
-                                </button>
+                                <Link
+                                :href="route('arret.index')"
+                                class="btn-cancel"
+                            >
+                                Annuler
+                            </Link>
                                 <button
                                     type="submit"
                                     class="btn btn-primary"

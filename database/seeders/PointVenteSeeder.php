@@ -11,17 +11,17 @@ class PointVenteSeeder extends Seeder
     public function run(): void
     {
         $garesVente = [
-            'Gare de Bamako',
-            'Gare de Kati',
-            'Gare de Négala',
-            'Gare de Sébécoro',
-            'Gare de Badinko',
-            'Gare de Kita',
-            'Gare de Toukoto',
-            'Gare de Oualia',
-            'Gare de Mahina',
-            'Gare de Diamou',
-            'Gare de Kayes',
+            'Bamako',
+            'Kati',
+            'Négala',
+            'Sébécoro',
+            'Badinko',
+            'Kita',
+            'Toukoto',
+            'Oualia',
+            'Mahina',
+            'Diamou',
+            'Kayes',
         ];
 
         foreach ($garesVente as $nom) {

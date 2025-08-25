@@ -98,9 +98,8 @@ class TarifController
     {
         $this->authorize('update tarif');
         return Inertia::render('Tarifs/Edit', [
-            'tarif' => $tarif->load(['voyage']),
+            'tarif' => $tarif->load(['voyage', 'classeWagon']),
             'voyages' => Voyage::all(),
-            'gares' => Gare::all(),
             'classes' => ClassesWagon::all(),
         ]);
     }
@@ -113,7 +112,7 @@ class TarifController
             'voyage_id' => 'nullable|exists:voyages,id',
             'classe_wagon_id' => 'required|exists:classes_wagon,id',
             'prix' => 'required|numeric|min:0',
-            'date_effet' => 'required|date|after_or_equal:today',
+            'date_effet' => 'required|date',
             'date_expiration' => 'nullable|date|after:date_effet',
         ]);
 

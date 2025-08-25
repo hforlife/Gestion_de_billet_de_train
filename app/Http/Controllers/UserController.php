@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PointsVente;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use Inertia\Response;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -41,8 +43,10 @@ class UserController extends Controller
     public function create(): Response
     {
         $this->authorize('create user');
+        $pointsVente = PointsVente::with('gare')->get();
         return Inertia::render('Setting/User/Create', [
             'roles' => Role::all()->pluck('name')->toArray(), // Retourne un tableau de noms
+            'pointsVente' => $pointsVente, // Retourne un tableau de noms
         ]);
     }
 
@@ -54,32 +58,43 @@ class UserController extends Controller
             'username' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'roles' => ['required','string', 'exists:roles,name'],
+            'access_app' => ['boolean'],
+            'point_vente_id' => ['required', 'exists:points_ventes,id'],
+            'roles' => ['required', 'string', 'exists:roles,name'],
         ]);
+        // dd($request);
 
         $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'access_app' => $request->access_app,
+            'point_vente_id' => $request->point_vente_id,
+
         ]);
 
         $user->syncRoles($request->roles);
 
         return Redirect::route('user.index')->with('success', 'Utilisateur créé avec succès.');
     }
+
     public function edit(User $user): Response
     {
         $this->authorize('update user');
+        $pointsVente = PointsVente::with('gare')->get();
         return Inertia::render('Setting/User/Edit', [
             'users' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'username' => $user->username,
                 'email' => $user->email,
+                'access_app' => $user->access_app,
+                'point_vente_id' => $user->point_vente_id,
                 'role' => $user->getRoleNames()->first(), // ✅ un seul rôle pour le champ select
             ],
-            'roles' => Role::all()->pluck('username')->toArray(), // Si besoin d’ID + nom, sinon .toArray() simple
+            'pointsVente' => $pointsVente, // Retourne un tableau de noms
+            'roles' => Role::all()->pluck('name')->toArray(), // Si besoin d’ID + nom, sinon .toArray() simple
         ]);
     }
 
@@ -88,9 +103,18 @@ class UserController extends Controller
         $this->authorize('update user');
         $request->validate([
             'name' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'string', 'email', 'max:255'],
+            'username' => ['nullable', 'string', 'max:255'],
+            'email' => [
+                'nullable',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($user->id), // ✅ ici
+            ],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
-            'roles' => ['required','string', 'exists:roles,name'],
+            'access_app' => ['boolean'],
+            'point_vente_id' => ['nullable', 'exists:points_ventes,id'],
+            'roles' => ['required', 'string', 'exists:roles,name'],
         ]);
 
         $user->update([
@@ -98,6 +122,8 @@ class UserController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'password' => $request->password ? Hash::make($request->password) : $user->password,
+            'access_app' => $request->access_app,
+            'point_vente_id' => $request->point_vente_id,
         ]);
 
         $user->syncRoles($request->roles);
@@ -116,6 +142,4 @@ class UserController extends Controller
         $user->delete();
         return Redirect::route('user.index')->with('success', 'Utilisateur supprimé avec succès.');
     }
-
-
 }

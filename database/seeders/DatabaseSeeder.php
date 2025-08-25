@@ -15,16 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(GareSeeder::class);
+        $this->call(PointVenteSeeder::class);
         $this->call(RoleSeeder::class);
         $this->call(AdminSeeder::class);
-        $this->call(GareSeeder::class);
         $this->call(TrainSeeder::class);
         $this->call(LigneSeeder::class);
         $this->call(ClasseSeeder::class);
         $this->call(ModesPaiementSeeder::class);
         $this->call(CategorieColisSeeder::class);
         $this->call(ArretLigneSeeder::class);
-        $this->call(PointVenteSeeder::class);
         $this->call(SytemSettingSeeder::class);
 
         // Optionnel : créer des utilisateurs de test

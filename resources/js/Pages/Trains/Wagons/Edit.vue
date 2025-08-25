@@ -24,7 +24,11 @@ const isValidNumero = () => {
 
 const submit = () => {
     if (!isValidNumero()) {
-        Swal.fire("Erreur", "Le numéro du wagon doit commencer par '2020' suivi de 3 chiffres.", "error");
+        Swal.fire(
+            "Erreur",
+            "Le numéro du wagon doit commencer par '2020' suivi de 3 chiffres.",
+            "error"
+        );
         return;
     }
     form.put(route("wagon.update", props.wagon.id), {
@@ -72,124 +76,136 @@ const submit = () => {
                         <i class="mdi mdi-train"></i>
                         Formulaire d'ajout de wagon
                     </h2>
-                        <form @submit.prevent="submit">
-                            <!-- Train -->
-                            <div class="form-group">
-                                <label for="train_id" class="form-label required">Train</label>
-                                <select
-                                    class="form-select"
-                                    v-model="form.train_id"
-                                    id="train_id"
+                    <form @submit.prevent="submit">
+                        <!-- Train -->
+                        <div class="form-group">
+                            <label for="train_id" class="form-label required"
+                                >Train</label
+                            >
+                            <select
+                                class="form-select"
+                                v-model="form.train_id"
+                                id="train_id"
+                            >
+                                <option value="" disabled>
+                                    -- Choisir un train --
+                                </option>
+                                <option
+                                    v-for="train in trains"
+                                    :key="train.id"
+                                    :value="train.id"
                                 >
-                                    <option value="" disabled>
-                                        -- Choisir un train --
-                                    </option>
-                                    <option
-                                        v-for="train in trains"
-                                        :key="train.id"
-                                        :value="train.id"
-                                    >
-                                        {{ train.numero }}
-                                    </option>
-                                </select>
-                                <div
-                                    v-if="form.errors.train_id"
-                                    class="text-danger"
-                                >
-                                    {{ form.errors.train_id }}
-                                </div>
+                                    {{ train.numero }}
+                                </option>
+                            </select>
+                            <div
+                                v-if="form.errors.train_id"
+                                class="text-danger"
+                            >
+                                {{ form.errors.train_id }}
                             </div>
+                        </div>
 
-                            <!-- Classe -->
-                            <div class="form-group">
-                                <label for="classe_id" class="form-label required">Classe du wagon</label>
-                                <select
-                                    class="form-select"
-                                    v-model="form.classe_id"
-                                    id="classe_id"
+                        <!-- Classe -->
+                        <div class="form-group">
+                            <label for="classe_id" class="form-label required"
+                                >Classe du wagon</label
+                            >
+                            <select
+                                class="form-select"
+                                v-model="form.classe_id"
+                                id="classe_id"
+                            >
+                                <option value="" disabled>
+                                    -- Choisir une classe --
+                                </option>
+                                <option
+                                    v-for="classe in classes"
+                                    :key="classe.id"
+                                    :value="classe.id"
                                 >
-                                    <option value="" disabled>
-                                        -- Choisir une classe --
-                                    </option>
-                                    <option
-                                        v-for="classe in classes"
-                                        :key="classe.id"
-                                        :value="classe.id"
-                                    >
-                                        {{ classe.classe }}
-                                    </option>
-                                </select>
-                                <div
-                                    v-if="form.errors.classe_id"
-                                    class="text-danger"
-                                >
-                                    {{ form.errors.classe_id }}
-                                </div>
+                                    {{ classe.classe }}
+                                </option>
+                            </select>
+                            <div
+                                v-if="form.errors.classe_id"
+                                class="text-danger"
+                            >
+                                {{ form.errors.classe_id }}
                             </div>
+                        </div>
 
-                            <!-- Numéro du wagon -->
-                            <div class="form-group">
-                                <label for="numero_wagon" class="form-label required"
-                                    >Numéro du wagon</label
-                                >
-                                <input
-                                    type="text"
-                                    class="form-input"
-                                    id="numero_wagon"
-                                    v-model="form.numero_wagon"
-                                    placeholder="Ex: 2020123"
-                                    pattern="^2020\d{3}$"
-                                    value="2020"
-                                    title="Le numéro doit commencer par '2020' suivi de 3 chiffres"
-                                    required
-                                />
-                                <div
-                                    v-if="form.errors.numero_wagon"
-                                    class="text-danger"
-                                >
-                                    {{ form.errors.numero_wagon }}
-                                </div>
+                        <!-- Numéro du wagon -->
+                        <div class="form-group">
+                            <label
+                                for="numero_wagon"
+                                class="form-label required"
+                                >Numéro du wagon</label
+                            >
+                            <input
+                                type="text"
+                                class="form-input"
+                                id="numero_wagon"
+                                v-model="form.numero_wagon"
+                                placeholder="Ex: 2020123"
+                                pattern="^2020\d{3}$"
+                                value="2020"
+                                title="Le numéro doit commencer par '2020' suivi de 3 chiffres"
+                                required
+                            />
+                            <div
+                                v-if="form.errors.numero_wagon"
+                                class="text-danger"
+                            >
+                                {{ form.errors.numero_wagon }}
                             </div>
+                        </div>
 
-                            <!-- Nombre de sièges -->
-                            <div class="form-group">
-                                <label for="nombre_sieges" class="form-label required"
-                                    >Nombre de sièges</label
-                                >
-                                <input
-                                    type="number"
-                                    class="form-input"
-                                    id="nombre_sieges"
-                                    v-model="form.nombre_sieges"
-                                    placeholder="Ex: 40"
-                                />
-                                <div
-                                    v-if="form.errors.nombre_sieges"
-                                    class="text-danger"
-                                >
-                                    {{ form.errors.nombre_sieges }}
-                                </div>
+                        <!-- Nombre de sièges -->
+                        <div class="form-group">
+                            <label
+                                for="nombre_sieges"
+                                class="form-label required"
+                                >Nombre de sièges</label
+                            >
+                            <input
+                                type="number"
+                                class="form-input"
+                                id="nombre_sieges"
+                                v-model="form.nombre_sieges"
+                                placeholder="Ex: 40"
+                            />
+                            <div
+                                v-if="form.errors.nombre_sieges"
+                                class="text-danger"
+                            >
+                                {{ form.errors.nombre_sieges }}
                             </div>
+                        </div>
 
-                            <!-- Actions du formulaire -->
+                        <!-- Actions du formulaire -->
                         <div class="form-actions">
-                            <button
-                                type="button"
+                            <Link
+                                :href="route('wagon.index')"
                                 class="btn-cancel"
-                                @click="form.reset()"
                             >
                                 Annuler
-                            </button>
+                            </Link>
                             <button
                                 type="submit"
                                 class="btn-submit"
                                 :disabled="form.processing"
                             >
-                                <span v-if="form.processing" class="spinner"></span>
-                                {{ form.processing ? "En cours..." : "Valider" }}
+                                <span
+                                    v-if="form.processing"
+                                    class="spinner"
+                                ></span>
+                                {{
+                                    form.processing ? "En cours..." : "Valider"
+                                }}
                             </button>
                         </div>
-                        </form>
+                    </form>
                 </div>
             </div>
         </div>
@@ -457,7 +473,9 @@ const submit = () => {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive */
@@ -472,7 +490,8 @@ const submit = () => {
         flex-direction: column;
     }
 
-    .btn-cancel, .btn-submit {
+    .btn-cancel,
+    .btn-submit {
         width: 100%;
     }
 

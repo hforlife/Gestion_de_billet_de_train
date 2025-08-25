@@ -135,7 +135,7 @@ const deletePoint = (id) => {
                                     v-for="(point, index) in pointsVente.data"
                                     :key="point.id"
                                 >
-                                    <td class="column-id">{{ index + 1 }}</td>
+                                    <td class="column-id">{{ pointsVente.from + index }}</td>
                                     <td class="column-name">
                                         {{ point.gare_nom }}
                                     </td>

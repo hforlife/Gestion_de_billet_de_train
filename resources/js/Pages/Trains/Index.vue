@@ -149,7 +149,7 @@ const deleteTrain = (id) => {
                                 :key="train.id"
                             >
                                 <td class="py-1">
-                                    {{ index + 1 }}
+                                    {{ trains.from + index }}
                                 </td>
                                 <td>{{ train.numero }}</td>
                                 <td>{{ train.sens }}</td>

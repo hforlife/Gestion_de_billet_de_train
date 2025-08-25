@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 import { computed } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     errors: Object,
@@ -209,7 +210,12 @@ const submit = () => {
                             </div>
 
                             <div class="d-flex justify-content-end mt-4">
-                                <button type="reset" class="btn btn-light me-2" @click="form.reset()">Annuler</button>
+                                <Link
+                                    :href="route('role.index')"
+                                    class="btn-cancel"
+                                >
+                                    Annuler
+                                </Link>
                                 <button type="submit" class="btn btn-primary" :disabled="form.processing">
                                     <span
                                         v-if="form.processing"

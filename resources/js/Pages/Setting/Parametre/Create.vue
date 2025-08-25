@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 import { defineProps, watch } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     categories: Array,
@@ -58,9 +59,9 @@ const submit = () => {
         <!-- En-tête de page -->
         <div class="settings-header">
             <div class="header-content">
-                <h1 class="page-title">Paramètres Système</h1>
+                <h1 class="page-title">Paramètres Catégorie Colis</h1>
                 <p class="page-subtitle">
-                    Gestion des configurations de l'application
+                    Gestion des configurations des Catégorie de Colis
                 </p>
             </div>
         </div>

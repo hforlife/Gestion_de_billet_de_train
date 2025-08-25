@@ -37,6 +37,11 @@ onMounted(() => {
         }
     });
 });
+
+// fonction pour tester les permissions
+const can = (permission) => {
+    return user.value?.permissions?.includes(permission);
+};
 </script>
 
 <template>
@@ -74,6 +79,7 @@ onMounted(() => {
 
                 <div class="navbar-menu-wrapper d-flex align-items-center">
                     <Link
+                        v-if="can('viewAny vente')"
                         :href="route('create')"
                         class="btn btn-primary btn-icon-text animate-fade"
                     >
@@ -85,10 +91,12 @@ onMounted(() => {
                         <li class="nav-item">
                             <div>
                                 <Link
+                                    v-if="can('viewAny parametre')"
                                     class="btn btn-primary text-white animate-fade"
                                     :href="route('setting.index')"
                                 >
-                                    <i class="mdi mdi-cogs mr-2"></i> <!--Paramètres-->
+                                    <i class="mdi mdi-cogs mr-2"></i>
+                                    <!--Paramètres-->
                                 </Link>
                             </div>
                         </li>
@@ -209,7 +217,10 @@ onMounted(() => {
                             </li>
 
                             <!-- Dashboard -->
-                            <li class="nav-item">
+                            <li
+                                v-if="can('viewAny dashboard')"
+                                class="nav-item"
+                            >
                                 <Link
                                     class="nav-link"
                                     :href="route('dashboard')"
@@ -227,7 +238,7 @@ onMounted(() => {
                             </li>
 
                             <!-- Ventes/Points de Ventes -->
-                            <li class="nav-item">
+                            <li v-if="can('viewAny vente')" class="nav-item">
                                 <a
                                     class="nav-link"
                                     data-toggle="collapse"
@@ -244,7 +255,10 @@ onMounted(() => {
                                 <div class="collapse" id="ui-basical">
                                     <ul class="nav flex-column sub-menu">
                                         <!-- Ventes -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny vente')"
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
                                                 :href="route('vente.index')"
@@ -263,7 +277,10 @@ onMounted(() => {
                                             </Link>
                                         </li>
                                         <!-- Points Ventes -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny point_vente')"
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
                                                 :href="
@@ -288,7 +305,7 @@ onMounted(() => {
                             </li>
 
                             <!-- Gares/Arrets -->
-                            <li class="nav-item">
+                            <li v-if="can('viewAny gare')" class="nav-item">
                                 <a
                                     class="nav-link"
                                     data-toggle="collapse"
@@ -305,7 +322,10 @@ onMounted(() => {
                                 <div class="collapse" id="ui-basic">
                                     <ul class="nav flex-column sub-menu">
                                         <!-- Gares -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny gare')"
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
                                                 :href="route('gare.index')"
@@ -324,49 +344,11 @@ onMounted(() => {
                                             </Link>
                                         </li>
 
-                                        <!-- Distances Gares -->
-                                        <!-- <li class="nav-item">
-                                            <Link
-                                                class="nav-link"
-                                                :href="route('distance.index')"
-                                                :class="{
-                                                    active: $page.url.startsWith(
-                                                        '/distance'
-                                                    ),
-                                                }"
-                                            >
-                                                <i
-                                                    class="menu-icon typcn typcn-user-outline"
-                                                ></i>
-                                                <span class="menu-title"
-                                                    >Distance Gares</span
-                                                >
-                                            </Link>
-                                        </li> -->
-
-                                        <!-- Types Gare -->
-                                        <!-- <li class="nav-item">
-                                            <a class="nav-link" href="pages/ui-features/typography.html">Trains</a>
-                                            <Link
-                                                class="nav-link"
-                                                :href="route('type.index')"
-                                                :class="{
-                                                    active: $page.url.startsWith(
-                                                        '/type'
-                                                    ),
-                                                }"
-                                            >
-                                                <i
-                                                    class="menu-icon typcn typcn-bell"
-                                                ></i>
-                                                <span class="menu-title"
-                                                    >Types Gare</span
-                                                >
-                                            </Link>
-                                        </li> -->
-
                                         <!-- Ligne -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny ligne')"
+                                            class="nav-item"
+                                        >
                                             <!-- <a class="nav-link" href="pages/ui-features/buttons.html">Gares</a> -->
                                             <Link
                                                 class="nav-link"
@@ -387,7 +369,10 @@ onMounted(() => {
                                         </li>
 
                                         <!-- Arrets -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny arret')"
+                                            class="nav-item"
+                                        >
                                             <!-- <a class="nav-link" href="pages/ui-features/dropdowns.html">Arrets</a> -->
                                             <Link
                                                 class="nav-link"
@@ -411,7 +396,7 @@ onMounted(() => {
                             </li>
 
                             <!-- Trains/Wagons -->
-                            <li class="nav-item">
+                            <li v-if="can('viewAny train')" class="nav-item">
                                 <a
                                     class="nav-link"
                                     data-toggle="collapse"
@@ -428,7 +413,10 @@ onMounted(() => {
                                 <div class="collapse" id="ui-base">
                                     <ul class="nav flex-column sub-menu">
                                         <!-- Trains -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny train')"
+                                            class="nav-item"
+                                        >
                                             <!-- <a class="nav-link" href="pages/ui-features/typography.html">Trains</a> -->
                                             <Link
                                                 class="nav-link"
@@ -448,28 +436,11 @@ onMounted(() => {
                                             </Link>
                                         </li>
 
-                                        <!-- Classes Wagons -->
-                                        <!-- <li class="nav-item">
-                                            <Link
-                                                class="nav-link"
-                                                :href="route('classe.index')"
-                                                :class="{
-                                                    active: $page.url.startsWith(
-                                                        '/classe'
-                                                    ),
-                                                }"
-                                            >
-                                                <i
-                                                    class="menu-icon typcn typcn-th-large-outline"
-                                                ></i>
-                                                <span class="menu-title"
-                                                    >Classes Wagon</span
-                                                >
-                                            </Link>
-                                        </li> -->
-
                                         <!-- Wagons -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny wagon')"
+                                            class="nav-item"
+                                        >
                                             <!-- <a class="nav-link" href="pages/ui-features/typography.html">Trains</a> -->
                                             <Link
                                                 class="nav-link"
@@ -488,32 +459,12 @@ onMounted(() => {
                                                 >
                                             </Link>
                                         </li>
-
-                                        <!-- Maintenance -->
-                                        <!-- <li class="nav-item">
-                                            <Link
-                                                class="nav-link"
-                                                :href="route('maintenance.index')"
-                                                :class="{
-                                                    active: $page.url.startsWith(
-                                                        '/maintenance'
-                                                    ),
-                                                }"
-                                            >
-                                                <i
-                                                    class="menu-icon typcn typcn-bell"
-                                                ></i>
-                                                <span class="menu-title"
-                                                    >Maintenance</span
-                                                >
-                                            </Link>
-                                        </li> -->
                                     </ul>
                                 </div>
                             </li>
 
                             <!-- Gestion des Colis -->
-                            <li class="nav-item">
+                            <li v-if="can('viewAny colis')" class="nav-item">
                                 <a
                                     class="nav-link"
                                     data-toggle="collapse"
@@ -529,7 +480,12 @@ onMounted(() => {
                                 </a>
                                 <div class="collapse" id="ui-classic">
                                     <ul class="nav flex-column sub-menu">
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="
+                                                can('viewAny categorie_colis')
+                                            "
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
                                                 :href="
@@ -551,7 +507,10 @@ onMounted(() => {
                                                 >
                                             </Link>
                                         </li>
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny colis')"
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
                                                 :href="route('colis.index')"
@@ -574,7 +533,7 @@ onMounted(() => {
                             </li>
 
                             <!-- Voyages -->
-                            <li class="nav-item">
+                            <li v-if="can('viewAny voyage')" class="nav-item">
                                 <a
                                     class="nav-link"
                                     data-toggle="collapse"
@@ -591,7 +550,10 @@ onMounted(() => {
                                 <div class="collapse" id="ui-zeta">
                                     <ul class="nav flex-column sub-menu">
                                         <!-- Voyages Classique -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny voyage')"
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
                                                 :href="route('voyage.index')"
@@ -610,39 +572,14 @@ onMounted(() => {
                                             </Link>
                                         </li>
 
-                                        <!-- Voyages Recurrent  -->
-                                        <!-- <li class="nav-item">
-                                            <Link
-                                                class="nav-link"
-                                                :href="
-                                                    route(
-                                                        'voyage-reccurent.index'
-                                                    )
-                                                "
-                                                :class="{
-                                                    active: $page.url.startsWith(
-                                                        '/voyage-reccurent'
-                                                    ),
-                                                }"
-                                            >
-                                                <i
-                                                    class="menu-icon typcn typcn-th-large-outline"
-                                                ></i>
-                                                <span class="menu-title"
-                                                    >Voyages Récurrents</span
-                                                >
-                                            </Link>
-                                        </li> -->
-
                                         <!-- Tarifs -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny tarif')"
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
-                                                :href="
-                                                    route(
-                                                        'tarif.index'
-                                                    )
-                                                "
+                                                :href="route('tarif.index')"
                                                 :class="{
                                                     active: $page.url.startsWith(
                                                         '/tarif'
@@ -662,7 +599,7 @@ onMounted(() => {
                             </li>
 
                             <!-- Administration -->
-                            <li class="nav-item">
+                            <li v-if="can('viewAny user')" class="nav-item">
                                 <a
                                     class="nav-link"
                                     data-toggle="collapse"
@@ -679,7 +616,10 @@ onMounted(() => {
                                 <div class="collapse" id="ui-zet">
                                     <ul class="nav flex-column sub-menu">
                                         <!-- Utilisateurs -->
-                                        <li class="nav-item">
+                                        <li
+                                            v-if="can('viewAny user')"
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
                                                 :class="{
@@ -698,52 +638,15 @@ onMounted(() => {
                                                 >
                                             </Link>
                                         </li>
-
-                                        <!-- Rapport -->
-                                        <!-- <li class="nav-item">
-                                            <Link
-                                                class="nav-link"
-                                                :class="{
-                                                    active: $page.url.startsWith(
-                                                        '/feed'
-                                                    ),
-                                                }"
-                                                :href="route('feed.index')"
-                                            >
-                                                <i
-                                                    class="menu-icon typcn typcn-user-outline"
-                                                ></i>
-                                                <span class="menu-title"
-                                                    >Rapport</span
-                                                >
-                                            </Link>
-                                        </li> -->
-
-                                        <!-- Modes de Paiements -->
-                                        <!-- <li class="nav-item">
-                                            <Link
-                                                class="nav-link"
-                                                :class="{
-                                                    active: $page.url.startsWith(
-                                                        '/paiement'
-                                                    ),
-                                                }"
-                                                :href="route('paiement.index')"
-                                            >
-                                                <i
-                                                    class="menu-icon typcn typcn-user-outline"
-                                                ></i>
-                                                <span class="menu-title"
-                                                    >Mode de Paiements</span
-                                                >
-                                            </Link>
-                                        </li> -->
                                     </ul>
                                 </div>
                             </li>
 
                             <!-- Paramètres -->
-                            <li class="nav-item">
+                            <li
+                                v-if="can('viewAny parametre')"
+                                class="nav-item"
+                            >
                                 <a
                                     class="nav-link"
                                     data-toggle="collapse"
@@ -752,15 +655,16 @@ onMounted(() => {
                                     aria-controls="ui-ze"
                                 >
                                     <i class="menu-icon typcn typcn-coffee"></i>
-                                    <span class="menu-title"
-                                        >Paramètres</span
-                                    >
+                                    <span class="menu-title">Paramètres</span>
                                     <i class="menu-arrow"></i>
                                 </a>
                                 <div class="collapse" id="ui-ze">
                                     <ul class="nav flex-column sub-menu">
-                                        <!-- Rôles -->
-                                        <li class="nav-item">
+                                        <!-- Rôles & Permissions -->
+                                        <li
+                                            v-if="can('viewAny role')"
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
                                                 :class="{
@@ -779,8 +683,11 @@ onMounted(() => {
                                             </Link>
                                         </li>
 
-                                        <!-- Rapport -->
-                                        <li class="nav-item">
+                                        <!-- Paramètres Systèmes -->
+                                        <li
+                                            v-if="can('viewAny parametre')"
+                                            class="nav-item"
+                                        >
                                             <Link
                                                 class="nav-link"
                                                 :class="{
@@ -798,30 +705,9 @@ onMounted(() => {
                                                 >
                                             </Link>
                                         </li>
-
-                                        <!-- Modes de Paiements -->
-                                        <!-- <li class="nav-item">
-                                            <Link
-                                                class="nav-link"
-                                                :class="{
-                                                    active: $page.url.startsWith(
-                                                        '/paiement'
-                                                    ),
-                                                }"
-                                                :href="route('paiement.index')"
-                                            >
-                                                <i
-                                                    class="menu-icon typcn typcn-user-outline"
-                                                ></i>
-                                                <span class="menu-title"
-                                                    >Mode de Paiements</span
-                                                >
-                                            </Link>
-                                        </li> -->
                                     </ul>
                                 </div>
                             </li>
-
                         </ul>
                     </nav>
                 </transition>
@@ -841,7 +727,7 @@ onMounted(() => {
 
                     <footer class="footer">
                         <div class="container-fluid clearfix">
-                            <span
+                            <!-- <span
                                 class="text-muted d-block text-center text-sm-left d-sm-inline-block"
                             >
                                 Copyright © Intellec 3
@@ -855,7 +741,7 @@ onMounted(() => {
                                     >Doucsoft Technologies</a
                                 >
                                 par doucsoft.com
-                            </span>
+                            </span> -->
                         </div>
                     </footer>
                 </div>

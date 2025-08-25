@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { defineProps, ref } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useForm } from "@inertiajs/vue3";
+import { Link } from "@inertiajs/vue3";
 import { Pencil, LogOut } from "lucide-vue-next";
 
 const props = defineProps({

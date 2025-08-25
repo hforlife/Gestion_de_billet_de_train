@@ -159,9 +159,9 @@ return new class extends Migration {
             $table->string('client_nom')->nullable();
 
             $table->foreignId('voyage_id')->constrained('voyages')->onDelete('cascade');
-            $table->foreignId('mode_paiement_id')->constrained('modes_paiement');
-            $table->foreignId('point_vente_id')->constrained('points_ventes');
-            $table->foreignId('classe_wagon_id')->constrained('classes_wagon');
+            $table->foreignId('mode_paiement_id')->constrained('modes_paiement')->onDelete('cascade');
+            $table->foreignId('point_vente_id')->constrained('points_ventes')->onDelete('cascade')->nullable();
+            $table->foreignId('classe_wagon_id')->constrained('classes_wagon')->onDelete('cascade');
 
             $table->decimal('prix', 8, 2);
             $table->integer('quantite')->default(1);
@@ -188,6 +188,7 @@ return new class extends Migration {
             $table->index(['place_id', 'voyage_id']);
         });
 
+
         // Contraintes supplémentaires (PostgreSQL)
         DB::statement('ALTER TABLE ventes ADD CONSTRAINT prix_non_negatif CHECK (prix >= 0)');
         DB::statement('ALTER TABLE ventes ADD CONSTRAINT quantite_positive CHECK (quantite >= 1)');
@@ -197,32 +198,9 @@ return new class extends Migration {
             $table->index(['voyage_id', 'place_id']);
         });
 
-
-        // 5. Nouvelle structure pour les jours de circulation
-        // Schema::create('jours_semaine', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->string('nom', 10); // Lundi, Mardi...
-        //     $table->timestamps();
-        // });
-
-        // 6. Voyages récurrents modifiés
-        // Schema::create('voyage_recurrents', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->string('name');
-        //     $table->foreignId('train_id')->constrained('trains');
-        //     $table->foreignId('ligne_id')->constrained('lignes');
-        //     $table->time('heure_depart');
-        //     $table->foreignId('tarif_id')->constrained('tarifs_gares');
-        //     $table->string('statut')->default('actif');
-        //     $table->timestamps();
-        // });
-
-        // Table pivot pour les jours
-        // Schema::create('voyage_recurrent_jour', function (Blueprint $table) {
-        //     $table->foreignId('voyage_recurrent_id')->constrained()->cascadeOnDelete();
-        //     $table->foreignId('jour_semaine_id')->constrained('jours_semaine')->cascadeOnDelete();
-        //     $table->primary(['voyage_recurrent_id', 'jour_semaine_id']);
-        // });
+        Schema::table('users', function (Blueprint $table) {
+            $table->foreignId('point_vente_id')->constrained('points_ventes')->onDelete('cascade')->nullable();
+        });
 
         // 7. Tables annexes inchangées
         Schema::create('bagages', function (Blueprint $table) {
@@ -252,14 +230,6 @@ return new class extends Migration {
             $table->enum('statut', ['enregistré', 'perdu', 'livré']);
             $table->timestamps();
         });
-
-        // Schema::create('rapports', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->foreignId('chef_gare_id')->constrained('users')->onDelete('cascade');
-        //     $table->text('contenu');
-        //     $table->dateTime('date');
-        //     $table->timestamps();
-        // });
 
         Schema::create('parametres', function (Blueprint $table) {
             $table->id();

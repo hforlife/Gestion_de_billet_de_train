@@ -2,6 +2,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import { Link } from "@inertiajs/vue3";
 
 const form = useForm({
     nom: "",

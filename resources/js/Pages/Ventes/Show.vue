@@ -49,8 +49,8 @@ const form = computed(() => ({
         props.vente.pointVente?.nom ||
         "Inconnu",
     classe_wagon:
-        props.vente.classeWagon?.nom ||
-        props.vente.place?.wagon?.classeWagon?.nom ||
+        props.vente.classeWagon?.classe ||
+        props.vente.place?.wagon?.classeWagon?.classe ||
         "Non spécifiée",
 }));
 
@@ -153,12 +153,12 @@ const confirmDelete = () => {
                                 <label>Place attribuée</label>
                                 <div class="pos-input">N°{{ form.place }}</div>
                             </div>
-                            <div class="pos-form-group">
+                            <!-- <div class="pos-form-group">
                                 <label>Classe</label>
                                 <div class="pos-input">
                                     {{ form.classe_wagon }}
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
@@ -189,7 +189,7 @@ const confirmDelete = () => {
                                     {{ form.mode_paiement }}
                                 </div>
                             </div>
-                            <div class="pos-form-group">
+                            <!-- <div class="pos-form-group">
                                 <label>Point de vente</label>
                                 <div class="pos-input">
                                     {{ form.point_vente }}
@@ -200,7 +200,7 @@ const confirmDelete = () => {
                                         (Non spécifié)
                                     </span>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
 
@@ -217,7 +217,7 @@ const confirmDelete = () => {
                                 <div class="pos-input">{{ form.poids }}</div>
                             </div>
                         </div>
-                        <div v-if="form.qrcode" class="mt-4">
+                        <!-- <div v-if="form.qrcode" class="mt-4">
                             <label>QR Code du billet</label>
                             <img
                                 :src="form.qrcode"
@@ -227,10 +227,8 @@ const confirmDelete = () => {
                             <p class="text-xs text-center mt-2">
                                 Référence: {{ vente.reference }}
                             </p>
-                        </div>
-                    </div>
-
-                    <!-- Actions -->
+                        </div> -->
+                         <!-- Actions -->
                     <div class="pos-cart-actions">
                         <button
                             @click="generateVente(vente.id)"
@@ -238,13 +236,16 @@ const confirmDelete = () => {
                         >
                             <File class="icon" /> Imprimer le billet
                         </button>
-                        <button
+                        <!-- <button
                             @click="confirmDelete"
                             class="pos-cancel-btn delete-btn"
                         >
                             <Trash class="icon" /> Supprimer
-                        </button>
+                        </button> -->
                     </div>
+                    </div>
+
+
                 </div>
             </div>
         </div>

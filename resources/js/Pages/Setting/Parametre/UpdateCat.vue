@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 import { defineProps, watch } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     settings: Array,
@@ -59,9 +60,9 @@ const submit = () => {
         <!-- En-tête de page -->
         <div class="settings-header">
             <div class="header-content">
-                <h1 class="page-title">Paramètres Système</h1>
+                <h1 class="page-title">Paramètres Catégorie Colis</h1>
                 <p class="page-subtitle">
-                    Gestion des configurations de l'application
+                    Gestion des configurations des Catégorie de Colis
                 </p>
             </div>
         </div>
@@ -126,7 +127,7 @@ const submit = () => {
                                         class="form-control number-input"
                                         placeholder="0.0"
                                         min="0"
-                                        step="0.1"
+                                        step="any"
                                         required
                                     />
                                     <div
@@ -151,7 +152,7 @@ const submit = () => {
                                         class="form-control number-input"
                                         placeholder="10.0"
                                         min="0"
-                                        step="0.1"
+                                        step="any"
                                         required
                                     />
                                     <div
@@ -177,8 +178,6 @@ const submit = () => {
                                         v-model="form.prix_par_kg"
                                         class="form-control number-input"
                                         placeholder="250"
-                                        min="0"
-                                        step="10"
                                         required
                                     />
                                     <!-- <span class="input-unit">FCFA</span> -->

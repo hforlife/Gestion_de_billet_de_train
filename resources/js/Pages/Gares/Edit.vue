@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 import { defineProps } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     gare: Object,

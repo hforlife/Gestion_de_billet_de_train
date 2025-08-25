@@ -22,6 +22,8 @@ class AdminSeeder extends Seeder
         'username' => 'admin',
         'email' => 'admin@doucsoft.com',
         'password' => bcrypt('password'),
+        'access_app' => true,
+        'point_vente_id' => 1,
         'email_verified_at' => now(),
         'remember_token' => Str::random(10),
     ]);
@@ -30,6 +32,8 @@ class AdminSeeder extends Seeder
         'username' => 'abdoul',
         'email' => 'abdoulayeyoro.haidara@doucsoft.com',
         'password' => bcrypt('Animeh920'),
+        'access_app' => true,
+        'point_vente_id' => 1,
         'email_verified_at' => now(),
         'remember_token' => Str::random(10),
     ]);
@@ -38,6 +42,8 @@ class AdminSeeder extends Seeder
         'username' => 'doucsoft',
         'email' => 'moussdouc@doucsoft.tech',
         'password' => bcrypt('Admin@2025'),
+        'access_app' => true,
+        'point_vente_id' => 1,
         'email_verified_at' => now(),
         'remember_token' => Str::random(10),
     ]);
@@ -46,6 +52,8 @@ class AdminSeeder extends Seeder
         'username' => 'kizza',
         'email' => 'mallemagass@doucsoft.tech',
         'password' => bcrypt('Kizza@2025'),
+        'access_app' => true,
+        'point_vente_id' => 1,
         'email_verified_at' => now(),
         'remember_token' => Str::random(10),
     ]);

@@ -4,6 +4,7 @@ import { useForm } from "@inertiajs/vue3";
 import { ref, computed, watch } from "vue";
 import Swal from "sweetalert2";
 import { defineProps } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 // Props
 const props = defineProps({
@@ -220,13 +221,12 @@ const submit = () => {
 
                         <!-- Actions du formulaire -->
                         <div class="form-actions">
-                            <button
-                                type="button"
+                            <Link
+                                :href="route('colis.index')"
                                 class="btn-cancel"
-                                @click="form.reset()"
                             >
                                 Annuler
-                            </button>
+                            </Link>
                             <button
                                 type="submit"
                                 class="btn-submit"

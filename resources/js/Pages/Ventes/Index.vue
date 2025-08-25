@@ -78,6 +78,15 @@ const formatDate = (dateString) => {
         year: "numeric",
     });
 };
+const formatNumber = (v) =>
+    isNaN(v) ? "0" : new Intl.NumberFormat("fr-FR").format(v);
+const formatTime = (t) =>
+    t
+        ? new Date(t).toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+          })
+        : "";
 </script>
 
 <template>
@@ -176,7 +185,7 @@ const formatDate = (dateString) => {
                                 <th class="column-id">#</th>
                                 <th>Client</th>
                                 <th>Voyage</th>
-                                <th>Train</th>
+                                <!-- <th>Train</th> -->
                                 <th class="text-end">Prix Unitaire</th>
                                 <th class="text-center">Bagage</th>
                                 <th class="text-end">Quantité</th>
@@ -210,9 +219,9 @@ const formatDate = (dateString) => {
                                     </template>
                                     <span v-else>---</span>
                                 </td>
-                                <td class="train-number">
+                                <!-- <td class="train-number">
                                     {{ vente.voyage.train?.numero || "---" }}
-                                </td>
+                                </td> -->
                                 <td class="text-end price">
                                     {{ formatPrice(vente.prix) }}
                                 </td>
@@ -560,7 +569,7 @@ const formatDate = (dateString) => {
 }
 
 .sales-table td {
-    padding: 1rem 1.25rem;
+    padding: 0.25rem 1.25rem;
     border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
 }

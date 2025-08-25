@@ -18,19 +18,27 @@ class VoyageController
     public function index(Request $request): Response
     {
         $this->authorize('viewAny voyage');
-        $filters = $request->only('search');
+
+        // Récupération des filtres
+        $filters = $request->only('search', 'date_depart', 'statut');
         $sortOrder = $request->get('sort', 'asc');
 
-        $voyages = Voyage::with([
-            'train',
-            'ligne',
-        ])
+        $voyages = Voyage::with(['train', 'ligne'])
+            // Filtre texte
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nom', 'like', "%{$search}%")
                         ->orWhereHas('train', fn($q) => $q->where('numero', 'like', "%{$search}%"))
                         ->orWhereHas('ligne', fn($q) => $q->where('nom', 'like', "%{$search}%"));
                 });
+            })
+            // Filtre par date de départ
+            ->when($filters['date_depart'] ?? null, function ($query, $date) {
+                $query->whereDate('date_depart', $date);
+            })
+            // Filtre par statut
+            ->when($filters['statut'] ?? null, function ($query, $statut) {
+                $query->where('statut', $statut);
             })
             ->orderBy('date_depart', $sortOrder)
             ->paginate(10)
@@ -44,6 +52,7 @@ class VoyageController
             'sort' => $sortOrder,
         ]);
     }
+
 
     public function create(): Response
     {

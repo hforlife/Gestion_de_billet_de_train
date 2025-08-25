@@ -2,10 +2,12 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     errors: Object,
     roles: Array,
+    pointsVente: Array,
 });
 
 const form = useForm({
@@ -13,8 +15,10 @@ const form = useForm({
     username: "",
     email: "",
     password: "",
+    access_app: false,
+    point_vente_id: props.pointsVente[0]?.id || null,
     password_confirmation: "",
-    roles: [],
+    roles: "",
 });
 
 const submit = () => {
@@ -70,11 +74,15 @@ const submit = () => {
                 <form class="creation-form" @submit.prevent="submit">
                     <!-- Informations de base -->
                     <div class="form-section">
-                        <h2 class="section-title">Informations de l'utilisateur</h2>
-                        
+                        <h2 class="section-title">
+                            Informations de l'utilisateur
+                        </h2>
+
                         <!-- Nom -->
                         <div class="form-group">
-                            <label for="name" class="form-label required">Nom complet</label>
+                            <label for="name" class="form-label required"
+                                >Nom complet</label
+                            >
                             <input
                                 type="text"
                                 class="form-control"
@@ -90,7 +98,9 @@ const submit = () => {
 
                         <!-- Nom D'utilisateur -->
                         <div class="form-group">
-                            <label for="username" class="form-label required">Surnom/Nom d'utilisateur (Username)</label>
+                            <label for="username" class="form-label required"
+                                >Surnom/Nom d'utilisateur (Username)</label
+                            >
                             <input
                                 type="text"
                                 class="form-control"
@@ -106,7 +116,9 @@ const submit = () => {
 
                         <!-- Email -->
                         <div class="form-group">
-                            <label for="email" class="form-label required">Adresse email</label>
+                            <label for="email" class="form-label required"
+                                >Adresse email</label
+                            >
                             <input
                                 type="email"
                                 class="form-control"
@@ -124,10 +136,12 @@ const submit = () => {
                     <!-- Sécurité -->
                     <div class="form-section">
                         <h2 class="section-title">Sécurité</h2>
-                        
+
                         <!-- Mot de passe -->
                         <div class="form-group">
-                            <label for="password" class="form-label required">Mot de passe</label>
+                            <label for="password" class="form-label required"
+                                >Mot de passe</label
+                            >
                             <input
                                 type="password"
                                 class="form-control"
@@ -143,35 +157,53 @@ const submit = () => {
 
                         <!-- Confirmation mot de passe -->
                         <div class="form-group">
-                            <label for="password_confirmation" class="form-label required">Confirmation</label>
+                            <label
+                                for="password_confirmation"
+                                class="form-label required"
+                                >Confirmation</label
+                            >
                             <input
                                 type="password"
                                 class="form-control"
                                 id="password_confirmation"
                                 v-model="form.password_confirmation"
                                 placeholder="Confirmer le mot de passe..."
-                                :class="{ 'is-invalid': form.errors.password_confirmation }"
+                                :class="{
+                                    'is-invalid':
+                                        form.errors.password_confirmation,
+                                }"
                             />
-                            <p v-if="form.errors.password_confirmation" class="form-error">
+                            <p
+                                v-if="form.errors.password_confirmation"
+                                class="form-error"
+                            >
                                 {{ form.errors.password_confirmation }}
                             </p>
                         </div>
                     </div>
-                                
+
                     <!-- Rôle -->
                     <div class="form-section">
                         <h2 class="section-title">Rôle</h2>
-                        
+
                         <div class="form-group">
-                            <label for="roles" class="form-label required">Rôle utilisateur</label>
+                            <label for="roles" class="form-label required"
+                                >Rôle utilisateur</label
+                            >
                             <select
                                 class="form-select"
                                 id="roles"
                                 v-model="form.roles"
                                 :class="{ 'is-invalid': form.errors.roles }"
                             >
-                                <option value="" disabled selected>-- Sélectionnez un rôle --</option>
-                                <option v-for="role in roles" :key="role" :value="role">
+                                <option value="" disabled selected>
+                                    -- Sélectionnez un rôle --
+                                </option>
+                                <option
+                                    v-for="role in roles"
+                                    :key="role"
+                                    :value="role"
+                                >
                                     {{ role }}
                                 </option>
                             </select>
@@ -181,22 +213,96 @@ const submit = () => {
                         </div>
                     </div>
 
+                    <!-- Point de Vente -->
+                    <div class="form-section">
+                        <h2 class="section-title">Point de Vente</h2>
+
+                        <div class="form-group">
+                            <label
+                                for="point_vente_id"
+                                class="form-label required"
+                                >Point de Vente</label
+                            >
+                            <select
+                                class="form-select"
+                                id="roles"
+                                v-model="form.point_vente_id"
+                                :class="{
+                                    'is-invalid': form.errors.point_vente_id,
+                                }"
+                            >
+                                <option value="" disabled selected>
+                                    -- Sélectionnez un point de vente --
+                                </option>
+                                <option
+                                    v-for="point in pointsVente"
+                                    :key="point.id"
+                                    :value="point.id"
+                                >
+                                    {{ point.gare?.nom }}
+                                </option>
+                            </select>
+                            <p
+                                v-if="form.errors.point_vente_id"
+                                class="form-error"
+                            >
+                                {{ form.errors.point_vente_id }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Accèss Application -->
+                    <div class="form-section">
+                        <h2 class="section-title">Accèss Application</h2>
+                        <div class="form-group switch-group">
+                            <div class="switch-container">
+                                <label
+                                    for="access_app"
+                                    class="form-label required"
+                                    >Donner Accèss à l'Application</label
+                                >
+                                <label class="switch">
+                                    <input
+                                        type="checkbox"
+                                        v-model="form.access_app"
+                                        id="actifSwitch"
+                                        class="form-control"
+                                        :class="{
+                                            'is-invalid':
+                                                form.errors.access_app,
+                                        }"
+                                    />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span class="switch-label">{{
+                                    form.access_app ? "Actif" : "Inactif"
+                                }}</span>
+                                <p
+                                    v-if="form.errors.access_app"
+                                    class="form-error"
+                                >
+                                    {{ form.errors.access_app }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Form Actions -->
                     <div class="form-actions">
-                        <button
-                            type="button"
-                            class="btn-cancel"
-                            @click="form.reset()"
-                        >
+                        <Link :href="route('user.index')" class="btn-cancel">
                             Annuler
-                        </button>
+                        </Link>
                         <button
                             type="submit"
                             class="btn-submit"
                             :disabled="form.processing"
                         >
                             <span v-if="form.processing" class="spinner"></span>
-                            {{ form.processing ? 'Enregistrement...' : 'Enregistrer' }}
+                            {{
+                                form.processing
+                                    ? "Enregistrement..."
+                                    : "Enregistrer"
+                            }}
                         </button>
                     </div>
                 </form>
@@ -401,7 +507,7 @@ const submit = () => {
     right: 0;
     bottom: 0;
     background-color: #ccc;
-    transition: .4s;
+    transition: 0.4s;
     border-radius: 34px;
 }
 
@@ -413,7 +519,7 @@ const submit = () => {
     left: 4px;
     bottom: 4px;
     background-color: white;
-    transition: .4s;
+    transition: 0.4s;
     border-radius: 50%;
 }
 
@@ -524,7 +630,9 @@ input:checked + .slider:before {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive */
@@ -539,7 +647,8 @@ input:checked + .slider:before {
         flex-direction: column;
     }
 
-    .btn-cancel, .btn-submit {
+    .btn-cancel,
+    .btn-submit {
         width: 100%;
     }
 

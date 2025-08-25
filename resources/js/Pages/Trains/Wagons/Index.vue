@@ -142,7 +142,7 @@ const deletewagon = (id) => {
                                 v-for="(wagon, index) in wagons.data"
                                 :key="wagon.id"
                             >
-                                <td class="py-1">{{ index + 1 }}</td>
+                                <td class="py-1">{{ wagons.from + index }}</td>
                                 <td>{{ wagon.train_numero }}</td>
                                 <td>{{ wagon.classe_id }}</td>
                                 <td>{{ wagon.numero_wagon }}</td>

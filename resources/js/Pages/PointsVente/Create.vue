@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import { Plus, ArrowLeft } from "lucide-vue-next";
 import Swal from "sweetalert2";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     gares: Array,
@@ -15,7 +16,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('points-vente.store'), {
+    form.post(route("points-vente.store"), {
         onSuccess: () => {
             Swal.fire("Succès", "Point de vente créé avec succès", "success");
         },
@@ -33,10 +34,7 @@ const submit = () => {
             <div class="header-content">
                 <div class="header-title-wrapper">
                     <h1 class="page-title">Nouveau Point de Vente</h1>
-                    <Link
-                        :href="route('points-vente.index')"
-                        class="btn-back"
-                    >
+                    <Link :href="route('points-vente.index')" class="btn-back">
                         <ArrowLeft size="16" class="me-1" />
                         Retour à la liste
                     </Link>
@@ -44,11 +42,15 @@ const submit = () => {
                 <div class="breadcrumb-wrapper">
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <Link :href="route('dashboard')">Tableau de bord</Link>
+                            <Link :href="route('dashboard')"
+                                >Tableau de bord</Link
+                            >
                             <span class="breadcrumb-divider">/</span>
                         </li>
                         <li class="breadcrumb-item">
-                            <Link :href="route('points-vente.index')">Points de vente</Link>
+                            <Link :href="route('points-vente.index')"
+                                >Points de vente</Link
+                            >
                             <span class="breadcrumb-divider">/</span>
                         </li>
                         <li class="breadcrumb-item active">Nouveau</li>
@@ -72,7 +74,9 @@ const submit = () => {
                                 :class="{ 'is-invalid': form.errors.gare_id }"
                                 required
                             >
-                                <option value="" disabled selected>Sélectionnez une gare</option>
+                                <option value="" disabled selected>
+                                    Sélectionnez une gare
+                                </option>
                                 <option
                                     v-for="gare in gares"
                                     :key="gare.id"
@@ -87,14 +91,18 @@ const submit = () => {
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label required">Type de point</label>
+                            <label class="form-label required"
+                                >Type de point</label
+                            >
                             <select
                                 v-model="form.type"
                                 class="form-select"
                                 :class="{ 'is-invalid': form.errors.type }"
                                 required
                             >
-                                <option value="" disabled selected>-- Sélectionnez un type --</option>
+                                <option value="" disabled selected>
+                                    -- Sélectionnez un type --
+                                </option>
                                 <option value="gare">Interne</option>
                                 <option value="externe">Externe</option>
                             </select>
@@ -114,30 +122,36 @@ const submit = () => {
                                     />
                                     <span class="slider round"></span>
                                 </label>
-                                <span class="switch-label">{{ form.actif ? 'Actif' : 'Inactif' }}</span>
+                                <span class="switch-label">{{
+                                    form.actif ? "Actif" : "Inactif"
+                                }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Boutons d'action -->
                     <div class="form-actions">
-                        <button
+                        <!-- <button
                             type="button"
                             @click="router.visit(route('points-vente.index'))"
                             class="btn-cancel"
                         >
                             Annuler
-                        </button>
+                        </button> -->
+                        <Link :href="route('points-vente.index')" class="btn-cancel">
+                            Annuler
+                        </Link>
                         <button
                             type="submit"
                             class="btn-submit"
                             :disabled="form.processing"
                         >
-                            <span
-                                v-if="form.processing"
-                                class="spinner"
-                            ></span>
-                            {{ form.processing ? 'Création en cours...' : 'Créer le point de vente' }}
+                            <span v-if="form.processing" class="spinner"></span>
+                            {{
+                                form.processing
+                                    ? "Création en cours..."
+                                    : "Créer le point de vente"
+                            }}
                         </button>
                     </div>
                 </form>
@@ -342,7 +356,7 @@ const submit = () => {
     right: 0;
     bottom: 0;
     background-color: #ccc;
-    transition: .4s;
+    transition: 0.4s;
     border-radius: 34px;
 }
 
@@ -354,7 +368,7 @@ const submit = () => {
     left: 4px;
     bottom: 4px;
     background-color: white;
-    transition: .4s;
+    transition: 0.4s;
     border-radius: 50%;
 }
 
@@ -465,7 +479,9 @@ input:checked + .slider:before {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive */
@@ -480,7 +496,8 @@ input:checked + .slider:before {
         flex-direction: column;
     }
 
-    .btn-cancel, .btn-submit {
+    .btn-cancel,
+    .btn-submit {
         width: 100%;
     }
 

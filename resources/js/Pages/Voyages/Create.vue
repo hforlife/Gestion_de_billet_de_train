@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm, router } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
 import { ArrowLeft } from "lucide-vue-next";
+import { Link } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 const props = defineProps({

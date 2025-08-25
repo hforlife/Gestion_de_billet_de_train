@@ -8,61 +8,70 @@ use App\Models\Voyage;
 use App\Models\Gare;
 use App\Models\Train;
 use App\Models\Vente;
+use App\Models\User;
+use App\Models\Client;
+use App\Models\Ligne;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class DashboardController extends Controller
 {
     use AuthorizesRequests;
+
     /**
      * Display a listing of the resource.
      */
     public function index(): Response
     {
         $this->authorize('viewAny dashboard');
-        // Total des entités
+
+        // Totaux
         $ticketsCount = Vente::count();
         $revenusTotaux = Vente::sum('prix');
         $trainsCount = Train::count();
         $voyagesCount = Voyage::count();
         $garesCount = Gare::count();
+        $colisExpressCount = Colis::where('statut', 'enregistré')->count();
+        $voyagesDuJour = Voyage::whereDate('date_depart', today())->count();
 
-        // Total de colis express transférés par l'utilisateur connecté
-        $colisExpressCount = Colis::where('statut', 'enregistré')
-            ->count();
-
-        // Revenus mensuels (12 derniers mois)
+        // Revenus mensuels
         $revenusMensuels = Vente::selectRaw("
-                DATE_FORMAT(created_at, 'YYYY-MM') as mois,
+                DATE_FORMAT(date_vente, '%Y-%m') as mois,
                 SUM(prix) as total_revenus
             ")
-            ->where('created_at', '>=', now()->subMonths(12))
+            ->where('date_vente', '>=', now()->subMonths(12))
             ->groupBy('mois')
             ->orderBy('mois')
             ->get();
 
-        // Ventes par mois pour le graphique (12 derniers mois)
+        // Ventes mensuelles
         $ventesParMois = Vente::selectRaw("
-                DATE_FORMAT(created_at, 'YYYY-MM') as mois,
+                DATE_FORMAT(date_vente, '%Y-%m') as mois,
                 COUNT(*) as total_ventes
             ")
-            ->where('created_at', '>=', now()->subMonths(12))
+            ->where('date_vente', '>=', now()->subMonths(12))
             ->groupBy('mois')
             ->orderBy('mois')
             ->get();
 
-        // Préparer les données pour le graphique
         $graphData = $ventesParMois->map(function ($item) use ($revenusMensuels) {
             $revenuMois = $revenusMensuels->firstWhere('mois', $item->mois);
             return [
-                'mois' => $item->mois,
+                'mois' => Carbon::createFromFormat('Y-m', $item->mois)->format('M Y'),
                 'ventes' => $item->total_ventes,
                 'revenus' => $revenuMois ? $revenuMois->total_revenus : 0,
             ];
         });
+
+        // Top destinations
+        $topDestinations = $this->getTopDestinations();
+
+        // Méthodes de paiement
+        $paymentMethodsData = $this->getPaymentMethodsData();
 
         return Inertia::render('Dashboard/Index', [
             'tickets' => $ticketsCount,
@@ -73,26 +82,77 @@ class DashboardController extends Controller
                 'total_ventes' => $ticketsCount,
                 'revenus_totaux' => $revenusTotaux,
                 'colis_express' => $colisExpressCount,
+                'voyages_du_jour' => $voyagesDuJour,
             ],
             'graph_data' => $graphData,
             'revenus_mensuels' => $revenusMensuels,
+            'top_destinations' => $topDestinations,
+            'payment_methods_data' => $paymentMethodsData,
         ]);
     }
 
 
-    // app/Http/Controllers/VoyageController.php
+    /**
+     * Get top destinations
+     */
+
+    private function getTopDestinations(): array
+    {
+        return Voyage::selectRaw('
+                gares.nom as destination,
+                COUNT(ventes.id) as nombre_ventes,
+                SUM(ventes.prix) as revenu_total
+            ')
+            ->join('gares', 'voyages.gare_arrivee_id', '=', 'gares.id')
+            ->join('ventes', 'ventes.voyage_id', '=', 'voyages.id')
+            ->where('ventes.date_vente', '>=', now()->subMonths(6))
+            ->groupBy('gares.id', 'gares.nom')
+            ->orderByDesc('nombre_ventes')
+            ->limit(5)
+            ->get()
+            ->map(fn($item) => [
+                'nom' => $item->destination,
+                'ventes' => $item->nombre_ventes,
+                'revenu' => $item->revenu_total
+            ])
+            ->toArray();
+    }
+
+
+    /**
+     * Get payment methods data
+     */
+    private function getPaymentMethodsData(): array
+    {
+        $totalVentes = Vente::where('date_vente', '>=', now()->subMonth())->count();
+
+        if ($totalVentes === 0) {
+            return [
+                ['methode' => 'Mobile Money', 'pourcentage' => 45],
+                ['methode' => 'Carte Bancaire', 'pourcentage' => 30],
+                ['methode' => 'Espèce', 'pourcentage' => 20],
+                ['methode' => 'Autre', 'pourcentage' => 5]
+            ];
+        }
+
+        return Vente::selectRaw("
+        modes_paiement.type as methode,
+        ROUND(COUNT(*) * 100.0 / {$totalVentes}, 2) as pourcentage
+    ")
+            ->join('modes_paiement', 'ventes.mode_paiement_id', '=', 'modes_paiement.id')
+            ->where('ventes.date_vente', '>=', now()->subMonth())
+            ->groupBy('modes_paiement.type')
+            ->get()
+            ->toArray();
+    }
+
+    /**anieh920
+     * Get voyages for calendar
+     */
     public function getVoyagesForCalendar()
     {
         $voyages = Voyage::with(['gareDepart', 'gareArrivee', 'train'])
-            ->select(
-                'id',
-                'date_depart',
-                'heure_depart',
-                'heure_arrivee',
-                'gare_depart_id',
-                'gare_arrivee_id',
-                'train_id'
-            )
+            ->select('id', 'date_depart', 'gare_depart_id', 'gare_arrivee_id', 'train_id')
             ->get()
             ->map(function ($voyage) {
                 return [
@@ -100,16 +160,8 @@ class DashboardController extends Controller
                     'title' => $voyage->train->numero . ' → ' .
                         $voyage->gareDepart->nom . ' - ' .
                         $voyage->gareArrivee->nom,
-                    'start' => $voyage->date_depart->format('Y-m-d') . 'T' . $voyage->heure_depart,
-                    'end' => $voyage->date_depart->format('Y-m-d') . 'T' . $voyage->heure_arrivee,
-                    'color' => $this->getTrainColor($voyage->train->type),
-                    'extendedProps' => [
-                        'train' => $voyage->train->numero,
-                        'depart' => $voyage->gareDepart->nom,
-                        'arrivee' => $voyage->gareArrivee->nom,
-                        'heure_depart' => $voyage->heure_depart,
-                        'heure_arrivee' => $voyage->heure_arrivee
-                    ]
+                    'start' => $voyage->date_depart,
+                    'color' => '#3b82f6', // couleur par défaut car ton modèle Train n’a pas "type"
                 ];
             });
 

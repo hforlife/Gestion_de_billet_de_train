@@ -3,6 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { useForm } from "@inertiajs/vue3";
 import { computed, reactive, watch, onMounted } from "vue";
 import Swal from "sweetalert2";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     voyages: Array,
@@ -19,7 +20,6 @@ const form = useForm({
     classe_wagon_id: "",
     client_nom: "",
     mode_paiement_id: props.modesPaiement[0]?.id || null,
-    point_vente_id: props.pointsVente[0]?.id || null,
     quantite: 1,
     quantite_demi_tarif: 0,
     prix: 0,
@@ -245,16 +245,40 @@ const validateBeforeSubmit = () => {
 };
 
 // Soumission du formulaire
-const submit = () => {
+// Soumission du formulaire
+const submit = (imprimer = false) => {
     if (!validateBeforeSubmit()) return;
 
+    // Afficher un loading personnalisé
+    Swal.fire({
+        title: "Traitement en cours...",
+        text: "Enregistrement de la vente",
+        icon: "info",
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Ajouter un flag pour l'impression dans les données du formulaire
+    form.imprimer = imprimer;
+
     form.post(route("vente.store"), {
-        onSuccess: () => {
+        onSuccess: (response) => {
             Swal.fire({
                 title: "Succès!",
-                text: "La vente a été enregistrée",
+                text: imprimer
+                    ? "Vente enregistrée et impression lancée"
+                    : "La vente a été enregistrée",
                 icon: "success",
-            }).then(() => resetPOS());
+            }).then(() => {
+                if (imprimer && response.props.vente) {
+                    // Ouvrir l'impression après validation
+                    imprimerBillet(response.props.vente);
+                }
+                resetPOS();
+            });
         },
         onError: (errors) => {
             if (errors.place) {
@@ -272,6 +296,26 @@ const submit = () => {
             }
         },
     });
+};
+
+// Fonction d'impression utilisant le PDF généré par le serveur
+const imprimerBillet = (vente) => {
+    // Ouvrir le PDF généré par le contrôleur Laravel
+    const pdfUrl = route("vente.generate", vente.id);
+
+    // Ouvrir dans une nouvelle fenêtre pour impression
+    const printWindow = window.open(pdfUrl, "_blank");
+
+    // Vérifier si la fenêtre s'est ouverte correctement
+    if (!printWindow) {
+        Swal.fire({
+            title: "Erreur",
+            text: "Veuillez autoriser les pop-ups pour l'impression",
+            icon: "warning",
+        });
+    }
+
+    // Le PDF s'imprimera automatiquement grâce à TCPDF qui envoie le PDF directement
 };
 </script>
 
@@ -657,7 +701,7 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <div class="pos-form-group">
+                            <!-- <div class="pos-form-group">
                                 <label>Point de vente</label>
                                 <div class="select-wrapper">
                                     <select
@@ -680,7 +724,7 @@ const submit = () => {
                                         class="text-danger"
                                     ></div>
                                 </div>
-                            </div>
+                            </div> -->
 
                             <!-- Statut -->
                             <div class="pos-form-group">
@@ -812,22 +856,129 @@ const submit = () => {
                             </div>
 
                             <!-- Actions -->
-                            <div class="pos-cart-actions">
+                            <div
+                                class="pos-cart-actions"
+                                style="
+                                    display: flex;
+                                    padding: 20px;
+                                    margin: 0;
+                                    gap: 15px;
+                                    background: white;
+                                    border-top: 1px solid #e2e8f0;
+                                    position: fixed;
+                                    bottom: 0;
+                                    left: 0;
+                                    right: 0;
+                                    width: 100%;
+                                    justify-content: center;
+                                    z-index: 1000;
+                                    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+                                "
+                            >
+                                <!-- Bouton Annuler -->
                                 <button
                                     @click="resetPOS"
-                                    class="pos-cancel-btn"
+                                    style="
+                                        flex: 1;
+                                        max-width: 120px;
+                                        padding: 12px 16px;
+                                        background: #f8f9fa;
+                                        border: 1px solid #dee2e6;
+                                        border-radius: 8px;
+                                        color: #6c757d;
+                                        font-weight: 500;
+                                        cursor: pointer;
+                                        transition: all 0.2s ease;
+                                        font-size: 14px;
+                                    "
+                                    onmouseover="this.style.background='#e9ecef'; this.style.borderColor='#adb5bd'"
+                                    onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='#dee2e6'"
                                 >
+                                    <i
+                                        class="fas fa-times"
+                                        style="margin-right: 8px"
+                                    ></i>
                                     Annuler
                                 </button>
+
+                                <!-- Bouton Valider -->
                                 <button
-                                    @click="submit"
-                                    class="pos-pay-btn"
+                                    @click="submit(false)"
                                     :disabled="form.processing"
+                                    style="
+        flex: 1;
+        max-width: 150px;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        opacity: form.processing ? 0.7 : 1;
+    "
+                                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(16, 185, 129, 0.3)'"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+                                    :style="{
+                                        opacity: form.processing ? 0.7 : 1,
+                                    }"
                                 >
-                                    <span v-if="!form.processing"
-                                        >Valider la vente</span
-                                    >
-                                    <span v-else>Enregistrement...</span>
+                                    <span v-if="!form.processing">
+                                        <i
+                                            class="fas fa-check"
+                                            style="margin-right: 8px"
+                                        ></i>
+                                        Valider
+                                    </span>
+                                    <span v-else>
+                                        <i
+                                            class="fas fa-spinner fa-spin"
+                                            style="margin-right: 8px"
+                                        ></i>
+                                        ...
+                                    </span>
+                                </button>
+
+                                <!-- Bouton Valider & Imprimer -->
+                                <button
+                                    @click="submit(true)"
+                                    :disabled="form.processing"
+                                    style="
+        flex: 1;
+        max-width: 180px;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        opacity: form.processing ? 0.7 : 1;
+    "
+                                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.3)'"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+                                    :style="{
+                                        opacity: form.processing ? 0.7 : 1,
+                                    }"
+                                >
+                                    <span v-if="!form.processing">
+                                        <i
+                                            class="fas fa-print"
+                                            style="margin-right: 8px"
+                                        ></i>
+                                        Valider & Imprimer
+                                    </span>
+                                    <span v-else>
+                                        <i
+                                            class="fas fa-spinner fa-spin"
+                                            style="margin-right: 8px"
+                                        ></i>
+                                        ...
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -856,6 +1007,54 @@ const submit = () => {
 </template>
 
 <style scoped>
+/* Ajouter Font Awesome ou utiliser des icônes SVG */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css");
+
+.pos-cancel-btn i,
+.pos-pay-btn i,
+.pos-print-btn i {
+    margin-right: 8px;
+}
+
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+.pos-print-btn {
+    flex: 1;
+    padding: 14px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.pos-print-btn:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.pos-print-btn:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+    box-shadow: none;
+}
 /* Base Styles */
 .pos-system {
     display: flex;

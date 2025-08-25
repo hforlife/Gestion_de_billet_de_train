@@ -144,7 +144,7 @@ const deleteGare = (id) => {
                                     v-for="(gare, index) in gares.data"
                                     :key="gare.id"
                                 >
-                                    <td class="column-id">{{ index + 1 }}</td>
+                                    <td class="column-id">{{ gares.from + index }}</td>
                                     <td class="gare-name">{{ gare.nom }}</td>
                                     <td class="gare-address">
                                         {{ gare.adresse }}

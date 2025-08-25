@@ -147,7 +147,7 @@ const deleteCategorie = (id) => {
                                 v-for="(categorie, index) in categories.data"
                                 :key="categorie.id"
                             >
-                                <td>{{ index + 1 }}</td>
+                                <td>{{ categories.from + index }}</td>
                                 <td>{{ categorie.nom }}</td>
                                 <td>{{ categorie.description }}</td>
                                 <td>

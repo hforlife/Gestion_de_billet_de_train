@@ -20,7 +20,7 @@ class ArretController
         $filters = $request->only(['search', 'ligne_id']);
 
         $arrets = ArretsLigne::with(['ligne', 'gare'])
-            ->orderBy('ordre')
+            // ->orderBy('gare_id')
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->whereHas('gare', function ($q) use ($search) {
                     $q->where('nom', 'like', "%{$search}%");
@@ -29,7 +29,7 @@ class ArretController
             ->when($filters['ligne_id'] ?? null, function ($query, $ligneId) {
                 $query->where('ligne_id', $ligneId);
             })
-            ->paginate(10)
+            ->paginate(50)
             ->withQueryString()
             ->through(fn ($arret) => [
                 'id' => $arret->id,

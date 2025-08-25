@@ -148,7 +148,7 @@ const deleteTarif = (id) => {
                                 :key="tarif.id"
                             >
                                 <td class="py-1">
-                                    {{ index + 1 }}
+                                    {{ tarifs.from + index }}
                                 </td>
                                 <td>{{ tarif.voyage.nom }}</td>
                                 <td>
