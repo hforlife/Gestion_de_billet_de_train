@@ -9,11 +9,17 @@ const props = defineProps({
     parametres: Object,
     ClassesWagons: Object,
     Settings: Object,
+    generals: Object,
 });
 
 // Actions Paramètre Système
 const editSetting = (id) => {
     router.visit(route("system.edit", id));
+};
+
+// Actions Paramètre Généraux
+const editGeneral = (id) => {
+    router.visit(route("general.edit", id));
 };
 
 // Actions Catégorie
@@ -133,7 +139,9 @@ const deleteClasse = (id) => {
                             </thead>
                             <tbody>
                                 <tr
-                                    v-for="(parametre, index) in parametres.data"
+                                    v-for="(
+                                        parametre, index
+                                    ) in parametres.data"
                                     :key="parametre.id"
                                 >
                                     <td class="column-id">{{ index + 1 }}</td>
@@ -183,7 +191,6 @@ const deleteClasse = (id) => {
             </div>
         </div>
 
-
         <!-- Paramètre Système -->
         <div class="sales-container">
             <!-- Contenu principal -->
@@ -192,15 +199,7 @@ const deleteClasse = (id) => {
                     <div class="table-header">
                         <h3 class="table-title">
                             Paramètres Mode de Vente (Kilométrique/Prédéfinie)
-                       </h3>
-                        <!-- <Link
-                            :href="route('points-vente.create')"
-                            class="btn-create-sm"
-                            aria-label="Créer une nouvelle vente"
-                        >
-                            <Plus size="16" class="me-1" />
-                            Nouveau point de Vente
-                        </Link> -->
+                        </h3>
                     </div>
 
                     <!-- Tableau -->
@@ -272,7 +271,7 @@ const deleteClasse = (id) => {
                             aria-label="Créer une nouvelle vente"
                         >
                             <Plus size="16" class="me-1" />
-                             Nouvelle Classe
+                            Nouvelle Classe
                         </Link>
                     </div>
 
@@ -289,14 +288,17 @@ const deleteClasse = (id) => {
                             </thead>
                             <tbody>
                                 <tr
-                                   v-for="(classe, index) in ClassesWagons.data" :key="classe.id"
+                                    v-for="(
+                                        classe, index
+                                    ) in ClassesWagons.data"
+                                    :key="classe.id"
                                 >
                                     <td class="column-id">{{ index + 1 }}</td>
                                     <td class="text-capitalize">
-                                       {{ classe.classe }}
+                                        {{ classe.classe }}
                                     </td>
                                     <td class="text-capitalize">
-                                       {{ classe.prix_multiplier }}
+                                        {{ classe.prix_multiplier }}
                                     </td>
                                     <td>
                                         <div class="action-buttons">
@@ -332,7 +334,99 @@ const deleteClasse = (id) => {
             </div>
         </div>
 
+        <!-- Autres Paramètres -->
+        <div class="sales-container">
+            <!-- Contenu principal -->
+            <div class="sales-container">
+                <div class="sales-card">
+                    <div class="table-header">
+                        <h3 class="table-title">Autres Paramètres</h3>
+                        <!-- <Link
+                            :href="route('classe.create')"
+                            class="btn-create-sm"
+                            aria-label="Créer une nouvelle vente"
+                        >
+                            <Plus size="16" class="me-1" />
+                             Nouvelle Classe
+                        </Link> -->
+                    </div>
 
+                    <!-- Tableau -->
+                    <div class="table-responsive">
+                        <table class="sales-table">
+                            <thead>
+                                <tr>
+                                    <th class="column-id">#</th>
+                                    <th>Nom de l'application</th>
+                                    <th>Logo</th>
+                                    <th>Text Pied de page</th>
+                                    <th>Mode Sombre</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="(general, index) in generals"
+                                    :key="general.id"
+                                >
+                                    <td class="column-id">{{ index + 1 }}</td>
+                                    <td class="text-capitalize">
+                                        {{ general.nom_app }}
+                                    </td>
+                                    <td>
+                                        <img
+                                            v-if="general.logo"
+                                            :src="`/storage/${general.logo}`"
+                                            alt="Logo"
+                                            class="h-10"
+                                        />
+                                    </td>
+                                    <td class="text-capitalize">
+                                        {{ general.footer_text }}
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge"
+                                            :class="
+                                                general.dark_mode
+                                                    ? 'bg-dark text-white'
+                                                    : 'bg-light text-dark'
+                                            "
+                                        >
+                                            {{
+                                                general.dark_mode
+                                                    ? "Activé"
+                                                    : "Désactivé"
+                                            }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <Link
+                                                @click="editGeneral(general.id)"
+                                                class="btn-action btn-edit"
+                                                title="Modifier"
+                                            >
+                                                <Pencil size="16" />
+                                            </Link>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- <tr v-if="generals.length === 0">
+                                    <td
+                                        colspan="6"
+                                        class="text-center py-4 text-muted"
+                                    >
+                                        Aucun paramètre trouvé
+                                    </td>
+                                </tr> -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </AppLayout>
 </template>
 

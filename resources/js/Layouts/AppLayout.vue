@@ -21,6 +21,8 @@ const closeAllDropdowns = () => {
     userDropdownOpen.value = false;
 };
 
+const general = computed(() => page.props.general);
+
 onMounted(() => {
     document.addEventListener("click", (e) => {
         if (!e.target.closest(".user-dropdown")) {
@@ -60,7 +62,11 @@ const can = (permission) => {
                         :href="route('dashboard')"
                     >
                         <img
-                            src="/resources/js/assets/images/icon_white.png"
+                            :src="
+                                general?.logo
+                                    ? '/storage/' + general.logo
+                                    : '/resources/js/assets/images/icon_white.png'
+                            "
                             alt="logo"
                         />
                     </Link>
@@ -727,21 +733,14 @@ const can = (permission) => {
 
                     <footer class="footer">
                         <div class="container-fluid clearfix">
-                            <!-- <span
-                                class="text-muted d-block text-center text-sm-left d-sm-inline-block"
-                            >
-                                Copyright © Intellec 3
-                                {{ new Date().getFullYear() }}
+                            <span class="text-muted">
+                                {{
+                                    general?.footer_text ||
+                                    "© " +
+                                        new Date().getFullYear() +
+                                        " Mon Application"
+                                }}
                             </span>
-                            <span
-                                class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center"
-                            >
-                                Site
-                                <a href="https://doucsoft.tech" target="_blank"
-                                    >Doucsoft Technologies</a
-                                >
-                                par doucsoft.com
-                            </span> -->
                         </div>
                     </footer>
                 </div>

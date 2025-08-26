@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CategorieColis;
 use App\Models\Parametre;
 use App\Models\ClassesWagon;
+use App\Models\General;
 use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,7 +28,9 @@ class ParametreController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $SystemSetting = SystemSetting::first();
+            $SystemSetting = SystemSetting::first();
+
+            $generals = General::all();
 
         return Inertia::render('Setting/Parametre/Index', [
             // Données pour les catégories de colis
@@ -52,6 +55,8 @@ class ParametreController extends Controller
 
             // Données pour les paramètres systèmes
             'Settings' => $SystemSetting,
+
+            'generals' => $generals,
         ]);
     }
 
@@ -83,7 +88,7 @@ class ParametreController extends Controller
                 $query->whereBetween('poids_min', [$validated['poids_min'], $validated['poids_max']])
                     ->orWhereBetween('poids_max', [$validated['poids_min'], $validated['poids_max']]);
             })
-            ->exists(); 
+            ->exists();
 
         if ($exists) {
             return back()->withErrors([

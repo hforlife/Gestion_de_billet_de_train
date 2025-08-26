@@ -9,6 +9,7 @@ use App\Http\Controllers\{
     FeedController,
     BilletController,
     DistanceController,
+    GeneralController,
     PaiementController,
     RoleController,
     SystemSettingController
@@ -72,6 +73,8 @@ Route::middleware(['auth', 'role:admin|chef'])->group(function () {
     Route::resource('/voyage-reccurent', ReccuringVoyageController::class)->except(['show']);   // Pour les voyages récurrents
     Route::resource('/categories-colis', CategorieColisController::class)->except(['show']);    // Pour les catégories de colis
     Route::resource('/setting', ParametreController::class)->except(['show']);                  // Pour les paramètres
+    Route::get('/general/{id}/edit', [GeneralController::class, 'edit'])->name('general.edit');                 // Pour les paramètres
+    Route::post('/general/{id}', [GeneralController::class, 'update'])->name('general.update');                  // Pour les paramètres
     Route::resource('/system', SystemSettingController::class)->except(['show','destroy']);     // Pour les paramètres
     Route::resource('/feed', FeedController::class)->except(['show']);                          //Pour les rapports
     Route::resource('/paiement', PaiementController::class)->except(['show']);                  //Pour les Paiements
