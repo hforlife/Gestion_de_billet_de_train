@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                                   style: TextStyle(color: TColors.primary),
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                if (userRole != null) Text(' ($userRole)'),
+                                Text(' ($userRole)'),
                               ],
                             ),
                           ),
