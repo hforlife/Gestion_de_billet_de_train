@@ -19,33 +19,40 @@ import 'package:gestion_billet_train_flutter/features/ticket/domain/usecases/sca
 import 'package:gestion_billet_train_flutter/features/ticket/domain/usecases/sell_ticket.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/bloc/ticket_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // Enregistrez les adaptateurs Hive
+  // Initialize Hive
+  await Hive.initFlutter();
+
+  // Register Hive adapters
   Hive.registerAdapter(UserModelAdapter());
   Hive.registerAdapter(TicketModelAdapter());
 
-  // Ouvrez les boxes Hive
+  // Open Hive boxes
   final userBox = await Hive.openBox<UserModel>('users');
   final ticketBox = await Hive.openBox<TicketModel>('tickets');
-  final scannedTicketsBox = await Hive.openBox<String>(
-    'scannedTickets',
-  ); // Add this
+  final appDataBox = await Hive.openBox<String>(
+    'app_data',
+  ); // For ApiConstants and scanned tickets
+
+  // Register Hive boxes
   sl.registerLazySingleton<Box<UserModel>>(() => userBox);
   sl.registerLazySingleton<Box<TicketModel>>(() => ticketBox);
-  sl.registerLazySingleton<Box<String>>(
-    () => scannedTicketsBox,
-  ); // Register the box
+  sl.registerLazySingleton<Box<String>>(() => appDataBox);
 
   // External dependencies
   sl.registerLazySingleton<http.Client>(() => http.Client());
   sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(),
   );
+  sl.registerLazySingleton<Connectivity>(() => Connectivity());
+
+  // Core
+  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
 
   // Blocs
   sl.registerFactory(
@@ -81,7 +88,10 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(sl<Box<UserModel>>()),
+    () => AuthLocalDataSourceImpl(
+      userBox: sl<Box<UserModel>>(),
+      secureStorage: sl<FlutterSecureStorage>(),
+    ),
   );
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(),
@@ -95,8 +105,4 @@ Future<void> init() async {
       secureStorage: sl<FlutterSecureStorage>(),
     ),
   );
-
-  // Core
-  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
-  sl.registerLazySingleton(() => Connectivity());
 }

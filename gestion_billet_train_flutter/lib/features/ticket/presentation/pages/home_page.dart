@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gestion_billet_train_flutter/core/constants/api_constants.dart';
+import 'package:hive/hive.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:gestion_billet_train_flutter/core/constants/colors.dart';
 import 'package:gestion_billet_train_flutter/core/constants/helper_functions.dart';
 import 'package:gestion_billet_train_flutter/core/constants/sizes.dart';
@@ -15,8 +18,6 @@ import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/sell_ticket_page.dart';
 import 'package:gestion_billet_train_flutter/features/ticket/presentation/pages/ticket_details_page.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive/hive.dart';
-import 'package:iconsax/iconsax.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,6 +31,7 @@ class _HomePageState extends State<HomePage> {
   final TicketBloc ticketBloc = sl<TicketBloc>();
   DateTime? _lastScanTime;
   late Box<String> _scannedTicketsBox;
+
   static const MethodChannel _channel = MethodChannel(
     'com.sopafer.dev/datawedge',
   );
@@ -68,6 +70,44 @@ class _HomePageState extends State<HomePage> {
       }
     }
     return null;
+  }
+
+  void _showServerSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Sélectionner le serveur'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: ApiConstants.availableServers.map((server) {
+              return ListTile(
+                title: Text(server),
+                onTap: () async {
+                  print('HomePage: Switching to server: $server');
+                  await ApiConstants.setServer(server);
+                  context.read<AuthBloc>().add(ResetAuthEvent());
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Serveur changé à $server. Veuillez vous reconnecter.',
+                      ),
+                    ),
+                  );
+                },
+              );
+            }).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Annuler'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -170,26 +210,52 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              print('HomePage: Logout pressed');
-                              context.read<AuthBloc>().add(LogoutEvent());
-                            },
-                            child: Container(
-                              width: THelperFunctions.screenWidth() * 0.08,
-                              height: THelperFunctions.screenWidth() * 0.08,
-                              decoration: BoxDecoration(
-                                color: TColors.error.withAlpha(25),
-                                borderRadius: BorderRadius.circular(
-                                  THelperFunctions.screenWidth() * 0.03,
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () =>
+                                    _showServerSelectionDialog(context),
+                                child: Container(
+                                  width: THelperFunctions.screenWidth() * 0.08,
+                                  height: THelperFunctions.screenWidth() * 0.08,
+                                  decoration: BoxDecoration(
+                                    color: TColors.primary.withAlpha(25),
+                                    borderRadius: BorderRadius.circular(
+                                      THelperFunctions.screenWidth() * 0.03,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Iconsax.setting,
+                                    size: TSizes.lg,
+                                    color: TColors.primary.withAlpha(120),
+                                  ),
                                 ),
                               ),
-                              child: Icon(
-                                Icons.logout,
-                                size: TSizes.lg,
-                                color: TColors.error.withAlpha(120),
+                              SizedBox(
+                                width: THelperFunctions.screenWidth() * 0.02,
                               ),
-                            ),
+                              GestureDetector(
+                                onTap: () {
+                                  print('HomePage: Logout pressed');
+                                  context.read<AuthBloc>().add(LogoutEvent());
+                                },
+                                child: Container(
+                                  width: THelperFunctions.screenWidth() * 0.08,
+                                  height: THelperFunctions.screenWidth() * 0.08,
+                                  decoration: BoxDecoration(
+                                    color: TColors.error.withAlpha(25),
+                                    borderRadius: BorderRadius.circular(
+                                      THelperFunctions.screenWidth() * 0.03,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.logout,
+                                    size: TSizes.lg,
+                                    color: TColors.error.withAlpha(120),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

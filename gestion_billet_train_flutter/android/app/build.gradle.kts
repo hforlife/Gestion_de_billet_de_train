@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         applicationId = "com.sopafer.dev"
-        minSdk = 21  // minimum Android supporté
+        minSdk = flutter.minSdkVersion  // minimum Android supporté
         targetSdk = 35  // Android 15
         versionCode = 1
         versionName = "1.0"

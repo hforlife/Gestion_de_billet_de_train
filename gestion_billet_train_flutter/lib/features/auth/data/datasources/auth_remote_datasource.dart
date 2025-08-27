@@ -7,14 +7,10 @@ import 'package:http/http.dart' as http;
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String username, String password);
+  Future<void> clearToken(); // Add method to clear token
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  static String _baseUrl = ApiConstants.baseUrl; // Remplacez par votre URL
-  static String _baseUrlLocal =
-      ApiConstants.baseUrlLocalWork; // Remplacez par votre URL
-
-  // Instance de flutter_secure_storage
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
@@ -22,7 +18,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/login'),
+            Uri.parse('${ApiConstants.baseUrl}/login'), // Use dynamic baseUrl
             body: {'login': username, 'password': password},
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
           )
@@ -31,7 +27,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == true || data['success'] == true) {
-          // Stocker le token dans le storage sécurisé
           final token =
               data['token'] ?? data['access_token'] ?? 'default_token';
           await _secureStorage.write(key: 'bearer_token', value: token);
@@ -54,6 +49,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } catch (e) {
       throw Exception('Erreur lors de l\'appel API: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> clearToken() async {
+    try {
+      print('Suppression du token sécurisé');
+      await _secureStorage.delete(key: 'bearer_token');
+    } catch (e) {
+      print('Erreur lors de la suppression du token: $e');
+      throw Exception(
+        'Erreur lors de la suppression du token: ${e.toString()}',
+      );
     }
   }
 }

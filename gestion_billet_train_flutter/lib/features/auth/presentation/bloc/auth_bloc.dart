@@ -9,16 +9,17 @@ import 'package:gestion_billet_train_flutter/features/auth/presentation/bloc/aut
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final Login login;
   final Logout logout;
-  final AuthLocalDataSource localDataSource; // Ajout de la dépendance
+  final AuthLocalDataSource localDataSource;
 
   AuthBloc({
     required this.login,
     required this.logout,
-    required this.localDataSource, // Injection manuelle
+    required this.localDataSource,
   }) : super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
     on<LogoutEvent>(_onLogout);
     on<CheckAuthEvent>(_onCheckAuth);
+    on<ResetAuthEvent>(_onResetAuth); // Added handler for ResetAuthEvent
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
@@ -71,8 +72,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     print('Vérification de l\'authentification');
     try {
-      final cachedUser = await localDataSource
-          .getCachedUser(); // Utilisation de localDataSource
+      final cachedUser = await localDataSource.getCachedUser();
       if (cachedUser != null) {
         emit(
           AuthAuthenticated(
@@ -89,6 +89,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       print('Exception dans _onCheckAuth: $e');
       emit(AuthUnauthenticated());
+    }
+  }
+
+  Future<void> _onResetAuth(
+    ResetAuthEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    print('Réinitialisation de l\'authentification');
+    try {
+      await localDataSource.clearCachedUser();
+      await localDataSource.clearToken();
+      print('Authentification réinitialisée avec succès');
+      emit(AuthUnauthenticated());
+    } catch (e) {
+      print('Exception dans _onResetAuth: $e');
+      emit(AuthError('Erreur lors de la réinitialisation: ${e.toString()}'));
     }
   }
 }
