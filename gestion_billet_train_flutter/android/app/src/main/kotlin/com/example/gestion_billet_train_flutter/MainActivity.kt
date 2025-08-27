@@ -25,7 +25,14 @@ class MainActivity : FlutterActivity() {
         val filter = IntentFilter()
         filter.addAction("com.sopafer.dev.SCAN")
         filter.addCategory("android.intent.category.DEFAULT")
-        registerReceiver(dataWedgeReceiver, filter)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+    // Android 13+ (API 33 et au-delà, dont Android 15)
+        registerReceiver(dataWedgeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+    // Anciennes versions
+    registerReceiver(dataWedgeReceiver, filter)
+}
+
     }
 
     private val dataWedgeReceiver = object : BroadcastReceiver() {
